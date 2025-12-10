@@ -301,9 +301,12 @@ class MyApp extends StatelessWidget {
           // Fix for Flutter SDK bug on HyperOS windowed mode
           // https://github.com/flutter/flutter/issues/164092
           // https://github.com/flutter/flutter/issues/161086
-          // Detect abnormal viewPadding values
+          
           // Fallback padding values based on typical Android status/navigation bar heights
+          // Top: 25dp approximates a standard Android status bar
+          // Bottom: 35dp accommodates gesture navigation bars
           const fallbackPadding = EdgeInsets.only(top: 25, bottom: 35);
+          
           // Threshold for detecting abnormal padding: 
           // - Normal status bars are typically 20-48 dp
           // - Values <= 0 or > 50 indicate the Flutter SDK bug
@@ -312,17 +315,19 @@ class MyApp extends StatelessWidget {
           final mediaQueryData = MediaQuery.of(context);
           final hasAbnormalPadding = mediaQueryData.viewPadding.top <= 0 ||
               mediaQueryData.viewPadding.top > maxNormalPadding;
+          
+          final effectiveViewPadding = hasAbnormalPadding
+              ? fallbackPadding
+              : mediaQueryData.viewPadding;
+          final effectivePadding = hasAbnormalPadding
+              ? fallbackPadding
+              : mediaQueryData.padding;
 
           child = MediaQuery(
             data: mediaQueryData.copyWith(
               textScaler: TextScaler.linear(Pref.defaultTextScale),
-              // Apply fallback padding if abnormal values detected
-              viewPadding: hasAbnormalPadding
-                  ? fallbackPadding
-                  : mediaQueryData.viewPadding,
-              padding: hasAbnormalPadding
-                  ? fallbackPadding
-                  : mediaQueryData.padding,
+              viewPadding: effectiveViewPadding,
+              padding: effectivePadding,
             ),
             child: child!,
           );
