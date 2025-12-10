@@ -32,6 +32,9 @@ class PlDanmakuController {
   
   // Default font size for standard danmaku from Bilibili
   static const int _defaultFontSize = 25;
+  
+  // Precomputed log(5) for performance optimization
+  static const double _log5 = 1.6094379124341003;
 
   void dispose() {
     _dmSegMap.clear();
@@ -51,15 +54,18 @@ class PlDanmakuController {
     if (count <= 5) {
       return 1.0;
     }
-    // Using precomputed log(5) for performance
-    // log(5) = 1.6094379124341003
-    return log(count) / log(5);
+    return log(count) / _log5;
   }
 
   /// Calculate enlarged font size for merged danmaku
   /// Base font size is typically 25 for standard danmaku
   static int _calcEnlargedFontSize(int baseFontSize, int count) {
     return (baseFontSize * _calcEnlargeRate(count)).round();
+  }
+
+  /// Get the base font size from DanmakuElem, falling back to default if not set
+  static int _getBaseFontSize(DanmakuElem element) {
+    return element.fontsize != 0 ? element.fontsize : _defaultFontSize;
   }
 
   Future<void> queryDanmaku(int segmentIndex) async {
@@ -102,14 +108,14 @@ class PlDanmakuController {
           final elem = uniques[element.content];
           if (elem == null) {
             // First occurrence: initialize count and store base font size
-            final baseFontSize = element.fontsize != 0 ? element.fontsize : _defaultFontSize;
+            final baseFontSize = _getBaseFontSize(element);
             uniques[element.content] = element
               ..count = 1
               ..fontsize = baseFontSize;
           } else {
             // Subsequent occurrence: increment count and calculate enlarged font size
             elem.count++;
-            final baseFontSize = element.fontsize != 0 ? element.fontsize : _defaultFontSize;
+            final baseFontSize = _getBaseFontSize(element);
             elem.fontsize = _calcEnlargedFontSize(baseFontSize, elem.count);
             continue;
           }
