@@ -302,10 +302,16 @@ class MyApp extends StatelessWidget {
           // https://github.com/flutter/flutter/issues/164092
           // https://github.com/flutter/flutter/issues/161086
           // Detect abnormal viewPadding values
+          // Fallback padding values based on typical Android status/navigation bar heights
           const fallbackPadding = EdgeInsets.only(top: 25, bottom: 35);
+          // Threshold for detecting abnormal padding: 
+          // - Normal status bars are typically 20-48 dp
+          // - Values <= 0 or > 50 indicate the Flutter SDK bug
+          const maxNormalPadding = 50.0;
+          
           final mediaQueryData = MediaQuery.of(context);
           final hasAbnormalPadding = mediaQueryData.viewPadding.top <= 0 ||
-              mediaQueryData.viewPadding.top > 50;
+              mediaQueryData.viewPadding.top > maxNormalPadding;
 
           child = MediaQuery(
             data: mediaQueryData.copyWith(
