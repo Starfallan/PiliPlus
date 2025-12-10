@@ -115,19 +115,22 @@ class PlDanmakuController {
         if (_mergeDanmaku) {
           final elem = uniques[element.content];
           if (elem == null) {
-            // First occurrence: initialize count and store base font size
-            final baseFontSize = _getBaseFontSize(element);
-            baseFontSizes[element.content] = baseFontSize;
-            uniques[element.content] = element
-              ..count = 1
-              ..fontsize = baseFontSize;
+            // First occurrence: initialize count
+            // Don't set fontsize yet - let it use global fontSize from view
+            uniques[element.content] = element..count = 1;
+            baseFontSizes[element.content] = _defaultFontSize;
           } else {
-            // Subsequent occurrence: increment count and calculate enlarged font size
-            // Use cached base font size from first occurrence
-            // Fallback to _defaultFontSize for safety (should not normally occur)
+            // Subsequent occurrence: increment count
             elem.count++;
-            final baseFontSize = baseFontSizes[element.content] ?? _defaultFontSize;
-            elem.fontsize = _calcEnlargedFontSize(baseFontSize, elem.count);
+            // Only calculate enlarged font size if count > threshold
+            if (elem.count > _enlargeThreshold) {
+              final baseFontSize = baseFontSizes[element.content] ?? _defaultFontSize;
+              // Store the enlarge rate as fontsize (will be multiplied by scale in view)
+              elem.fontsize = _calcEnlargedFontSize(baseFontSize, elem.count);
+            } else {
+              // Count <= threshold: no enlargement, fontsize stays 0
+              elem.fontsize = 0;
+            }
             continue;
           }
         }

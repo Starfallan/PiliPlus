@@ -132,16 +132,18 @@ class _PlDanmakuState extends State<PlDanmaku> {
             );
           } catch (_) {}
         } else {
-          // Calculate enlarged font size based on merge count and user's font size setting
-          // e.fontsize contains the base enlarged size (base=15), multiply by user's scale
+          // Only apply custom fontSize for danmaku that should be enlarged (count > 5)
+          // Otherwise, use the global fontSize setting from DanmakuOption
           double? itemFontSize;
-          if (e.fontsize > 0 && e.count > 1) {
-            // Apply user's font size scale to the enlarged size
+          if (e.fontsize > 0 && e.count > 5) {
+            // e.fontsize contains the enlarged size (base * enlargeRate)
+            // Multiply by user's scale to respect their font size setting
             final scale = !widget.isFullScreen || widget.isPipMode
                 ? playerController.danmakuFontScale
                 : playerController.danmakuFontScaleFS;
             itemFontSize = e.fontsize.toDouble() * scale;
           }
+          // If itemFontSize is null, canvas_danmaku will use global fontSize
           
           _controller!.addDanmaku(
             DanmakuContentItem(
