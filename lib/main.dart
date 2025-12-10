@@ -302,20 +302,21 @@ class MyApp extends StatelessWidget {
           // https://github.com/flutter/flutter/issues/164092
           // https://github.com/flutter/flutter/issues/161086
           // Detect abnormal viewPadding values
-          final isPaddingCheckError =
-              MediaQuery.of(context).viewPadding.top <= 0 ||
-              MediaQuery.of(context).viewPadding.top > 50;
+          const fallbackPadding = EdgeInsets.only(top: 25, bottom: 35);
+          final mediaQueryData = MediaQuery.of(context);
+          final hasAbnormalPadding = mediaQueryData.viewPadding.top <= 0 ||
+              mediaQueryData.viewPadding.top > 50;
 
           child = MediaQuery(
-            data: MediaQuery.of(context).copyWith(
+            data: mediaQueryData.copyWith(
               textScaler: TextScaler.linear(Pref.defaultTextScale),
               // Apply fallback padding if abnormal values detected
-              viewPadding: isPaddingCheckError
-                  ? const EdgeInsets.only(top: 25, bottom: 35)
-                  : MediaQuery.of(context).viewPadding,
-              padding: isPaddingCheckError
-                  ? const EdgeInsets.only(top: 25, bottom: 35)
-                  : MediaQuery.of(context).padding,
+              viewPadding: hasAbnormalPadding
+                  ? fallbackPadding
+                  : mediaQueryData.viewPadding,
+              padding: hasAbnormalPadding
+                  ? fallbackPadding
+                  : mediaQueryData.padding,
             ),
             child: child!,
           );
