@@ -35,6 +35,8 @@ class PlDanmakuController {
   static const int _defaultFontSize = 25;
   
   // Precomputed log(5) for performance optimization
+  // Matches log(5) = 1.6094379124341003 exactly
+  // Using precomputed value to avoid repeated runtime calculation
   static const double _log5 = 1.6094379124341003;
   
   // Threshold for danmaku merge count before applying enlargement (from Pakku.js)
@@ -122,6 +124,7 @@ class PlDanmakuController {
           } else {
             // Subsequent occurrence: increment count and calculate enlarged font size
             // Use cached base font size from first occurrence
+            // Fallback to _defaultFontSize for safety (should not normally occur)
             elem.count++;
             final baseFontSize = baseFontSizes[element.content] ?? _defaultFontSize;
             elem.fontsize = _calcEnlargedFontSize(baseFontSize, elem.count);
