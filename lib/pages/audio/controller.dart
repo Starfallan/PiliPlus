@@ -298,13 +298,13 @@ class AudioController extends GetxController
             case PlayRepeat.pause:
               break;
             case PlayRepeat.listOrder:
-              playNext();
+              playNext(nextPart: true);
               break;
             case PlayRepeat.singleCycle:
               _replay();
               break;
             case PlayRepeat.listCycle:
-              if (!playNext()) {
+              if (!playNext(nextPart: true)) {
                 if (index != null && index != 0 && playlist != null) {
                   playIndex(0);
                 } else {
@@ -606,7 +606,27 @@ class AudioController extends GetxController
     return false;
   }
 
-  bool playNext() {
+  bool playNext({bool nextPart = false}) {
+    if (nextPart) {
+      if (audioItem.value case final audioItem?) {
+        final parts = audioItem.parts;
+        if (parts.length > 1) {
+          final subId = this.subId.firstOrNull;
+          final nextIndex = parts.indexWhere((e) => e.subId == subId) + 1;
+          if (nextIndex != 0 && nextIndex < parts.length) {
+            final nextPart = parts[nextIndex];
+            oid = nextPart.oid;
+            this.subId = [nextPart.subId];
+            _queryPlayUrl().then((res) {
+              if (res) {
+                _videoDetailController = null;
+              }
+            });
+            return true;
+          }
+        }
+      }
+    }
     if (index != null && playlist != null && player != null) {
       final next = index! + 1;
       if (next < playlist!.length) {

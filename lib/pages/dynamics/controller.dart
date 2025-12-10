@@ -191,12 +191,16 @@ class DynamicsController extends GetxController
 
   @override
   Future<void> onRefresh() {
+    _refreshFollowUp();
+    return controller!.onRefresh();
+  }
+
+  void _refreshFollowUp() {
     if (_showAllUp) {
       _upPage = 1;
       _cacheUpList = null;
     }
     queryFollowUp();
-    return controller!.onRefresh();
   }
 
   @override
@@ -235,5 +239,5 @@ class DynamicsController extends GetxController
   }
 
   @override
-  void onChangeAccount(bool isLogin) => onRefresh();
+  void onChangeAccount(bool isLogin) => _refreshFollowUp();
 }

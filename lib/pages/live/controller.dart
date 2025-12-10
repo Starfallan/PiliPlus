@@ -143,5 +143,5 @@ class LiveController extends CommonListController with AccountMixin {
   }
 
   @override
-  void onChangeAccount(bool isLogin) => onRefresh();
+  void onChangeAccount(bool isLogin) => onReload();
 }

@@ -42,14 +42,18 @@ class PgcController
   @override
   Future<void> onRefresh() {
     if (accountService.isLogin.value) {
-      followPage = 1;
-      followEnd = false;
+      _refreshPgcFollow();
     }
-    queryPgcFollow();
     if (showPgcTimeline) {
       queryPgcTimeline();
     }
     return super.onRefresh();
+  }
+
+  void _refreshPgcFollow() {
+    followPage = 1;
+    followEnd = false;
+    queryPgcFollow();
   }
 
   // follow
@@ -147,9 +151,7 @@ class PgcController
   @override
   void onChangeAccount(bool isLogin) {
     if (isLogin) {
-      followPage = 1;
-      followEnd = false;
-      queryPgcFollow();
+      _refreshPgcFollow();
     } else {
       followState.value = LoadingState.loading();
     }

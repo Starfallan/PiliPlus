@@ -91,5 +91,5 @@ class DynamicsTabController
   }
 
   @override
-  void onChangeAccount(bool isLogin) => onRefresh();
+  void onChangeAccount(bool isLogin) => onReload();
 }
