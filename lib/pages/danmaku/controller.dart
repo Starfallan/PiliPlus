@@ -34,12 +34,11 @@ class PlDanmakuController {
   // This matches the base size used in view.dart: 15 * scale
   static const int _defaultFontSize = 15;
   
-  // Precomputed log(5) for performance optimization
-  // Matches log(5) = 1.6094379124341003 exactly
-  // Using precomputed value to avoid repeated runtime calculation
-  static const double _log5 = 1.6094379124341003;
+  // Precomputed log(7) for performance optimization
+  // Using log(7) instead of log(5) for better mobile screen adaptation
+  static const double _log7 = 1.9459101490553132;
   
-  // Threshold for danmaku merge count before applying enlargement (from Pakku.js)
+  // Threshold for danmaku merge count before applying enlargement
   static const int _enlargeThreshold = 5;
 
   void dispose() {
@@ -53,14 +52,14 @@ class PlDanmakuController {
 
   /// Calculate the font size enlargement rate based on the number of merged danmaku
   /// 
-  /// Formula from Pakku.js:
+  /// Formula adapted from Pakku.js for mobile screens:
   /// - count <= _enlargeThreshold: return 1 (no enlargement)
-  /// - count > _enlargeThreshold: return log(count) / log(5)
+  /// - count > _enlargeThreshold: return log(count) / log(7)
   static double _calcEnlargeRate(int count) {
     if (count <= _enlargeThreshold) {
       return 1.0;
     }
-    return log(count) / _log5;
+    return log(count) / _log7;
   }
 
   /// Calculate enlarged font size for merged danmaku
@@ -116,21 +115,17 @@ class PlDanmakuController {
           final elem = uniques[element.content];
           if (elem == null) {
             // First occurrence: initialize count
-            // Don't set fontsize yet - let it use global fontSize from view
-            uniques[element.content] = element..count = 1;
-            baseFontSizes[element.content] = _defaultFontSize;
+            final baseFontSize = _getBaseFontSize(element);
+            baseFontSizes[element.content] = baseFontSize;
+            uniques[element.content] = element
+              ..count = 1
+              ..fontsize = _calcEnlargedFontSize(baseFontSize, 1); // Rate is 1.0 for count=1
           } else {
-            // Subsequent occurrence: increment count
+            // Subsequent occurrence: increment count and calculate enlarged font size
             elem.count++;
-            // Only calculate enlarged font size if count > threshold
-            if (elem.count > _enlargeThreshold) {
-              final baseFontSize = baseFontSizes[element.content] ?? _defaultFontSize;
-              // Store the enlarge rate as fontsize (will be multiplied by scale in view)
-              elem.fontsize = _calcEnlargedFontSize(baseFontSize, elem.count);
-            } else {
-              // Count <= threshold: no enlargement, fontsize stays 0
-              elem.fontsize = 0;
-            }
+            final baseFontSize = baseFontSizes[element.content] ?? _defaultFontSize;
+            // Always calculate enlarged font size (rate is 1.0 for count <= 5)
+            elem.fontsize = _calcEnlargedFontSize(baseFontSize, elem.count);
             continue;
           }
         }
