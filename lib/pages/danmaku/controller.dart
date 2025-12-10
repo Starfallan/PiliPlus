@@ -35,6 +35,9 @@ class PlDanmakuController {
   
   // Precomputed log(5) for performance optimization
   static const double _log5 = 1.6094379124341003;
+  
+  // Threshold for danmaku merge count before applying enlargement (from Pakku.js)
+  static const int _enlargeThreshold = 5;
 
   void dispose() {
     _dmSegMap.clear();
@@ -48,10 +51,10 @@ class PlDanmakuController {
   /// Calculate the font size enlargement rate based on the number of merged danmaku
   /// 
   /// Formula from Pakku.js:
-  /// - count <= 5: return 1 (no enlargement)
-  /// - count > 5: return log(count) / log(5)
+  /// - count <= _enlargeThreshold: return 1 (no enlargement)
+  /// - count > _enlargeThreshold: return log(count) / log(5)
   static double _calcEnlargeRate(int count) {
-    if (count <= 5) {
+    if (count <= _enlargeThreshold) {
       return 1.0;
     }
     return log(count) / _log5;
@@ -95,6 +98,8 @@ class PlDanmakuController {
   void handleDanmaku(List<DanmakuElem> elems) {
     if (elems.isEmpty) return;
     final uniques = HashMap<String, DanmakuElem>();
+    // Track base font sizes for merged danmaku to avoid recalculation
+    final baseFontSizes = HashMap<String, int>();
 
     final shouldFilter = _plPlayerController.filters.count != 0;
     final danmakuWeight = _plPlayerController.danmakuWeight;
@@ -109,13 +114,15 @@ class PlDanmakuController {
           if (elem == null) {
             // First occurrence: initialize count and store base font size
             final baseFontSize = _getBaseFontSize(element);
+            baseFontSizes[element.content] = baseFontSize;
             uniques[element.content] = element
               ..count = 1
               ..fontsize = baseFontSize;
           } else {
             // Subsequent occurrence: increment count and calculate enlarged font size
+            // Use cached base font size from first occurrence
             elem.count++;
-            final baseFontSize = _getBaseFontSize(element);
+            final baseFontSize = baseFontSizes[element.content]!;
             elem.fontsize = _calcEnlargedFontSize(baseFontSize, elem.count);
             continue;
           }
