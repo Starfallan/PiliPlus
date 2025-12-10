@@ -132,7 +132,17 @@ class _PlDanmakuState extends State<PlDanmaku> {
             );
           } catch (_) {}
         } else {
-          // Pass calculated enlarged font size for merged danmaku
+          // Calculate enlarged font size based on merge count and user's font size setting
+          // e.fontsize contains the base enlarged size (base=15), multiply by user's scale
+          double? itemFontSize;
+          if (e.fontsize > 0 && e.count > 1) {
+            // Apply user's font size scale to the enlarged size
+            final scale = !widget.isFullScreen || widget.isPipMode
+                ? playerController.danmakuFontScale
+                : playerController.danmakuFontScaleFS;
+            itemFontSize = e.fontsize.toDouble() * scale;
+          }
+          
           _controller!.addDanmaku(
             DanmakuContentItem(
               e.content,
@@ -144,7 +154,7 @@ class _PlDanmakuState extends State<PlDanmaku> {
                   playerController.showVipDanmaku &&
                   e.colorful == DmColorfulType.VipGradualColor,
               count: e.count > 1 ? e.count : null,
-              fontSize: e.fontsize > 0 ? e.fontsize.toDouble() : null,
+              fontSize: itemFontSize,
               selfSend: e.isSelf,
               extra: VideoDanmaku(
                 id: e.id.toInt(),

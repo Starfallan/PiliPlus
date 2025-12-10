@@ -30,9 +30,9 @@ class PlDanmakuController {
 
   static const int segmentLength = 60 * 6 * 1000;
   
-  // Default font size for standard danmaku from Bilibili API
-  // This is the standard size sent by Bilibili servers
-  static const int _defaultFontSize = 25;
+  // Default font size for standard danmaku (base before user scaling)
+  // This matches the base size used in view.dart: 15 * scale
+  static const int _defaultFontSize = 15;
   
   // Precomputed log(5) for performance optimization
   // Matches log(5) = 1.6094379124341003 exactly
