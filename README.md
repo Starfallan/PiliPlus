@@ -37,12 +37,19 @@
 
 ## refactor
 
+本人自用修改，随便写写，勿喷。
+
+**在这里感谢原作者和上游作者的无私奉献。**
+
 - [ ] gRPC [wip]
 - [x] 用户界面
 - [x] 其他
+- [x] 修复Flutter在澎湃小窗下无法正常显示的问题，参考Flutter官方issue [#161086](https://github.com/flutter/flutter/issues/161086)
+
+   修复方案参考[venera/pull/467](https://github.com/venera-app/venera/pull/467)
 
 ## feat
-
+- [x] 合并弹幕，添加类Pakku重复弹幕字体随数量而增大
 - [x] DLNA 投屏
 - [x] 离线缓存/播放
 - [x] 移动端支持点击弹幕悬停，点赞、复制、举报 by [@My-Responsitories](https://github.com/My-Responsitories)
@@ -82,7 +89,6 @@
 - [x] Live Photo
 - [x] 复制/移动/排序收藏夹/稍后再看视频
 - [x] 超分辨率
-- [x] 合并弹幕
 - [x] 会员彩色弹幕
 - [x] 播放全部/继续播放/倒序播放
 - [x] Cookie登录
