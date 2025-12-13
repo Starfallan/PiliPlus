@@ -1598,14 +1598,21 @@ class HeaderControlState extends State<HeaderControl>
     
     // If trial quality unlock is enabled, count all supportFormats that have
     // corresponding streams in dash.video (matched by quality code)
+    // This ensures unlocked qualities are properly enabled in the UI
     if (Pref.enableTrialQuality) {
       final Set<int> availableQualities = idSet;
-      // Count how many supportFormats have matching streams
-      usefulQaSam = videoFormat.where((format) {
+      // Count ALL supportFormats with matching streams (including unlocked ones)
+      final matchedFormats = videoFormat.where((format) {
         return format.quality != null && availableQualities.contains(format.quality);
-      }).length;
+      }).toList();
+      usefulQaSam = matchedFormats.length;
       if (kDebugMode) {
-        print('[UnlockQuality] UI: availableQualities=$availableQualities, usefulQaSam=$usefulQaSam');
+        print('[UnlockQuality] UI: totalFormats=${videoFormat.length}, '
+            'videoFormat qualities=${videoFormat.map((f) => f.quality).toList()}, '
+            'availableQualities=$availableQualities, '
+            'matchedFormats=${matchedFormats.map((f) => f.quality).toList()}, '
+            'usefulQaSam=$usefulQaSam, '
+            'enabledIndexRange=[${totalQaSam - usefulQaSam}, ${totalQaSam - 1}]');
       }
     }
 

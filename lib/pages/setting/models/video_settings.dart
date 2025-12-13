@@ -38,39 +38,6 @@ List<SettingsModel> get videoSettings => [
     leading: const Icon(Icons.high_quality_outlined),
     setKey: SettingBoxKey.enableTrialQuality,
     defaultVal: false,
-    onChanged: (value) async {
-      if (value) {
-        // Show risk warning when enabling
-        final confirmed = await Get.dialog<bool>(
-          AlertDialog(
-            title: const Text('风险提示'),
-            content: const Text(
-              '此功能通过修改本地响应数据来尝试播放高画质流，仅用于技术学习和研究。\n\n'
-              '注意事项：\n'
-              '1. 此功能不破解付费内容，仅在服务器返回可访问URL时允许播放\n'
-              '2. 使用此功能需自行承担风险\n'
-              '3. 不建议在公开版本中启用\n'
-              '4. 请遵守相关服务条款\n\n'
-              '是否继续启用？',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Get.back(result: false),
-                child: const Text('取消'),
-              ),
-              TextButton(
-                onPressed: () => Get.back(result: true),
-                child: const Text('我知道了'),
-              ),
-            ],
-          ),
-        );
-        if (confirmed != true) {
-          // Revert the switch if user cancelled
-          await GStorage.setting.put(SettingBoxKey.enableTrialQuality, false);
-        }
-      }
-    },
   ),
   NormalModel(
     title: 'B站定向流量支持',
