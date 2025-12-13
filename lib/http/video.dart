@@ -327,38 +327,15 @@ class VideoHttp {
             }
             
             unlockedCount++;
-            _logUnlockQuality('Video stream available: '
-                'quality=$qualityCode, '
-                'codec=${video.codecs}, '
-                'url=${video.baseUrl?.substring(0, math.min(50, video.baseUrl?.length ?? 0))}...');
+            // Log only essential info: quality code and whether it has URL
+            _logUnlockQuality('Video stream detected: quality=$qualityCode has URL: ${video.baseUrl != null}');
           }
         }
       }
 
-      // Process dash audio streams
-      final audioList = data.dash?.audio;
-      if (audioList != null) {
-        for (final audio in audioList) {
-          if (_hasPlayableUrls(audio.baseUrl, audio.backupUrl)) {
-            _logUnlockQuality('Audio stream available: '
-                'quality=${audio.quality}, '
-                'url=${audio.baseUrl?.substring(0, math.min(50, audio.baseUrl?.length ?? 0))}...');
-          }
-        }
-      }
+      // Process dash audio streams (skip logging for brevity)
 
-      // Process durl streams (legacy format)
-      final durlList = data.durl;
-      if (durlList != null) {
-        for (final durl in durlList) {
-          if (_hasPlayableUrls(durl.url, durl.backupUrl)) {
-            _logUnlockQuality('Durl stream available: '
-                'order=${durl.order}, '
-                'size=${durl.size}, '
-                'url=${durl.url?.substring(0, math.min(50, durl.url?.length ?? 0))}...');
-          }
-        }
-      }
+      // Process durl streams (legacy format, skip logging for brevity)
 
       // Unlock: Add missing quality codes to acceptQuality list
       if (unlockedQualities.isNotEmpty) {
