@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/*'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        run: |
+          cd ../
+          rm -r ./TrialQualityStandalone
+          git clone https://github.com/sti-233/TrialQualityStandalone.git
+          cd TrialQualityStandalone
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle/*.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Retrieve version
+        run: |
+          version=`awk -F "=" '$1 == "appVerName" {print $2}' gradle.properties`
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Build with gradle
+        run: |
+          chmod 777 ./gradlew
+          ./gradlew --no-daemon build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: TrialQualityStandalone-${{ env.VERSION }}
+          path: 'app/release'
