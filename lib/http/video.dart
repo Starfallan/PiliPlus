@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/http/api.dart';
@@ -277,12 +278,23 @@ class VideoHttp {
   /// - https://github.com/BiliRoamingX/BiliRoamingX/blob/main/integrations/app/src/main/java/app/revanced/bilibili/patches/TrialQualityPatch.java
   /// - https://github.com/BiliRoamingX/BiliRoamingX/blob/main/integrations/app/src/main/java/app/revanced/bilibili/patches/protobuf/BangumiPlayUrlHook.kt
   static void _makeVipFreePlayUrlModel(PlayUrlModel data) {
-    if (!Pref.enableTrialQuality) return;
+    // Log entry point - use warning level so it appears in error log
+    logger.w('[UnlockQuality] Function called. enableTrialQuality=${Pref.enableTrialQuality}');
+    
+    if (!Pref.enableTrialQuality) {
+      logger.w('[UnlockQuality] Feature disabled, skipping unlock');
+      return;
+    }
 
     try {
       int unlockedCount = 0;
       final Set<int> unlockedQualities = {};
       final Map<int, Set<String>> qualityCodecs = {}; // Track codecs per quality
+
+      // Log initial state
+      logger.w('[UnlockQuality] Initial acceptQuality: ${data.acceptQuality}');
+      logger.w('[UnlockQuality] Initial supportFormats count: ${data.supportFormats?.length}');
+      logger.w('[UnlockQuality] Dash video streams count: ${data.dash?.video?.length}');
 
       // Process dash video streams - collect available quality codes and codecs
       final videoList = data.dash?.video;
@@ -306,10 +318,10 @@ class VideoHttp {
             
             unlockedCount++;
             if (kDebugMode) {
-              logger.i('[UnlockQuality] Video stream available: '
+              logger.w('[UnlockQuality] Video stream available: '
                   'quality=$qualityCode, '
                   'codec=${video.codecs}, '
-                  'url=${video.baseUrl?.substring(0, 50)}...');
+                  'url=${video.baseUrl?.substring(0, math.min(50, video.baseUrl?.length ?? 0))}...');
             }
           }
         }
@@ -321,9 +333,9 @@ class VideoHttp {
         for (final audio in audioList) {
           if (_hasPlayableUrls(audio.baseUrl, audio.backupUrl)) {
             if (kDebugMode) {
-              logger.i('[UnlockQuality] Audio stream available: '
+              logger.w('[UnlockQuality] Audio stream available: '
                   'quality=${audio.quality}, '
-                  'url=${audio.baseUrl?.substring(0, 50)}...');
+                  'url=${audio.baseUrl?.substring(0, math.min(50, audio.baseUrl?.length ?? 0))}...');
             }
           }
         }
@@ -335,10 +347,10 @@ class VideoHttp {
         for (final durl in durlList) {
           if (_hasPlayableUrls(durl.url, durl.backupUrl)) {
             if (kDebugMode) {
-              logger.i('[UnlockQuality] Durl stream available: '
+              logger.w('[UnlockQuality] Durl stream available: '
                   'order=${durl.order}, '
                   'size=${durl.size}, '
-                  'url=${durl.url?.substring(0, 50)}...');
+                  'url=${durl.url?.substring(0, math.min(50, durl.url?.length ?? 0))}...');
             }
           }
         }
@@ -356,10 +368,8 @@ class VideoHttp {
           // Sort in descending order (highest quality first)
           data.acceptQuality!.sort((a, b) => b.compareTo(a));
           
-          if (kDebugMode) {
-            logger.i('[UnlockQuality] Added qualities to acceptQuality: $newQualities');
-            logger.i('[UnlockQuality] Updated acceptQuality: ${data.acceptQuality}');
-          }
+          logger.w('[UnlockQuality] Added qualities to acceptQuality: $newQualities');
+          logger.w('[UnlockQuality] Updated acceptQuality: ${data.acceptQuality}');
         }
 
         // Unlock: Add missing FormatItem entries for new qualities
@@ -378,9 +388,7 @@ class VideoHttp {
               } on StateError {
                 // Quality code not in enum, use generic description
                 qualityDesc = '$_unknownQualityPrefix $quality';
-                if (kDebugMode) {
-                  logger.i('[UnlockQuality] Unknown quality code $quality, using generic description');
-                }
+                logger.w('[UnlockQuality] Unknown quality code $quality, using generic description');
               }
               
               // Use actual codecs from streams, fallback to defaults (create a new list)
@@ -395,9 +403,7 @@ class VideoHttp {
               );
               data.supportFormats!.add(newFormat);
               
-              if (kDebugMode) {
-                logger.i('[UnlockQuality] Added FormatItem for quality $quality: $qualityDesc (codecs: $codecList)');
-              }
+              logger.w('[UnlockQuality] Added FormatItem for quality $quality: $qualityDesc (codecs: $codecList)');
             }
           }
           // Sort supportFormats by quality (descending)
@@ -405,14 +411,12 @@ class VideoHttp {
         }
       }
 
-      if (kDebugMode && unlockedCount > 0) {
-        logger.i('[UnlockQuality] Total unlocked video streams: $unlockedCount');
-        logger.i('[UnlockQuality] Unlocked qualities: $unlockedQualities');
-      }
+      logger.w('[UnlockQuality] Total unlocked video streams: $unlockedCount');
+      logger.w('[UnlockQuality] Unlocked qualities: $unlockedQualities');
+      logger.w('[UnlockQuality] Final acceptQuality: ${data.acceptQuality}');
+      logger.w('[UnlockQuality] Final supportFormats: ${data.supportFormats?.map((f) => f.quality).toList()}');
     } catch (e, s) {
-      if (kDebugMode) {
-        logger.e('[UnlockQuality] Error processing streams', error: e, stackTrace: s);
-      }
+      logger.e('[UnlockQuality] Error processing streams', error: e, stackTrace: s);
     }
   }
 

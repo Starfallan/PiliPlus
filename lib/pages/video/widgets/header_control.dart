@@ -1607,14 +1607,12 @@ class HeaderControlState extends State<HeaderControl>
         return format.quality != null && availableQualities.contains(format.quality);
       }).toList();
       usefulQaSam = matchedFormats.length;
-      if (kDebugMode) {
-        logger.i('[UnlockQuality] UI: totalFormats=${videoFormat.length}, '
-            'videoFormat qualities=${videoFormat.map((f) => f.quality).toList()}, '
-            'availableQualities=$availableQualities, '
-            'matchedFormats=${matchedFormats.map((f) => f.quality).toList()}, '
-            'usefulQaSam=$usefulQaSam, '
-            'enabledIndexRange=[${totalQaSam - usefulQaSam}, ${totalQaSam - 1}]');
-      }
+      logger.w('[UnlockQuality] UI: totalFormats=${videoFormat.length}, '
+          'videoFormat qualities=${videoFormat.map((f) => f.quality).toList()}, '
+          'availableQualities=$availableQualities, '
+          'matchedFormats=${matchedFormats.map((f) => f.quality).toList()}, '
+          'usefulQaSam=$usefulQaSam, '
+          'enabledIndexRange=[${totalQaSam - usefulQaSam}, ${totalQaSam - 1}]');
     }
 
     showBottomSheet(
