@@ -276,18 +276,31 @@ class VideoHttp {
     try {
       int unlockedCount = 0;
       final Set<int> unlockedQualities = {};
+      final Map<int, Set<String>> qualityCodecs = {}; // Track codecs per quality
 
-      // Process dash video streams - collect available quality codes
+      // Process dash video streams - collect available quality codes and codecs
       final videoList = data.dash?.video;
       if (videoList != null) {
         for (final video in videoList) {
           // Check if stream has playable URLs
           if (_hasPlayableUrls(video.baseUrl, video.backupUrl)) {
-            unlockedQualities.add(video.quality.code);
+            final qualityCode = video.quality.code;
+            unlockedQualities.add(qualityCode);
+            
+            // Collect codec information from actual stream
+            qualityCodecs[qualityCode] ??= {};
+            if (video.codecs?.isNotEmpty == true) {
+              // Extract codec prefix (e.g., 'avc' from 'avc1.640032')
+              final codecPrefix = video.codecs!.split('.').first.toLowerCase();
+              if (codecPrefix.isNotEmpty) {
+                qualityCodecs[qualityCode]!.add(codecPrefix);
+              }
+            }
+            
             unlockedCount++;
             if (kDebugMode) {
               print('[UnlockQuality] Video stream available: '
-                  'quality=${video.quality.code}, '
+                  'quality=$qualityCode, '
                   'codec=${video.codecs}, '
                   'url=${video.baseUrl?.substring(0, 50)}...');
             }
@@ -348,19 +361,33 @@ class VideoHttp {
             // Check if FormatItem already exists for this quality
             final exists = data.supportFormats!.any((f) => f.quality == quality);
             if (!exists) {
-              // Create a basic FormatItem for this quality
-              final videoQuality = VideoQuality.fromCode(quality);
+              // Try to get VideoQuality info, fallback to basic description if unknown
+              String qualityDesc;
+              try {
+                final videoQuality = VideoQuality.fromCode(quality);
+                qualityDesc = videoQuality.desc;
+              } catch (e) {
+                // Unknown quality code, use generic description
+                qualityDesc = '画质 $quality';
+                if (kDebugMode) {
+                  print('[UnlockQuality] Unknown quality code $quality, using generic description');
+                }
+              }
+              
+              // Use actual codecs from streams, fallback to defaults
+              final codecList = qualityCodecs[quality]?.toList() ?? ['avc', 'hev'];
+              
               final newFormat = FormatItem(
                 quality: quality,
                 format: 'dash',
-                newDesc: videoQuality.desc,
-                displayDesc: videoQuality.desc,
-                codecs: ['avc', 'hev'], // Basic codec support
+                newDesc: qualityDesc,
+                displayDesc: qualityDesc,
+                codecs: codecList,
               );
               data.supportFormats!.add(newFormat);
               
               if (kDebugMode) {
-                print('[UnlockQuality] Added FormatItem for quality $quality: ${videoQuality.desc}');
+                print('[UnlockQuality] Added FormatItem for quality $quality: $qualityDesc (codecs: $codecList)');
               }
             }
           }
