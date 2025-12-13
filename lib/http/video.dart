@@ -41,6 +41,10 @@ class VideoHttp {
   static RegExp zoneRegExp = RegExp(Pref.banWordForZone, caseSensitive: false);
   static bool enableFilter = zoneRegExp.pattern.isNotEmpty;
 
+  // Default codec list for unlocked qualities
+  static const List<String> _defaultCodecs = ['avc', 'hev'];
+  static const String _unknownQualityPrefix = '未知画质';
+
   // 首页推荐视频
   static Future<LoadingState> rcmdVideoList({
     required int ps,
@@ -291,7 +295,8 @@ class VideoHttp {
             qualityCodecs[qualityCode] ??= {};
             if (video.codecs?.isNotEmpty == true) {
               // Extract codec prefix (e.g., 'avc' from 'avc1.640032')
-              final codecPrefix = video.codecs!.split('.').first.toLowerCase();
+              final codecs = video.codecs!; // Safe: checked by condition above
+              final codecPrefix = codecs.split('.').first.toLowerCase();
               if (codecPrefix.isNotEmpty) {
                 qualityCodecs[qualityCode]!.add(codecPrefix);
               }
@@ -366,16 +371,16 @@ class VideoHttp {
               try {
                 final videoQuality = VideoQuality.fromCode(quality);
                 qualityDesc = videoQuality.desc;
-              } catch (e) {
-                // Unknown quality code, use generic description
-                qualityDesc = '画质 $quality';
+              } on StateError {
+                // Quality code not in enum, use generic description
+                qualityDesc = '$_unknownQualityPrefix $quality';
                 if (kDebugMode) {
                   print('[UnlockQuality] Unknown quality code $quality, using generic description');
                 }
               }
               
               // Use actual codecs from streams, fallback to defaults
-              final codecList = qualityCodecs[quality]?.toList() ?? ['avc', 'hev'];
+              final codecList = qualityCodecs[quality]?.toList() ?? _defaultCodecs;
               
               final newFormat = FormatItem(
                 quality: quality,
