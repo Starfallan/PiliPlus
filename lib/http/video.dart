@@ -402,6 +402,15 @@ class VideoHttp {
 
       _logUnlockQuality('Total unlocked video streams: $unlockedCount');
       _logUnlockQuality('Unlocked qualities: $unlockedQualities');
+      
+      // Check for VIP qualities specifically
+      final vipQualities = unlockedQualities.where((q) => q >= 112).toSet(); // 112+ are typically VIP
+      if (vipQualities.isNotEmpty) {
+        _logUnlockQuality('VIP qualities detected with URLs: $vipQualities (116=1080P60fps, 120=4K, 125=HDR, 126=Dolby, 127=8K)');
+      } else {
+        _logUnlockQuality('No VIP qualities detected - server may not provide trial streams for this video');
+      }
+      
       _logUnlockQuality('New qualities added to acceptQuality: $newQualities');
       _logUnlockQuality('Final acceptQuality: ${data.acceptQuality}');
       _logUnlockQuality('Final supportFormats: ${data.supportFormats?.map((f) => f.quality).toList()}');
