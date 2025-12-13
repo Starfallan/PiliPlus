@@ -344,9 +344,10 @@ class VideoHttp {
       // Process durl streams (legacy format, skip logging for brevity)
 
       // Unlock: Add missing quality codes to acceptQuality list
+      Set<int> newQualities = {};
       if (unlockedQualities.isNotEmpty) {
         final existingQualities = data.acceptQuality?.toSet() ?? <int>{};
-        final newQualities = unlockedQualities.difference(existingQualities);
+        newQualities = unlockedQualities.difference(existingQualities);
         
         if (newQualities.isNotEmpty) {
           // Add new qualities to acceptQuality list
