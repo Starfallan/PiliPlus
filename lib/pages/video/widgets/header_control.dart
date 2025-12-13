@@ -35,6 +35,7 @@ import 'package:PiliPlus/pages/video/introduction/ugc/widgets/menu_row.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
+import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
@@ -1593,6 +1594,30 @@ class HeaderControlState extends State<HeaderControl>
       if (!idSet.contains(id)) {
         idSet.add(id);
         usefulQaSam++;
+      }
+    }
+    
+    // If trial quality unlock is enabled, count all supportFormats that have
+    // corresponding streams in dash.video (matched by quality code)
+    // This ensures unlocked qualities are properly enabled in the UI
+    if (Pref.enableTrialQuality) {
+      final Set<int> availableQualities = idSet;
+      // Count ALL supportFormats with matching streams (including unlocked ones)
+      final matchedFormats = videoFormat.where((format) {
+        return format.quality != null && availableQualities.contains(format.quality);
+      }).toList();
+      usefulQaSam = matchedFormats.length;
+      
+      // Log diagnostic info - create error to appear in error log UI
+      try {
+        throw Exception('[UnlockQuality] UI: totalFormats=${videoFormat.length}, '
+            'videoFormat qualities=${videoFormat.map((f) => f.quality).toList()}, '
+            'availableQualities=$availableQualities, '
+            'matchedFormats=${matchedFormats.map((f) => f.quality).toList()}, '
+            'usefulQaSam=$usefulQaSam, '
+            'enabledIndexRange=[${totalQaSam - usefulQaSam}, ${totalQaSam - 1}]');
+      } catch (e, s) {
+        logger.e('[UnlockQuality] UI diagnostic', error: e, stackTrace: s);
       }
     }
 

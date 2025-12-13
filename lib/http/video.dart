@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/http/api.dart';
@@ -7,6 +8,7 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/login.dart';
 import 'package:PiliPlus/http/ua_type.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
+import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/models/home/rcmd/result.dart';
 import 'package:PiliPlus/models/model_hot_video_item.dart';
@@ -25,6 +27,7 @@ import 'package:PiliPlus/models_new/video/video_detail/video_detail_response.dar
 import 'package:PiliPlus/models_new/video/video_note_list/data.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/data.dart';
 import 'package:PiliPlus/models_new/video/video_relation/data.dart';
+import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/app_sign.dart';
 import 'package:PiliPlus/utils/extension.dart';
@@ -34,12 +37,16 @@ import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show compute;
+import 'package:flutter/foundation.dart' show compute, kDebugMode;
 
 /// view层根据 status 判断渲染逻辑
 class VideoHttp {
   static RegExp zoneRegExp = RegExp(Pref.banWordForZone, caseSensitive: false);
   static bool enableFilter = zoneRegExp.pattern.isNotEmpty;
+
+  // Default codec list for unlocked qualities
+  static const List<String> _defaultCodecs = ['avc', 'hev'];
+  static const String _unknownQualityPrefix = '未知画质';
 
   // 首页推荐视频
   static Future<LoadingState> rcmdVideoList({
@@ -200,6 +207,12 @@ class VideoHttp {
     required VideoType videoType,
     String? language,
   }) async {
+    // Force trial mode when unlock feature is enabled to get VIP quality streams
+    final shouldTryLook = tryLook || Pref.enableTrialQuality;
+    if (Pref.enableTrialQuality) {
+      _logUnlockQuality('Trial mode REQUESTED: try_look=1 will be sent to server');
+    }
+    
     final params = await WbiSign.makSign({
       'avid': ?avid,
       'bvid': ?bvid,
@@ -215,8 +228,8 @@ class VideoHttp {
       'gaia_source': 'pre-load',
       'isGaiaAvoided': true,
       'web_location': 1315873,
-      // 免登录查看1080p
-      if (tryLook) 'try_look': 1,
+      // 免登录查看1080p + 试用会员画质
+      if (shouldTryLook) 'try_look': 1,
       'cur_language': ?language,
     });
 
@@ -245,6 +258,8 @@ class VideoHttp {
                   result?['play_view_business_info']?['user_status']?['watch_progress']?['current_watch_progress'];
             break;
         }
+        // Apply trial quality unlock if enabled
+        _makeVipFreePlayUrlModel(data);
         return Success(data);
       } else if (epid != null && videoType == VideoType.ugc) {
         return videoUrl(
@@ -262,6 +277,154 @@ class VideoHttp {
     } catch (e, s) {
       return Error('$e\n\n$s');
     }
+  }
+
+  /// Unlock VIP/trial quality streams
+  /// Helper to log diagnostic info that will appear in error log UI
+  static void _logUnlockQuality(String message) {
+    // Catcher2 only captures error/fatal levels, so we create a diagnostic error
+    try {
+      throw Exception('[UnlockQuality] $message');
+    } catch (e, s) {
+      logger.e('[UnlockQuality] $message', error: e, stackTrace: s);
+    }
+  }
+
+  /// Reference: BiliRoamingX implementation approach
+  /// - https://github.com/BiliRoamingX/BiliRoamingX/blob/main/integrations/app/src/main/java/app/revanced/bilibili/patches/TrialQualityPatch.java
+  /// - https://github.com/BiliRoamingX/BiliRoamingX/blob/main/integrations/app/src/main/java/app/revanced/bilibili/patches/protobuf/BangumiPlayUrlHook.kt
+  static void _makeVipFreePlayUrlModel(PlayUrlModel data) {
+    // Log entry point - create error to appear in error log UI
+    _logUnlockQuality('Function called. enableTrialQuality=${Pref.enableTrialQuality}');
+    
+    if (!Pref.enableTrialQuality) {
+      _logUnlockQuality('Feature disabled, skipping unlock');
+      return;
+    }
+
+    try {
+      int unlockedCount = 0;
+      final Set<int> unlockedQualities = {};
+      final Map<int, Set<String>> qualityCodecs = {}; // Track codecs per quality
+
+      // Log initial state
+      _logUnlockQuality('Initial acceptQuality: ${data.acceptQuality}');
+      _logUnlockQuality('Initial supportFormats count: ${data.supportFormats?.length}');
+      _logUnlockQuality('Dash video streams count: ${data.dash?.video?.length}');
+
+      // Process dash video streams - collect available quality codes and codecs
+      final videoList = data.dash?.video;
+      if (videoList != null) {
+        for (final video in videoList) {
+          // Check if stream has playable URLs
+          if (_hasPlayableUrls(video.baseUrl, video.backupUrl)) {
+            final qualityCode = video.quality.code;
+            unlockedQualities.add(qualityCode);
+            
+            // Collect codec information from actual stream
+            qualityCodecs[qualityCode] ??= {};
+            final codecs = video.codecs;
+            if (codecs != null && codecs.isNotEmpty) {
+              // Extract codec prefix (e.g., 'avc' from 'avc1.640032')
+              final codecPrefix = codecs.split('.').first.toLowerCase();
+              if (codecPrefix.isNotEmpty) {
+                qualityCodecs[qualityCode]!.add(codecPrefix);
+              }
+            }
+            
+            unlockedCount++;
+            // Log only essential info: quality code and whether it has URL
+            _logUnlockQuality('Video stream detected: quality=$qualityCode has URL: ${video.baseUrl != null}');
+          }
+        }
+      }
+
+      // Process dash audio streams (skip logging for brevity)
+
+      // Process durl streams (legacy format, skip logging for brevity)
+
+      // Unlock: Add missing quality codes to acceptQuality list
+      Set<int> newQualities = {};
+      if (unlockedQualities.isNotEmpty) {
+        final existingQualities = data.acceptQuality?.toSet() ?? <int>{};
+        newQualities = unlockedQualities.difference(existingQualities);
+        
+        if (newQualities.isNotEmpty) {
+          // Add new qualities to acceptQuality list
+          data.acceptQuality ??= [];
+          data.acceptQuality!.addAll(newQualities);
+          // Sort in descending order (highest quality first)
+          data.acceptQuality!.sort((a, b) => b.compareTo(a));
+          
+          _logUnlockQuality('Added qualities to acceptQuality: $newQualities');
+          _logUnlockQuality('Updated acceptQuality: ${data.acceptQuality}');
+        }
+
+        // Unlock: Add missing FormatItem entries for ALL unlocked qualities
+        // This is critical: even if quality is already in acceptQuality, it might not have a FormatItem
+        // (server lists VIP qualities in acceptQuality to advertise them, but marks them as need_vip)
+        if (data.supportFormats != null && unlockedQualities.isNotEmpty) {
+          for (final quality in unlockedQualities) {
+            // Check if FormatItem already exists for this quality
+            final exists = data.supportFormats!.any((f) => f.quality == quality);
+            if (!exists) {
+              // Try to get VideoQuality info, fallback to basic description if unknown
+              // Note: VideoQuality.fromCode() uses _codeMap[code]! which throws StateError
+              // when the quality code is not in the enum
+              String qualityDesc;
+              try {
+                final videoQuality = VideoQuality.fromCode(quality);
+                qualityDesc = videoQuality.desc;
+              } on StateError {
+                // Quality code not in enum, use generic description
+                qualityDesc = '$_unknownQualityPrefix $quality';
+                _logUnlockQuality('Unknown quality code $quality, using generic description');
+              }
+              
+              // Use actual codecs from streams, fallback to defaults (create a new list)
+              final codecList = qualityCodecs[quality]?.toList() ?? List<String>.from(_defaultCodecs);
+              
+              final newFormat = FormatItem(
+                quality: quality,
+                format: 'dash',
+                newDesc: qualityDesc,
+                displayDesc: qualityDesc,
+                codecs: codecList,
+              );
+              data.supportFormats!.add(newFormat);
+              
+              _logUnlockQuality('Added FormatItem for quality $quality: $qualityDesc (codecs: $codecList)');
+            }
+          }
+          // Sort supportFormats by quality (descending)
+          data.supportFormats!.sort((a, b) => (b.quality ?? 0).compareTo(a.quality ?? 0));
+        }
+      }
+
+      _logUnlockQuality('Total unlocked video streams: $unlockedCount');
+      _logUnlockQuality('Unlocked qualities: $unlockedQualities');
+      
+      // Check for VIP qualities specifically
+      final vipQualities = unlockedQualities.where((q) => q >= 112).toSet(); // 112+ are typically VIP
+      if (vipQualities.isNotEmpty) {
+        _logUnlockQuality('VIP qualities detected with URLs: $vipQualities (116=1080P60fps, 120=4K, 125=HDR, 126=Dolby, 127=8K)');
+      } else {
+        _logUnlockQuality('No VIP qualities detected - server may not provide trial streams for this video');
+      }
+      
+      _logUnlockQuality('New qualities added to acceptQuality: $newQualities');
+      _logUnlockQuality('Final acceptQuality: ${data.acceptQuality}');
+      _logUnlockQuality('Final supportFormats: ${data.supportFormats?.map((f) => f.quality).toList()}');
+    } catch (e, s) {
+      logger.e('[UnlockQuality] Error processing streams', error: e, stackTrace: s);
+    }
+  }
+
+  /// Check if a stream has playable URLs
+  static bool _hasPlayableUrls(String? baseUrl, List<String>? backupUrls) {
+    if (baseUrl?.isNotEmpty ?? false) return true;
+    if (backupUrls?.isNotEmpty ?? false) return true;
+    return false;
   }
 
   static String _parseVideoErr(int? code, String? msg) {
