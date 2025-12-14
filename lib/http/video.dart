@@ -290,131 +290,95 @@ class VideoHttp {
     }
   }
 
-  /// Reference: BiliRoamingX implementation approach
+  /// Reference: BiliRoamingX/TrialQualityStandalone implementation approach
   /// - https://github.com/BiliRoamingX/BiliRoamingX/blob/main/integrations/app/src/main/java/app/revanced/bilibili/patches/TrialQualityPatch.java
-  /// - https://github.com/BiliRoamingX/BiliRoamingX/blob/main/integrations/app/src/main/java/app/revanced/bilibili/patches/protobuf/BangumiPlayUrlHook.kt
+  /// - https://github.com/sti-233/TrialQualityStandalone
+  /// 
+  /// Key insight: TrialQualityStandalone forces getNeedVip() to return false for ALL streams
+  /// We achieve the same effect by treating all qualities in acceptQuality as accessible
   static void _makeVipFreePlayUrlModel(PlayUrlModel data) {
-    // Log entry point - create error to appear in error log UI
     _logUnlockQuality('Function called. enableTrialQuality=${Pref.enableTrialQuality}');
     
     if (!Pref.enableTrialQuality) {
-      _logUnlockQuality('Feature disabled, skipping unlock');
       return;
     }
 
     try {
-      int unlockedCount = 0;
-      final Set<int> unlockedQualities = {};
-      final Map<int, Set<String>> qualityCodecs = {}; // Track codecs per quality
-
       // Log initial state
       _logUnlockQuality('Initial acceptQuality: ${data.acceptQuality}');
       _logUnlockQuality('Initial supportFormats count: ${data.supportFormats?.length}');
       _logUnlockQuality('Dash video streams count: ${data.dash?.video?.length}');
 
-      // Process dash video streams - collect available quality codes and codecs
+      // Collect codec info from actual dash streams
+      final Map<int, Set<String>> qualityCodecs = {};
       final videoList = data.dash?.video;
       if (videoList != null) {
         for (final video in videoList) {
-          // Check if stream has playable URLs
           if (_hasPlayableUrls(video.baseUrl, video.backupUrl)) {
             final qualityCode = video.quality.code;
-            unlockedQualities.add(qualityCode);
-            
-            // Collect codec information from actual stream
             qualityCodecs[qualityCode] ??= {};
-            final codecs = video.codecs;
-            if (codecs != null && codecs.isNotEmpty) {
-              // Extract codec prefix (e.g., 'avc' from 'avc1.640032')
-              final codecPrefix = codecs.split('.').first.toLowerCase();
+            if (video.codecs != null && video.codecs!.isNotEmpty) {
+              final codecPrefix = video.codecs!.split('.').first.toLowerCase();
               if (codecPrefix.isNotEmpty) {
                 qualityCodecs[qualityCode]!.add(codecPrefix);
               }
             }
-            
-            unlockedCount++;
-            // Log only essential info: quality code and whether it has URL
-            _logUnlockQuality('Video stream detected: quality=$qualityCode has URL: ${video.baseUrl != null}');
+            _logUnlockQuality('Dash stream found: quality=$qualityCode codec=${video.codecs}');
           }
         }
       }
 
-      // Process dash audio streams (skip logging for brevity)
-
-      // Process durl streams (legacy format, skip logging for brevity)
-
-      // Unlock: Add missing quality codes to acceptQuality list
-      Set<int> newQualities = {};
-      if (unlockedQualities.isNotEmpty) {
-        final existingQualities = data.acceptQuality?.toSet() ?? <int>{};
-        newQualities = unlockedQualities.difference(existingQualities);
+      // CRITICAL FIX: Like TrialQualityStandalone forcing getNeedVip()=false,
+      // we treat ALL qualities in acceptQuality as accessible by ensuring they have FormatItems
+      // The server lists VIP qualities (116, 120) in acceptQuality to advertise them,
+      // but doesn't provide dash streams. We create FormatItems anyway to make them selectable.
+      if (data.acceptQuality != null && data.acceptQuality!.isNotEmpty) {
+        data.supportFormats ??= [];
         
-        if (newQualities.isNotEmpty) {
-          // Add new qualities to acceptQuality list
-          data.acceptQuality ??= [];
-          data.acceptQuality!.addAll(newQualities);
-          // Sort in descending order (highest quality first)
-          data.acceptQuality!.sort((a, b) => b.compareTo(a));
-          
-          _logUnlockQuality('Added qualities to acceptQuality: $newQualities');
-          _logUnlockQuality('Updated acceptQuality: ${data.acceptQuality}');
-        }
-
-        // Unlock: Add missing FormatItem entries for ALL unlocked qualities
-        // This is critical: even if quality is already in acceptQuality, it might not have a FormatItem
-        // (server lists VIP qualities in acceptQuality to advertise them, but marks them as need_vip)
-        if (data.supportFormats != null && unlockedQualities.isNotEmpty) {
-          for (final quality in unlockedQualities) {
-            // Check if FormatItem already exists for this quality
-            final exists = data.supportFormats!.any((f) => f.quality == quality);
-            if (!exists) {
-              // Try to get VideoQuality info, fallback to basic description if unknown
-              // Note: VideoQuality.fromCode() uses _codeMap[code]! which throws StateError
-              // when the quality code is not in the enum
-              String qualityDesc;
-              try {
-                final videoQuality = VideoQuality.fromCode(quality);
-                qualityDesc = videoQuality.desc;
-              } on StateError {
-                // Quality code not in enum, use generic description
-                qualityDesc = '$_unknownQualityPrefix $quality';
-                _logUnlockQuality('Unknown quality code $quality, using generic description');
-              }
-              
-              // Use actual codecs from streams, fallback to defaults (create a new list)
-              final codecList = qualityCodecs[quality]?.toList() ?? List<String>.from(_defaultCodecs);
-              
-              final newFormat = FormatItem(
-                quality: quality,
-                format: 'dash',
-                newDesc: qualityDesc,
-                displayDesc: qualityDesc,
-                codecs: codecList,
-              );
-              data.supportFormats!.add(newFormat);
-              
-              _logUnlockQuality('Added FormatItem for quality $quality: $qualityDesc (codecs: $codecList)');
+        for (final quality in data.acceptQuality!) {
+          // Check if FormatItem already exists
+          final exists = data.supportFormats!.any((f) => f.quality == quality);
+          if (!exists) {
+            // Get quality description
+            String qualityDesc;
+            try {
+              final videoQuality = VideoQuality.fromCode(quality);
+              qualityDesc = videoQuality.desc;
+            } on StateError {
+              qualityDesc = '$_unknownQualityPrefix $quality';
             }
+            
+            // Use codecs from dash streams if available, otherwise use defaults
+            final codecList = qualityCodecs[quality]?.toList() ?? List<String>.from(_defaultCodecs);
+            
+            final newFormat = FormatItem(
+              quality: quality,
+              format: 'dash',
+              newDesc: qualityDesc,
+              displayDesc: qualityDesc,
+              codecs: codecList,
+            );
+            data.supportFormats!.add(newFormat);
+            
+            _logUnlockQuality('Created FormatItem for quality=$quality desc=$qualityDesc (codecs: $codecList)');
           }
-          // Sort supportFormats by quality (descending)
-          data.supportFormats!.sort((a, b) => (b.quality ?? 0).compareTo(a.quality ?? 0));
         }
-      }
-
-      _logUnlockQuality('Total unlocked video streams: $unlockedCount');
-      _logUnlockQuality('Unlocked qualities: $unlockedQualities');
-      
-      // Check for VIP qualities specifically
-      final vipQualities = unlockedQualities.where((q) => q >= 112).toSet(); // 112+ are typically VIP
-      if (vipQualities.isNotEmpty) {
-        _logUnlockQuality('VIP qualities detected with URLs: $vipQualities (116=1080P60fps, 120=4K, 125=HDR, 126=Dolby, 127=8K)');
+        
+        // Sort by quality descending
+        data.supportFormats!.sort((a, b) => (b.quality ?? 0).compareTo(a.quality ?? 0));
+        
+        _logUnlockQuality('Final supportFormats: ${data.supportFormats?.map((f) => f.quality).toList()}');
+        
+        // Check if VIP qualities are now accessible
+        final vipQualities = data.acceptQuality!.where((q) => q >= 112).toSet();
+        if (vipQualities.isNotEmpty) {
+          _logUnlockQuality('VIP qualities enabled: $vipQualities (116=1080P60, 120=4K, 125=HDR, 126=Dolby, 127=8K)');
+        } else {
+          _logUnlockQuality('No VIP qualities in acceptQuality list');
+        }
       } else {
-        _logUnlockQuality('No VIP qualities detected - server may not provide trial streams for this video');
+        _logUnlockQuality('No acceptQuality list found');
       }
-      
-      _logUnlockQuality('New qualities added to acceptQuality: $newQualities');
-      _logUnlockQuality('Final acceptQuality: ${data.acceptQuality}');
-      _logUnlockQuality('Final supportFormats: ${data.supportFormats?.map((f) => f.quality).toList()}');
     } catch (e, s) {
       logger.e('[UnlockQuality] Error processing streams', error: e, stackTrace: s);
     }
