@@ -10,7 +10,9 @@ import 'package:PiliPlus/pages/common/common_controller.dart';
 import 'package:PiliPlus/pages/dynamics_tab/controller.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
+import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
@@ -20,11 +22,7 @@ class DynamicsController extends GetxController
     with GetSingleTickerProviderStateMixin, ScrollOrRefreshMixin, AccountMixin {
   @override
   final ScrollController scrollController = ScrollController();
-  late final TabController tabController = TabController(
-    length: DynamicsTabType.values.length,
-    vsync: this,
-    initialIndex: Pref.defaultDynamicType,
-  );
+  late final TabController tabController;
 
   late final RxInt mid = (-1).obs;
   late int currentMid = -1;
@@ -57,6 +55,11 @@ class DynamicsController extends GetxController
   @override
   void onInit() {
     super.onInit();
+    tabController = TabController(
+      length: DynamicsTabType.values.length,
+      vsync: this,
+      initialIndex: Pref.defaultDynamicType,
+    );
     queryFollowUp();
   }
 

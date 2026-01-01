@@ -16,7 +16,7 @@ mixin GridMixin<T extends StatefulWidget> on State<T> {
   );
 }
 
-abstract class Grid {
+abstract final class Grid {
   static final double smallCardWidth = Pref.smallCardWidth;
 
   static SliverGridDelegateWithExtentAndRatio videoCardHDelegate(

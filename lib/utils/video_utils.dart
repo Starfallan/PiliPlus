@@ -33,7 +33,7 @@ abstract final class VideoUtils {
     String? mcdnUpgcxcode;
 
     String last = '';
-    for (var url in urls) {
+    for (final url in urls) {
       last = url;
       if (_mirrorRegex.hasMatch(url)) {
         final uri = Uri.parse(url);

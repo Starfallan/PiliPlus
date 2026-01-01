@@ -142,7 +142,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
               right: kFloatingActionButtonMargin,
               bottom: kFloatingActionButtonMargin + bottom,
               child: SlideTransition(
-                position: _videoReplyController.anim,
+                position: _videoReplyController.animation,
                 child: FloatingActionButton(
                   heroTag: null,
                   onPressed: () {
@@ -180,7 +180,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
         itemBuilder: (context, index) => const VideoReplySkeleton(),
         itemCount: 5,
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.builder(
                 itemBuilder: (context, index) {
@@ -229,7 +229,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                 errMsg: '还没有评论',
                 onReload: _videoReplyController.onReload,
               ),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _videoReplyController.onReload,
       ),

@@ -161,7 +161,7 @@ jobs:
             tag: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || '' }}
 
     linux_x64:
-        if: ${{ github.event_name == 'pull_request' || github.event.inputs.build_linux_x64 == 'true' }}
+        if: ${{ github.event.inputs.build_linux_x64 == 'true' }}
         uses: ./.github/workflows/linux_x64.yml
         permissions: write-all
         with:

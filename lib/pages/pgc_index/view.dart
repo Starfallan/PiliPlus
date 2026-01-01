@@ -53,7 +53,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
     final padding = MediaQuery.viewPaddingOf(context);
     return switch (loadingState) {
       Loading() => loadingWidget,
-      Success(:var response) => Builder(
+      Success(:final response) => Builder(
         builder: (context) {
           int count =
               (response.order?.isNotEmpty == true ? 1 : 0) +
@@ -90,7 +90,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
           );
         },
       ),
-      Error(:var errMsg) => scrollErrorWidget(
+      Error(:final errMsg) => scrollErrorWidget(
         errMsg: errMsg,
         onReload: () => _ctr
           ..conditionState.value = LoadingState.loading()
@@ -105,7 +105,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
     PgcIndexConditionData data,
     item,
   ) {
-    if (item case PgcConditionOrder e) {
+    if (item case final PgcConditionOrder e) {
       return Obx(
         () {
           final isCurr = _ctr.indexParams['order'] == e.field;
@@ -128,7 +128,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
         },
       );
     }
-    if (item case PgcConditionValue e) {
+    if (item case final PgcConditionValue e) {
       final hasOrder = data.order?.isNotEmpty == true;
       if (hasOrder) index -= 1;
       final key = data.filter![index].field!;
@@ -204,8 +204,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => _ctr.isExpand.value = !_ctr.isExpand.value,
-          child: Container(
-            alignment: Alignment.center,
+          child: Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -240,7 +239,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
   Widget _buildList(LoadingState<List<PgcIndexItem>?> loadingState) {
     return switch (loadingState) {
       Loading() => linearLoading,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -253,7 +252,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
                 itemCount: response.length,
               )
             : HttpError(onReload: _ctr.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _ctr.onReload,
       ),

@@ -53,7 +53,7 @@ class _FavCheesePageState extends State<FavCheesePage>
   ) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -68,14 +68,14 @@ class _FavCheesePageState extends State<FavCheesePage>
                       context: context,
                       title: '确定取消收藏该课堂？',
                       onConfirm: () =>
-                          _controller.onRemove(index, item.seasonId),
+                          _controller.onRemove(index, item.seasonId!),
                     ),
                   );
                 },
                 itemCount: response.length,
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

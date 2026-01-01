@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:PiliPlus/common/widgets/avatars.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -7,20 +9,23 @@ import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/dynamics/vote_model.dart';
+import 'package:PiliPlus/models_new/followee_votes/vote.dart';
+import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class VotePanel extends StatefulWidget {
   final VoteInfo voteInfo;
-  final FutureOr<LoadingState<VoteInfo>> Function(Set<int>, bool) callback;
+  final FutureOr<LoadingState<VoteInfo>> Function(Set<int>, bool) onVote;
 
   const VotePanel({
     super.key,
     required this.voteInfo,
-    required this.callback,
+    required this.onVote,
   });
 
   @override
@@ -28,7 +33,7 @@ class VotePanel extends StatefulWidget {
 }
 
 class _VotePanelState extends State<VotePanel> {
-  bool anonymity = false;
+  late bool anonymous = false;
 
   late VoteInfo _voteInfo;
   late final RxList<int> groupValue =
@@ -39,11 +44,20 @@ class _VotePanelState extends State<VotePanel> {
       _voteInfo.endTime! * 1000 > DateTime.now().millisecondsSinceEpoch;
   late bool _showPercentage = !_enabled;
   late final _maxCnt = _voteInfo.choiceCnt ?? _voteInfo.options.length;
+  final isLogin = Accounts.main.isLogin;
+  late final Rxn<List<FolloweeVote>> followeeVote = Rxn<List<FolloweeVote>>();
 
   @override
   void initState() {
     super.initState();
     _voteInfo = widget.voteInfo;
+    if (isLogin) {
+      DynamicsHttp.followeeVotes(voteId: _voteInfo.voteId).then((res) {
+        if (mounted && res.isSuccess) {
+          followeeVote.value = res.data;
+        }
+      });
+    }
   }
 
   @override
@@ -100,9 +114,9 @@ class _VotePanelState extends State<VotePanel> {
             () => OutlinedButton(
               onPressed: groupValue.isNotEmpty
                   ? () async {
-                      final res = await widget.callback(
+                      final res = await widget.onVote(
                         groupValue.toSet(),
-                        anonymity,
+                        anonymous,
                       );
                       if (res.isSuccess) {
                         if (mounted) {
@@ -124,12 +138,107 @@ class _VotePanelState extends State<VotePanel> {
         ),
       ],
     ];
+    Widget title = Text(
+      _voteInfo.title ?? '',
+      style: theme.textTheme.titleMedium,
+    );
+    if (isLogin) {
+      title = Row(
+        spacing: 3,
+        crossAxisAlignment: .start,
+        children: [
+          Expanded(child: title),
+          Obx(() {
+            final list = followeeVote.value;
+            if (list != null && list.isNotEmpty) {
+              return GestureDetector(
+                behavior: .opaque,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      final colorScheme = ColorScheme.of(context);
+                      return AlertDialog(
+                        clipBehavior: .hardEdge,
+                        title: const Text('关注的人的投票'),
+                        contentPadding: const .only(top: 10, bottom: 12),
+                        content: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: .min,
+                            children: list
+                                .map(
+                                  (e) => ListTile(
+                                    dense: true,
+                                    onTap: () =>
+                                        Get.toNamed('/member?mid=${e.mid}'),
+                                    leading: NetworkImgLayer(
+                                      src: e.face,
+                                      width: 40,
+                                      height: 40,
+                                      type: .avatar,
+                                    ),
+                                    title: Text.rich(
+                                      style: const TextStyle(fontSize: 13),
+                                      TextSpan(
+                                        children: [
+                                          TextSpan(text: e.name),
+                                          TextSpan(
+                                            text: ' 投给了',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: colorScheme.outline,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      style: const TextStyle(fontSize: 13),
+                                      e.votes
+                                          .map(
+                                            (vote) => _voteInfo.options
+                                                .firstWhereOrNull(
+                                                  (e) => e.optIdx == vote,
+                                                )
+                                                ?.optDesc,
+                                          )
+                                          .join('、'),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    avatars(
+                      colorScheme: theme.colorScheme,
+                      users: list.take(3),
+                    ),
+                    Icon(
+                      size: 18,
+                      color: theme.colorScheme.outline.withValues(alpha: .7),
+                      Icons.keyboard_arrow_right,
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ],
+      );
+    }
     Widget child = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_voteInfo.title != null)
-          Text(_voteInfo.title!, style: theme.textTheme.titleMedium),
+        title,
         if (_voteInfo.desc != null)
           Text(
             _voteInfo.desc!,
@@ -196,8 +305,8 @@ class _VotePanelState extends State<VotePanel> {
       ),
       CheckBoxText(
         text: '匿名',
-        selected: anonymity,
-        onChanged: (val) => anonymity = val,
+        selected: anonymous,
+        onChanged: (val) => anonymous = val,
       ),
     ],
   );
@@ -230,7 +339,7 @@ class _VotePanelState extends State<VotePanel> {
                           src: opt.imgUrl,
                           width: constraints.maxWidth,
                           height: constraints.maxHeight,
-                          radius: 0,
+                          type: .emote,
                         ),
                       ),
                     ),
@@ -444,10 +553,10 @@ Future showVoteDialog(
             padding: const EdgeInsets.all(24),
             child: VotePanel(
               voteInfo: voteInfo.data,
-              callback: (votes, anonymity) => DynamicsHttp.doVote(
+              onVote: (votes, anonymous) => DynamicsHttp.doVote(
                 voteId: voteId,
                 votes: votes.toList(),
-                anonymity: anonymity,
+                anonymous: anonymous,
                 dynamicId: dynamicId,
               ),
             ),

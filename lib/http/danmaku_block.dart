@@ -5,9 +5,9 @@ import 'package:PiliPlus/models/user/danmaku_block.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:dio/dio.dart';
 
-class DanmakuFilterHttp {
+abstract final class DanmakuFilterHttp {
   static Future<LoadingState<DanmakuBlockDataModel>> danmakuFilter() async {
-    var res = await Request().get(Api.danmakuFilter);
+    final res = await Request().get(Api.danmakuFilter);
     if (res.data['code'] == 0) {
       return Success(DanmakuBlockDataModel.fromJson(res.data['data']));
     } else {
@@ -16,7 +16,7 @@ class DanmakuFilterHttp {
   }
 
   static Future<LoadingState<Null>> danmakuFilterDel({required int ids}) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.danmakuFilterDel,
       data: {
         'ids': ids,
@@ -35,7 +35,7 @@ class DanmakuFilterHttp {
     required String filter,
     required int type,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.danmakuFilterAdd,
       data: {
         'type': type,

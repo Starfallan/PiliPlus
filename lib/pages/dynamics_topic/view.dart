@@ -12,6 +12,7 @@ import 'package:PiliPlus/models_new/dynamic/dyn_topic_top/top_details.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/dynamic_panel.dart';
 import 'package:PiliPlus/pages/dynamics_create/view.dart';
 import 'package:PiliPlus/pages/dynamics_topic/controller.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -157,10 +158,10 @@ class _DynTopicPageState extends State<DynTopicPage> with DynMixin {
   ) {
     return switch (topState) {
       Loading() => const SliverAppBar(),
-      Success(:var response) when (topState.dataOrNull != null) =>
+      Success(:final response) when (topState.dataOrNull != null) =>
         DynamicSliverAppBarMedium(
           pinned: true,
-          callback: (value) =>
+          afterCalc: (value) =>
               _controller.appbarOffset = value - kToolbarHeight - padding.top,
           title: IgnorePointer(child: Text(response!.topicItem!.name)),
           flexibleSpace: Container(
@@ -325,9 +326,8 @@ class _DynTopicPageState extends State<DynTopicPage> with DynMixin {
                         SmartDialog.showToast('账号未登录');
                         return;
                       }
-                      final isDark = Get.isDarkMode;
                       PageUtils.inAppWebview(
-                        'https://www.bilibili.com/h5/topic-active/topic-report?topic_id=${_controller.topicId}&topic_name=${_controller.topicName}&native.theme=${isDark ? 2 : 1}&night=${isDark ? 1 : 0}',
+                        'https://www.bilibili.com/h5/topic-active/topic-report?topic_id=${_controller.topicId}&topic_name=${_controller.topicName}&${Utils.themeUrl(theme.colorScheme.isDark)}',
                       );
                     },
                   ),
@@ -347,7 +347,7 @@ class _DynTopicPageState extends State<DynTopicPage> with DynMixin {
   Widget _buildBody(LoadingState<List<TopicCardItem>?> loadingState) {
     return switch (loadingState) {
       Loading() => dynSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? GlobalData().dynamicsWaterfallFlow
                   ? SliverWaterfallFlow(
@@ -389,7 +389,7 @@ class _DynTopicPageState extends State<DynTopicPage> with DynMixin {
                       itemCount: response.length,
                     )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

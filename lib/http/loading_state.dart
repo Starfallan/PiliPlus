@@ -3,29 +3,25 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 sealed class LoadingState<T> {
   const LoadingState();
 
-  factory LoadingState.loading() = Loading;
+  factory LoadingState.loading() => const Loading._internal();
 
   bool get isSuccess => this is Success<T>;
 
   T get data => switch (this) {
-    Success(:var response) => response,
+    Success(:final response) => response,
     _ => throw this,
   };
 
   T? get dataOrNull => switch (this) {
-    Success(:var response) => response,
+    Success(:final response) => response,
     _ => null,
   };
 
-  void toast() => SmartDialog.showToast(toString());
+  Future<void> toast() => SmartDialog.showToast(toString());
 }
 
 class Loading extends LoadingState<Never> {
   const Loading._internal();
-
-  static const Loading _instance = Loading._internal();
-
-  factory Loading() => _instance;
 
   @override
   String toString() {
@@ -42,7 +38,7 @@ class Success<T> extends LoadingState<T> {
     if (identical(this, other)) {
       return true;
     }
-    if (other is Success) {
+    if (other is Success<T>) {
       return response == other.response;
     }
     return false;
@@ -63,13 +59,13 @@ class Error extends LoadingState<Never> {
       return true;
     }
     if (other is Error) {
-      return errMsg == other.errMsg;
+      return errMsg == other.errMsg && code == other.code;
     }
     return false;
   }
 
   @override
-  int get hashCode => errMsg.hashCode;
+  int get hashCode => Object.hash(errMsg, code);
 
   @override
   String toString() {

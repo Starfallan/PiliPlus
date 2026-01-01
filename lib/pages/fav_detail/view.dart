@@ -278,11 +278,11 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                     title: '确定删除该收藏夹?',
                     onConfirm: () =>
                         FavHttp.deleteFolder(mediaIds: mediaId).then((res) {
-                          if (res['status']) {
+                          if (res.isSuccess) {
                             SmartDialog.showToast('删除成功');
                             Get.back(result: true);
                           } else {
-                            SmartDialog.showToast(res['msg']);
+                            res.toast();
                           }
                         }),
                   ),
@@ -485,7 +485,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
   ) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -514,7 +514,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                 itemCount: response.length + 1,
               )
             : HttpError(onReload: _favDetailController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _favDetailController.onReload,
       ),

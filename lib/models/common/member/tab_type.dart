@@ -17,7 +17,7 @@ enum MemberTabType {
     if (type == shop.name && !showMemberShop) {
       return false;
     }
-    for (var e in MemberTabType.values) {
+    for (final e in MemberTabType.values) {
       if (e.name == type) {
         return true;
       }

@@ -1,6 +1,7 @@
 import 'dart:math' show pi;
 
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 
 class ActionItem extends StatelessWidget {
@@ -74,6 +75,9 @@ class ActionItem extends StatelessWidget {
       borderRadius: const BorderRadius.all(Radius.circular(6)),
       onTap: _isThumbsUp ? null : onTap,
       onLongPress: _isThumbsUp ? null : onLongPress,
+      onSecondaryTap: PlatformUtils.isMobile || _isThumbsUp
+          ? null
+          : onLongPress,
       onTapDown: _isThumbsUp ? (_) => onStartTriple!() : null,
       onTapUp: _isThumbsUp ? (_) => onCancelTriple!(true) : null,
       onTapCancel: _isThumbsUp ? onCancelTriple : null,

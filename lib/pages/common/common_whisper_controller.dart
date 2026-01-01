@@ -12,15 +12,15 @@ abstract class CommonWhisperController<R>
     extends CommonListController<R, Session> {
   SessionPageType get sessionPageType;
 
-  Future<void> onRemove(int index, int? talkerId) async {
-    var res = await MsgHttp.removeMsg(talkerId);
-    if (res['status']) {
+  Future<void> onRemove(int index, int talkerId) async {
+    final res = await MsgHttp.removeMsg(talkerId);
+    if (res.isSuccess) {
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
       SmartDialog.showToast('删除成功');
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 
@@ -30,7 +30,7 @@ abstract class CommonWhisperController<R>
     bool isTop,
     SessionId sessionId,
   ) async {
-    var res = isTop
+    final res = isTop
         ? await ImGrpc.unpinSession(sessionId: sessionId)
         : await ImGrpc.pinSession(sessionId: sessionId);
 
@@ -48,17 +48,17 @@ abstract class CommonWhisperController<R>
   }
 
   Future<void> onSetMute(Session item, bool isMuted, Int64 talkerUid) async {
-    var res = await MsgHttp.setMsgDnd(
+    final res = await MsgHttp.setMsgDnd(
       uid: Accounts.main.mid,
       setting: isMuted ? 0 : 1,
       dndUid: talkerUid,
     );
-    if (res['status']) {
+    if (res.isSuccess) {
       item.isMuted = !isMuted;
       loadingState.refresh();
       SmartDialog.showToast('操作成功');
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 
@@ -68,7 +68,7 @@ abstract class CommonWhisperController<R>
       if (loadingState.value.isSuccess) {
         List<Session>? list = loadingState.value.data;
         if (list != null && list.isNotEmpty) {
-          for (var item in list) {
+          for (final item in list) {
             if (item.hasUnread()) {
               item.clearUnread();
             }
@@ -83,7 +83,7 @@ abstract class CommonWhisperController<R>
   }
 
   Future<void> onDeleteList() async {
-    var res = await ImGrpc.deleteSessionList(pageType: sessionPageType);
+    final res = await ImGrpc.deleteSessionList(pageType: sessionPageType);
     if (res.isSuccess) {
       loadingState.value = const Success(null);
     } else {

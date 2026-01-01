@@ -376,7 +376,8 @@ List<SettingsModel> get videoSettings => [
             title: '硬解模式',
             initValues: Pref.hardwareDecoding.split(','),
             values: {
-              for (var e in HwDecType.values) e.hwdec: '${e.hwdec}\n${e.desc}',
+              for (final e in HwDecType.values)
+                e.hwdec: '${e.hwdec}\n${e.desc}',
             },
           );
         },

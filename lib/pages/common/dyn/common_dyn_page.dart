@@ -10,21 +10,21 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/common/dyn/common_dyn_controller.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
     with SingleTickerProviderStateMixin {
   CommonDynController get controller;
 
-  late final scrollController = ScrollController()..addListener(listener);
+  late final ScrollController scrollController;
 
   bool get horizontalPreview => !isPortrait && controller.horizontalPreview;
 
@@ -38,27 +38,34 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
 
   final fabOffset = const Offset(0, 1);
 
-  late final AnimationController fabAnimationCtr = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 300),
-  )..forward();
+  late final AnimationController _fabAnimationCtr;
+  late final CurvedAnimation _curvedAnimation;
+  late final Animation<Offset> fabAnim;
 
-  late final Animation<Offset> fabAnim = Tween<Offset>(
-    begin: fabOffset,
-    end: Offset.zero,
-  ).animate(CurvedAnimation(parent: fabAnimationCtr, curve: Curves.easeInOut));
+  @override
+  void initState() {
+    super.initState();
+    _fabAnimationCtr = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    )..forward();
+    _curvedAnimation = CurvedAnimation(
+      parent: _fabAnimationCtr,
+      curve: Curves.easeInOut,
+    );
+    fabAnim = Tween<Offset>(
+      begin: fabOffset,
+      end: Offset.zero,
+    ).animate(_curvedAnimation);
+    scrollController = ScrollController()..addListener(listener);
+  }
 
   void listener() {
     final pos = scrollController.positions;
     controller.showTitle.value = pos.first.pixels > 55;
-
-    final direction1 = pos.first.userScrollDirection;
-    late final direction2 = pos.last.userScrollDirection;
-    if (direction1 == ScrollDirection.forward ||
-        direction2 == ScrollDirection.forward) {
+    if (pos.any((e) => e.userScrollDirection == .forward)) {
       showFab();
-    } else if (direction1 == ScrollDirection.reverse ||
-        direction2 == ScrollDirection.reverse) {
+    } else if (pos.any((e) => e.userScrollDirection == .reverse)) {
       hideFab();
     }
   }
@@ -66,14 +73,14 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
   void showFab() {
     if (!_showFab) {
       _showFab = true;
-      fabAnimationCtr.forward();
+      _fabAnimationCtr.forward();
     }
   }
 
   void hideFab() {
     if (_showFab) {
       _showFab = false;
-      fabAnimationCtr.reverse();
+      _fabAnimationCtr.reverse();
     }
   }
 
@@ -91,6 +98,8 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
     scrollController
       ..removeListener(listener)
       ..dispose();
+    _curvedAnimation.dispose();
+    _fabAnimationCtr.dispose();
     super.dispose();
   }
 
@@ -148,7 +157,7 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
         itemCount: 12,
         itemBuilder: (context, index) => const VideoReplySkeleton(),
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.builder(
                 itemCount: response.length + 1,
@@ -197,7 +206,7 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
                 errMsg: '还没有评论',
                 onReload: controller.onReload,
               ),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: controller.onReload,
       ),
@@ -276,10 +285,7 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
       builder: (context) => Align(
         alignment: Alignment.topRight,
         child: Container(
-          margin: const EdgeInsets.only(
-            top: 56,
-            right: 16,
-          ),
+          margin: const EdgeInsets.only(top: 56, right: 16),
           width: maxWidth / 4,
           height: 32,
           child: Builder(

@@ -3,17 +3,17 @@ import 'dart:math' show max;
 
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/grpc/dyn.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/msg.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamic_badge_mode.dart';
 import 'package:PiliPlus/models/common/msg/msg_unread_type.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
-import 'package:PiliPlus/models_new/msgfeed_unread/data.dart';
-import 'package:PiliPlus/models_new/single_unread/data.dart';
 import 'package:PiliPlus/pages/dynamics/controller.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/mine/view.dart';
 import 'package:PiliPlus/services/account_service.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/get_ext.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -31,8 +31,7 @@ class MainController extends GetxController
 
   List<NavigationBarType> navigationBars = <NavigationBarType>[];
 
-  StreamController<bool>? bottomBarStream;
-  late bool hideTabBar = Pref.hideTabBar;
+  RxBool? bottomBar;
   late dynamic controller;
   final RxInt selectedIndex = 0.obs;
 
@@ -42,12 +41,10 @@ class MainController extends GetxController
   late int dynamicPeriod = Pref.dynamicPeriod * 60 * 1000;
   late int _lastCheckDynamicAt = 0;
   late bool hasDyn = false;
-  late final DynamicsController dynamicController = Get.put(
-    DynamicsController(),
-  );
+  late final dynamicController = Get.putOrFind(DynamicsController.new);
 
   late bool hasHome = false;
-  late final HomeController homeController = Get.put(HomeController());
+  late final homeController = Get.putOrFind(HomeController.new);
 
   late DynamicBadgeMode msgBadgeMode = Pref.msgBadgeMode;
   late Set<MsgUnReadType> msgUnReadTypes = Pref.msgUnReadTypeV2;
@@ -85,8 +82,8 @@ class MainController extends GetxController
           )
         : PageController(initialPage: selectedIndex.value);
 
-    if (navigationBars.length > 1 && hideTabBar) {
-      bottomBarStream = StreamController<bool>.broadcast();
+    if (navigationBars.length > 1 && Pref.hideTabBar) {
+      bottomBar = true.obs;
     }
     dynamicBadgeMode = DynamicBadgeMode.values[Pref.dynamicBadgeMode];
 
@@ -111,15 +108,14 @@ class MainController extends GetxController
 
   Future<int> _msgUnread() async {
     if (msgUnReadTypes.contains(MsgUnReadType.pm)) {
-      var res = await MsgHttp.msgUnread();
-      if (res['status']) {
-        SingleUnreadData data = res['data'];
-        return data.followUnread +
-            data.unfollowUnread +
-            data.bizMsgFollowUnread +
-            data.bizMsgUnfollowUnread +
-            data.unfollowPushMsg +
-            data.customUnread;
+      final res = await MsgHttp.msgUnread();
+      if (res case Success(:final response)) {
+        return response.followUnread +
+            response.unfollowUnread +
+            response.bizMsgFollowUnread +
+            response.bizMsgUnfollowUnread +
+            response.unfollowPushMsg +
+            response.customUnread;
       }
     }
     return 0;
@@ -127,27 +123,26 @@ class MainController extends GetxController
 
   Future<int> _msgFeedUnread() async {
     int count = 0;
-    var remainTypes = Set<MsgUnReadType>.from(msgUnReadTypes)
+    final remainTypes = Set<MsgUnReadType>.from(msgUnReadTypes)
       ..remove(MsgUnReadType.pm);
     if (remainTypes.isNotEmpty) {
-      var res = await MsgHttp.msgFeedUnread();
-      if (res['status']) {
-        MsgFeedUnreadData data = res['data'];
-        for (var item in remainTypes) {
+      final res = await MsgHttp.msgFeedUnread();
+      if (res case Success(:final response)) {
+        for (final item in remainTypes) {
           switch (item) {
             case MsgUnReadType.pm:
               break;
             case MsgUnReadType.reply:
-              count += data.reply;
+              count += response.reply;
               break;
             case MsgUnReadType.at:
-              count += data.at;
+              count += response.at;
               break;
             case MsgUnReadType.like:
-              count += data.like;
+              count += response.like;
               break;
             case MsgUnReadType.sysMsg:
-              count += data.sysMsg;
+              count += response.sysMsg;
               break;
           }
         }
@@ -165,7 +160,7 @@ class MainController extends GetxController
       return;
     }
 
-    var res = await Future.wait([_msgUnread(), _msgFeedUnread()]);
+    final res = await Future.wait([_msgUnread(), _msgFeedUnread()]);
 
     final count = res.sum;
 
@@ -324,13 +319,13 @@ class MainController extends GetxController
 
   void setSearchBar() {
     if (hasHome) {
-      homeController.searchBarStream?.add(true);
+      homeController.searchBar?.value = true;
     }
   }
 
   @override
   void onClose() {
-    bottomBarStream?.close();
+    bottomBar?.close();
     controller.dispose();
     super.onClose();
   }

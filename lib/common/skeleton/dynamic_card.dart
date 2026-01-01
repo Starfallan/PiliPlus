@@ -9,6 +9,13 @@ class DynamicCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final color = theme.colorScheme.onInverseSurface;
+    final buttonStyle = TextButton.styleFrom(
+      tapTargetSize: .padded,
+      padding: const .symmetric(horizontal: 15),
+      foregroundColor: theme.colorScheme.outline.withValues(
+        alpha: 0.2,
+      ),
+    );
     return Skeleton(
       child: Container(
         padding: const EdgeInsets.only(left: 12, right: 12, top: 12),
@@ -86,29 +93,19 @@ class DynamicCardSkeleton extends StatelessWidget {
             if (GlobalData().dynamicsWaterfallFlow) const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                for (var i = 0; i < 3; i++)
-                  TextButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.radio_button_unchecked_outlined,
-                      size: 20,
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-                      foregroundColor: theme.colorScheme.outline.withValues(
-                        alpha: 0.2,
+              children: const ['转发', '评论', '点赞']
+                  .map(
+                    (e) => TextButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.radio_button_unchecked_outlined,
+                        size: 20,
                       ),
+                      style: buttonStyle,
+                      label: Text(e),
                     ),
-                    label: Text(
-                      i == 0
-                          ? '转发'
-                          : i == 1
-                          ? '评论'
-                          : '点赞',
-                    ),
-                  ),
-              ],
+                  )
+                  .toList(),
             ),
           ],
         ),

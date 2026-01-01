@@ -41,7 +41,7 @@ class _DynTopicRcmdPageState extends State<DynTopicRcmdPage> {
   Widget _buildBody(LoadingState<List<TopicItem>?> loadingState) {
     return switch (loadingState) {
       Loading() => linearLoading,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.builder(
                 itemCount: response.length,
@@ -59,7 +59,7 @@ class _DynTopicRcmdPageState extends State<DynTopicRcmdPage> {
                 },
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

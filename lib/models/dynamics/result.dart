@@ -4,8 +4,9 @@ import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/models/dynamics/article_content_model.dart';
 import 'package:PiliPlus/models/model_avatar.dart';
+import 'package:PiliPlus/models/model_owner.dart';
 import 'package:PiliPlus/models_new/live/live_feed_index/watched_show.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 
@@ -56,7 +57,7 @@ class DynamicsDataModel {
       items = <DynamicItemModel>[];
       late final filterBan =
           type != DynamicsTabType.up && tempBannedList?.isNotEmpty == true;
-      for (var e in list) {
+      for (final e in list) {
         DynamicItemModel item = DynamicItemModel.fromJson(e);
         if (antiGoodsDyn &&
             (item.orig?.modules.moduleDynamic?.additional?.type ==
@@ -166,6 +167,7 @@ class ItemModulesModel {
   List<ArticleContentModel>? moduleContent;
   ModuleBlocked? moduleBlocked;
   ModuleFold? moduleFold;
+  ModuleInteraction? moduleInteraction;
 
   ItemModulesModel.fromJson(Map<String, dynamic> json) {
     moduleAuthor = json['module_author'] != null
@@ -182,6 +184,9 @@ class ItemModulesModel {
         : null;
     moduleFold = json['module_fold'] != null
         ? ModuleFold.fromJson(json['module_fold'])
+        : null;
+    moduleInteraction = json['module_interaction'] != null
+        ? ModuleInteraction.fromJson(json['module_interaction'])
         : null;
   }
 
@@ -233,13 +238,37 @@ class ItemModulesModel {
   }
 }
 
+class ModuleInteraction {
+  List<ModuleInteractionItem>? items;
+
+  ModuleInteraction.fromJson(Map<String, dynamic> json) {
+    items = (json['items'] as List?)
+        ?.map((e) => ModuleInteractionItem.fromJson(e))
+        .toList();
+  }
+}
+
+class ModuleInteractionItem {
+  int? type;
+  DynamicDescModel? desc;
+
+  ModuleInteractionItem.fromJson(Map<String, dynamic> json) {
+    type = json['type'];
+    desc = json["desc"] == null
+        ? null
+        : DynamicDescModel.fromJson(json["desc"]);
+  }
+}
+
 class ModuleFold {
   List<String>? ids;
   String? statement;
+  List<Owner>? users;
 
   ModuleFold.fromJson(Map<String, dynamic> json) {
     ids = (json['ids'] as List?)?.fromCast();
     statement = json['statement'];
+    users = (json['users'] as List?)?.map((e) => Owner.fromJson(e)).toList();
   }
 }
 
@@ -616,17 +645,17 @@ class Vote {
   Vote({
     this.joinNum,
     this.voteId,
-    this.desc,
+    this.title,
   });
 
   int? joinNum;
   int? voteId;
-  String? desc;
+  String? title;
 
   Vote.fromJson(Map<String, dynamic> json) {
     joinNum = Utils.safeToInt(json['join_num']);
     voteId = Utils.safeToInt(json['vote_id']);
-    desc = json['desc'];
+    title = _parseString(json['title']) ?? _parseString(json['desc']);
   }
 }
 
@@ -1109,9 +1138,17 @@ class Emoji {
   late num size;
 
   Emoji.fromJson(Map<String, dynamic> json) {
-    url = json['webp_url'] ?? json['gif_url'] ?? json['icon_url'];
+    url =
+        _parseString(json['webp_url']) ??
+        _parseString(json['gif_url']) ??
+        _parseString(json['icon_url']);
     size = json['size'] ?? 1;
   }
+}
+
+String? _parseString(String? value) {
+  if (value == null || value.isEmpty) return null;
+  return value;
 }
 
 class DynamicNoneModel {

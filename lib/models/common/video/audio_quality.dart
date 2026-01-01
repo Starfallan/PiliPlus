@@ -14,7 +14,7 @@ enum AudioQuality {
 
   const AudioQuality(this.code, this.desc);
 
-  static final _codeMap = {for (var i in values) i.code: i};
+  static final _codeMap = {for (final i in values) i.code: i};
 
   static AudioQuality fromCode(int code) => _codeMap[code]!;
 }

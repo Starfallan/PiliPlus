@@ -26,6 +26,7 @@ class LoadingWidget extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(15)),
       ),
       child: Column(
+        spacing: 20,
         mainAxisSize: MainAxisSize.min,
         children: [
           //loading animation
@@ -43,10 +44,7 @@ class LoadingWidget extends StatelessWidget {
             0,
           ),
           //msg
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: Text(msg, style: TextStyle(color: onSurfaceVariant)),
-          ),
+          Text(msg, style: TextStyle(color: onSurfaceVariant)),
         ],
       ),
     );

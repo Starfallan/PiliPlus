@@ -15,40 +15,45 @@ class AppBarAni extends StatelessWidget {
   final bool isTop;
   final bool isFullScreen;
 
+  static final _topPos = Tween<Offset>(
+    begin: const Offset(0, -1),
+    end: Offset.zero,
+  );
+
+  static const _topDecoration = LinearGradient(
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: <Color>[
+      Colors.transparent,
+      Color(0xBF000000),
+    ],
+    tileMode: TileMode.mirror,
+  );
+
+  static final _bottomPos = Tween<Offset>(
+    begin: const Offset(0, 1.2),
+    end: Offset.zero,
+  );
+
+  static const _bottomDecoration = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: <Color>[
+      Colors.transparent,
+      Color(0xBF000000),
+    ],
+    tileMode: TileMode.mirror,
+  );
+
   @override
   Widget build(BuildContext context) {
     return SlideTransition(
-      position:
-          Tween<Offset>(
-            begin: isTop ? const Offset(0, -1) : const Offset(0, 1.2),
-            end: Offset.zero,
-          ).animate(
-            CurvedAnimation(
-              parent: controller,
-              curve: Curves.linear,
-            ),
-          ),
+      position: isTop
+          ? _topPos.animate(controller)
+          : _bottomPos.animate(controller),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: isTop
-              ? const LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: <Color>[
-                    Colors.transparent,
-                    Color(0xBF000000),
-                  ],
-                  tileMode: TileMode.mirror,
-                )
-              : const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: <Color>[
-                    Colors.transparent,
-                    Color(0xBF000000),
-                  ],
-                  tileMode: TileMode.mirror,
-                ),
+          gradient: isTop ? _topDecoration : _bottomDecoration,
         ),
         child: ViewSafeArea(
           left: isFullScreen,

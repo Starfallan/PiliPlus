@@ -8,12 +8,11 @@ import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/common/stat_type.dart';
-import 'package:PiliPlus/models/search/result.dart';
 import 'package:PiliPlus/models_new/later/list.dart';
 import 'package:PiliPlus/pages/later/controller.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
@@ -33,13 +32,6 @@ class VideoCardHLater extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String type = 'video';
-    if (videoItem case SearchVideoItemModel item) {
-      var typeOrNull = item.type;
-      if (typeOrNull != null && typeOrNull.isNotEmpty) {
-        type = typeOrNull;
-      }
-    }
     final theme = Theme.of(context);
     final enableMultiSelect = ctr.enableMultiSelect.value;
 
@@ -53,15 +45,15 @@ class VideoCardHLater extends StatelessWidget {
       type: MaterialType.transparency,
       child: InkWell(
         onLongPress: onLongPress,
-        onSecondaryTap: Utils.isMobile ? null : onLongPress,
+        onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
         onTap: enableMultiSelect
             ? () => ctr.onSelect(videoItem)
             : () async {
-                if (type == 'ketang') {
+                if (videoItem.isPugv ?? false) {
                   PageUtils.viewPugv(seasonId: videoItem.aid);
                   return;
                 }
-                if (videoItem.isPgc == true) {
+                if (videoItem.isPgc ?? false) {
                   if (videoItem.bangumi?.epId != null) {
                     PageUtils.viewPgc(epId: videoItem.bangumi!.epId);
                   } else if (videoItem.redirectUrl?.isNotEmpty == true) {
@@ -125,7 +117,7 @@ class VideoCardHLater extends StatelessWidget {
                             top: 6.0,
                             right: 6.0,
                           )
-                        else if (type == 'ketang')
+                        else if (videoItem.isPugv ?? false)
                           const PBadge(
                             text: '课堂',
                             top: 6.0,
@@ -162,7 +154,7 @@ class VideoCardHLater extends StatelessWidget {
                         Positioned.fill(
                           child: selectMask(
                             theme,
-                            videoItem.checked == true,
+                            videoItem.checked,
                           ),
                         ),
                       ],

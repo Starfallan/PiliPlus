@@ -12,7 +12,7 @@ import 'package:PiliPlus/models/login/model.dart';
 import 'package:PiliPlus/pages/login/geetest/geetest_webview_dialog.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
@@ -136,16 +136,17 @@ class LoginPageController extends GetxController
       onSuccess();
     }
 
-    if (Utils.isDesktop) {
-      Get.dialog<Map<String, dynamic>>(
-        GeetestWebviewDialog(geeGt, geeChallenge),
+    if (PlatformUtils.isDesktop) {
+      showDialog<Map<String, dynamic>>(
+        context: Get.context!,
+        builder: (context) => GeetestWebviewDialog(geeGt, geeChallenge),
       ).then((res) {
         if (res != null) {
           updateCaptchaData(res);
         }
       });
     } else {
-      var registerData = Gt3RegisterData(
+      final registerData = Gt3RegisterData(
         challenge: geeChallenge,
         gt: geeGt,
         success: true,
@@ -241,7 +242,7 @@ class LoginPageController extends GetxController
       return;
     }
     try {
-      var result = await Request().get(
+      final result = await Request().get(
         "/x/member/web/account",
         options: Options(
           headers: {
@@ -287,14 +288,14 @@ class LoginPageController extends GetxController
       return;
     }
     // if ((passwordFormKey.currentState as FormState).validate()) {
-    var webKeyRes = await LoginHttp.getWebKey();
+    final webKeyRes = await LoginHttp.getWebKey();
     if (!webKeyRes['status']) {
       SmartDialog.showToast(webKeyRes['msg']);
       return;
     }
     String salt = webKeyRes['data']['hash'];
     String key = webKeyRes['data']['key'];
-    var res = await LoginHttp.loginByPwd(
+    final res = await LoginHttp.loginByPwd(
       username: username,
       password: password,
       key: key,
@@ -305,7 +306,7 @@ class LoginPageController extends GetxController
       recaptchaToken: captchaData.token,
     );
     if (res['status']) {
-      var data = res['data'];
+      final data = res['data'];
       if (data == null) {
         SmartDialog.showToast('登录异常，接口未返回数据：${res["msg"]}');
         return;
@@ -319,7 +320,7 @@ class LoginPageController extends GetxController
         //{"code":0,"message":"0","ttl":1,"data":{"status":2,"message":"本次登录环境存在风险, 需使用手机号进行验证或绑定","url":"https://passport.bilibili.com/h5-app/passport/risk/verify?tmp_token=9e785433940891dfa78f033fb7928181&request_id=e5a6d6480df04097870be56c6e60f7ef&source=risk","token_info":null,"cookie_info":null,"sso":null,"is_new":false,"is_tourist":false}}
         String url = data['url']!;
         Uri currentUri = Uri.parse(url);
-        var safeCenterRes = await LoginHttp.safeCenterGetInfo(
+        final safeCenterRes = await LoginHttp.safeCenterGetInfo(
           tmpCode: currentUri.queryParameters['tmp_token']!,
         );
         //{"code":0,"message":"0","ttl":1,"data":{"account_info":{"hide_tel":"111*****111","hide_mail":"aaa*****aaaa.aaa","bind_mail":true,"bind_tel":true,"tel_verify":true,"mail_verify":true,"unneeded_check":false,"bind_safe_question":false,"mid":1111111},"member_info":{"nickname":"xxxxxxx","face":"https://i0.hdslb.com/bfs/face/xxxxxxx.jpg","realname_status":false},"sns_info":{"bind_google":false,"bind_fb":false,"bind_apple":false,"bind_qq":true,"bind_weibo":true,"bind_wechat":false},"account_safe":{"score":80}}}
@@ -341,8 +342,9 @@ class LoginPageController extends GetxController
 
         TextEditingController textFieldController = TextEditingController();
         String captchaKey = '';
-        Get.dialog(
-          AlertDialog(
+        showDialog(
+          context: Get.context!,
+          builder: (context) => AlertDialog(
             titlePadding: const EdgeInsets.only(
               left: 16,
               top: 18,
@@ -390,7 +392,7 @@ class LoginPageController extends GetxController
               TextButton(
                 child: const Text("发送验证码"),
                 onPressed: () async {
-                  var preCaptureRes = await LoginHttp.preCapture();
+                  final preCaptureRes = await LoginHttp.preCapture();
                   if (!preCaptureRes['status'] ||
                       preCaptureRes['data'] == null) {
                     SmartDialog.showToast(
@@ -413,7 +415,7 @@ class LoginPageController extends GetxController
                     geeGt,
                     geeChallenge,
                     () async {
-                      var safeCenterSendSmsCodeRes =
+                      final safeCenterSendSmsCodeRes =
                           await LoginHttp.safeCenterSmsCode(
                             tmpCode: currentUri.queryParameters['tmp_token']!,
                             geeChallenge: geeChallenge,
@@ -450,7 +452,7 @@ class LoginPageController extends GetxController
                     SmartDialog.showToast("请输入短信验证码");
                     return;
                   }
-                  var safeCenterSmsVerifyRes =
+                  final safeCenterSmsVerifyRes =
                       await LoginHttp.safeCenterSmsVerify(
                         code: code,
                         tmpCode: currentUri.queryParameters['tmp_token']!,
@@ -467,9 +469,10 @@ class LoginPageController extends GetxController
                     return;
                   }
                   SmartDialog.showToast("验证成功，正在登录");
-                  var oauth2AccessTokenRes = await LoginHttp.oauth2AccessToken(
-                    code: safeCenterSmsVerifyRes['data']['code'],
-                  );
+                  final oauth2AccessTokenRes =
+                      await LoginHttp.oauth2AccessToken(
+                        code: safeCenterSmsVerifyRes['data']['code'],
+                      );
                   if (!oauth2AccessTokenRes['status']) {
                     SmartDialog.showToast(
                       "登录失败，请尝试其它登录方式\n"
@@ -477,7 +480,7 @@ class LoginPageController extends GetxController
                     );
                     return;
                   }
-                  var data = oauth2AccessTokenRes['data'];
+                  final data = oauth2AccessTokenRes['data'];
                   if (data['token_info'] == null ||
                       data['cookie_info'] == null) {
                     SmartDialog.showToast(
@@ -554,13 +557,13 @@ class LoginPageController extends GetxController
       SmartDialog.showToast('验证码已过期，请重新获取');
       return;
     }
-    var webKeyRes = await LoginHttp.getWebKey();
+    final webKeyRes = await LoginHttp.getWebKey();
     if (!webKeyRes['status']) {
       SmartDialog.showToast(webKeyRes['msg']);
       return;
     }
     String key = webKeyRes['data']['key'];
-    var res = await LoginHttp.loginBySms(
+    final res = await LoginHttp.loginBySms(
       tel: telTextController.text,
       code: smsCodeTextController.text,
       captchaKey: captchaKey,
@@ -569,7 +572,7 @@ class LoginPageController extends GetxController
     );
     if (res['status']) {
       SmartDialog.showToast('登录成功');
-      var data = res['data'];
+      final data = res['data'];
       await setAccount(data['token_info'], data['cookie_info']['cookies']);
       Get.back();
     } else {
@@ -584,19 +587,19 @@ class LoginPageController extends GetxController
       return;
     }
     // String? guestId;
-    // var webKeyRes = await LoginHttp.getWebKey();
+    // final webKeyRes = await LoginHttp.getWebKey();
     // if (!webKeyRes['status']) {
     //   SmartDialog.showToast(webKeyRes['msg']);
     // } else {
     //   String key = webKeyRes['data']['key'];
-    //   var guestIdRes = await LoginHttp.getGuestId(key);
+    //   final guestIdRes = await LoginHttp.getGuestId(key);
     //   if (!guestIdRes['status']) {
     //     SmartDialog.showToast(guestIdRes['msg']);
     //   } else {
     //     guestId = guestIdRes['data']['guest_id'];
     //   }
     // }
-    // var preCaptureRes = await LoginHttp.preCapture();
+    // final preCaptureRes = await LoginHttp.preCapture();
     // if (!preCaptureRes['status']) {
     //   SmartDialog.showToast("获取验证码失败，请尝试其它登录方式\n"
     //       "(${preCaptureRes['code']}) ${preCaptureRes['msg']}");
@@ -608,7 +611,7 @@ class LoginPageController extends GetxController
 
     // getCaptcha(geeGt, geeChallenge, () async {
 
-    // var safeCenterSendSmsCodeRes =
+    // final safeCenterSendSmsCodeRes =
     // await LoginHttp.safeCenterSmsCode(
     //   tmpCode: currentUri.queryParameters['tmp_token']!,
     //   geeChallenge: geeChallenge,
@@ -625,7 +628,7 @@ class LoginPageController extends GetxController
     // SmartDialog.showToast("短信验证码已发送，请查收");
     // captchaKey = safeCenterSendSmsCodeRes['data']['captcha_key'];
 
-    var res = await LoginHttp.sendSmsCode(
+    final res = await LoginHttp.sendSmsCode(
       tel: telTextController.text,
       cid: selectedCountryCodeId.countryId,
       // deviceTouristId: guestId,
@@ -669,7 +672,7 @@ class LoginPageController extends GetxController
                 '验证信息错误：${res["msg"]}\n返回内容：${res["data"]}，尝试另一个验证码接口',
               );
             }
-            var preCaptureRes = await LoginHttp.preCapture();
+            final preCaptureRes = await LoginHttp.preCapture();
             if (!preCaptureRes['status'] || preCaptureRes['data'] == null) {
               SmartDialog.showToast(
                 "获取验证码失败，请尝试其它登录方式\n"
@@ -738,13 +741,9 @@ class LoginPageController extends GetxController
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('选择账号mid, 为0时使用匿名'),
-        titlePadding: const EdgeInsets.only(left: 22, top: 16, right: 22),
-        contentPadding: const EdgeInsets.symmetric(vertical: 5),
-        actionsPadding: const EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: 10,
-        ),
+        titlePadding: const .only(left: 22, top: 16, right: 22),
+        contentPadding: const .symmetric(vertical: 5),
+        actionsPadding: const .only(left: 16, right: 16, bottom: 10),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,7 +778,7 @@ class LoginPageController extends GetxController
           ),
           TextButton(
             onPressed: () {
-              for (var (i, v) in selectAccount.indexed) {
+              for (final (i, v) in selectAccount.indexed) {
                 if (v != Accounts.accountMode[i]) {
                   Accounts.set(AccountType.values[i], v);
                 }

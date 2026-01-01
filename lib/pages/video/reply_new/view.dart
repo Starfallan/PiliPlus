@@ -17,15 +17,15 @@ import 'package:PiliPlus/pages/dynamics_mention/controller.dart';
 import 'package:PiliPlus/pages/emote/view.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/reply_search_item/view.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart' hide TextField;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class ReplyPage extends CommonRichTextPubPage {
   final int oid;
@@ -142,31 +142,29 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
           left: 15,
           bottom: 10,
         ),
-        child: Form(
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: Listener(
-            onPointerUp: (event) {
-              if (readOnly.value) {
-                updatePanelType(PanelType.keyboard);
-              }
-            },
-            child: Obx(
-              () => RichTextField(
-                key: key,
-                controller: editController,
-                minLines: 4,
-                maxLines: 8,
-                autofocus: false,
-                readOnly: readOnly.value,
-                onChanged: onChanged,
-                focusNode: focusNode,
-                decoration: InputDecoration(
-                  hintText: widget.hint ?? "输入回复内容",
-                  border: InputBorder.none,
-                  hintStyle: const TextStyle(fontSize: 14),
-                ),
-                style: themeData.textTheme.bodyLarge,
+        child: Listener(
+          onPointerUp: (event) {
+            if (readOnly.value) {
+              updatePanelType(PanelType.keyboard);
+            }
+          },
+          child: Obx(
+            () => RichTextField(
+              key: key,
+              controller: editController,
+              minLines: 4,
+              maxLines: 8,
+              autofocus: false,
+              readOnly: readOnly.value,
+              onChanged: onChanged,
+              onSubmitted: onSubmitted,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: widget.hint ?? "输入回复内容",
+                border: InputBorder.none,
+                hintStyle: const TextStyle(fontSize: 14),
               ),
+              style: themeData.textTheme.bodyLarge,
             ),
           ),
         ),
@@ -320,7 +318,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
           item(
             onTap: () async {
               controller.keepChatPanel();
-              ({String title, String url})? res = await Get.to(
+              final ({String title, String url})? res = await Get.to(
                 ReplySearchPage(type: widget.replyType, oid: widget.oid),
               );
               if (res != null) {
@@ -367,7 +365,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
               icon: Icon(Icons.my_location, size: 28, color: color),
               title: '视频进度',
             ),
-            if (isRoot)
+            if (isRoot && widget.canUploadPic)
               item(
                 onTap: () async {
                   if (pathList.length >= limit) {
@@ -411,13 +409,13 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
   @override
   Future<void> onCustomPublish({List? pictures}) async {
     Map<String, int> atNameToMid = {};
-    for (var e in editController.items) {
+    for (final e in editController.items) {
       if (e.type == RichTextType.at) {
         atNameToMid[e.rawText] ??= int.parse(e.id!);
       }
     }
     String message = editController.rawText;
-    var result = await VideoHttp.replyAdd(
+    final result = await VideoHttp.replyAdd(
       type: widget.replyType,
       oid: widget.oid,
       root: widget.root,

@@ -93,7 +93,7 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
                     onTap: () async {
                       if (!e.selected) {
                         Get.back();
-                        for (var j in item.redirect.windowSelect.item) {
+                        for (final j in item.redirect.windowSelect.item) {
                           j.selected = false;
                         }
                         item.redirect.selectedSummary = e.text;
@@ -102,7 +102,7 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
                         final settings = {key: item};
                         final res = await _controller.onSet(settings);
                         if (!res) {
-                          for (var j in item.redirect.windowSelect.item) {
+                          for (final j in item.redirect.windowSelect.item) {
                             j.selected = j.text == selected;
                           }
                           item.redirect.selectedSummary = selected!;
@@ -159,7 +159,7 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
     );
     return switch (loadingState) {
       Loading() => const SizedBox.shrink(),
-      Success<PbMap<int, Setting>>(:var response) => Builder(
+      Success<PbMap<int, Setting>>(:final response) => Builder(
         builder: (context) {
           final keys = response.keys.toList()..sort();
           return ListView.separated(
@@ -180,7 +180,7 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
           );
         },
       ),
-      Error(:var errMsg) => scrollErrorWidget(
+      Error(:final errMsg) => scrollErrorWidget(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

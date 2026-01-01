@@ -1,26 +1,22 @@
 import 'package:PiliPlus/http/live.dart';
-import 'package:PiliPlus/models/common/live_dm_silent_type.dart';
-import 'package:PiliPlus/models_new/live/live_dm_block/shield_info.dart';
-import 'package:PiliPlus/models_new/live/live_dm_block/shield_rules.dart';
+import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/models/common/live/live_dm_silent_type.dart';
 import 'package:PiliPlus/models_new/live/live_dm_block/shield_user_list.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class LiveDmBlockController extends GetxController
     with GetSingleTickerProviderStateMixin {
-  final roomId = Get.parameters['roomId'];
+  final roomId = Get.parameters['roomId']!;
 
   @override
   void onInit() {
     super.onInit();
+    tabController = TabController(length: 2, vsync: this);
     queryData();
   }
 
-  late final TabController tabController = TabController(
-    length: 2,
-    vsync: this,
-  );
+  late final TabController tabController;
 
   int? oldLevel;
   final RxInt level = 0.obs;
@@ -36,10 +32,10 @@ class LiveDmBlockController extends GetxController
   }
 
   Future<void> queryData() async {
-    var res = await LiveHttp.getLiveInfoByUser(roomId);
+    final res = await LiveHttp.getLiveInfoByUser(roomId);
     if (res.isSuccess) {
-      ShieldInfo? data = res.data;
-      ShieldRules? shieldRules = data?.shieldRules;
+      final data = res.data;
+      final shieldRules = data?.shieldRules;
       level.value = shieldRules?.level ?? 0;
       rank.value = shieldRules?.rank ?? 0;
       verify.value = shieldRules?.verify ?? 0;
@@ -61,8 +57,8 @@ class LiveDmBlockController extends GetxController
     int level, {
     VoidCallback? onError,
   }) async {
-    var res = await LiveHttp.liveSetSilent(type: type.name, level: level);
-    if (res['status']) {
+    final res = await LiveHttp.liveSetSilent(type: type.name, level: level);
+    if (res.isSuccess) {
       switch (type) {
         case LiveDmSilentType.level:
           this.level.value = level;
@@ -75,7 +71,7 @@ class LiveDmBlockController extends GetxController
       return true;
     } else {
       onError?.call();
-      SmartDialog.showToast(res['msg']);
+      res.toast();
       return false;
     }
   }
@@ -90,9 +86,9 @@ class LiveDmBlockController extends GetxController
             setSilent(LiveDmSilentType.verify, 1),
           ]
         : [
-            for (var e in LiveDmSilentType.values) setSilent(e, 0),
+            for (final e in LiveDmSilentType.values) setSilent(e, 0),
           ];
-    var res = await Future.wait(futures);
+    final res = await Future.wait(futures);
     if (enable) {
       if (res.any((e) => e)) {
         isEnable.value = true;
@@ -106,50 +102,45 @@ class LiveDmBlockController extends GetxController
 
   Future<void> addShieldKeyword(bool isKeyword, String value) async {
     if (isKeyword) {
-      var res = await LiveHttp.addShieldKeyword(keyword: value);
-      if (res['status']) {
+      final res = await LiveHttp.addShieldKeyword(keyword: value);
+      if (res.isSuccess) {
         keywordList.insert(0, value);
       } else {
-        SmartDialog.showToast(res['msg']);
+        res.toast();
       }
     } else {
-      var res = await LiveHttp.liveShieldUser(
+      final res = await LiveHttp.liveShieldUser(
         uid: value,
         roomid: roomId,
         type: 1,
       );
-      if (res['status']) {
-        shieldUserList.insert(
-          0,
-          ShieldUserList(
-            uid: res['data']['uid'],
-            uname: res['data']['uname'],
-          ),
-        );
+      if (res case Success(:final response)) {
+        shieldUserList.insert(0, response);
       } else {
-        SmartDialog.showToast(res['msg']);
+        res.toast();
       }
     }
   }
 
-  Future<void> onRemove(int index, dynamic item) async {
+  Future<void> onRemove(int index, Object item) async {
+    assert(item is ShieldUserList || item is String);
     if (item is ShieldUserList) {
-      var res = await LiveHttp.liveShieldUser(
-        uid: item.uid,
+      final res = await LiveHttp.liveShieldUser(
+        uid: item.uid!,
         roomid: roomId,
         type: 0,
       );
-      if (res['status']) {
+      if (res.isSuccess) {
         shieldUserList.removeAt(index);
       } else {
-        SmartDialog.showToast(res['msg']);
+        res.toast();
       }
     } else {
-      var res = await LiveHttp.delShieldKeyword(keyword: item);
-      if (res['status']) {
+      final res = await LiveHttp.delShieldKeyword(keyword: item as String);
+      if (res.isSuccess) {
         keywordList.removeAt(index);
       } else {
-        SmartDialog.showToast(res['msg']);
+        res.toast();
       }
     }
   }

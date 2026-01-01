@@ -57,7 +57,7 @@ class _PopularSeriesPageState extends State<PopularSeriesPage> with GridMixin {
     switch (value) {
       case Loading():
         return gridSkeleton;
-      case Success<List<HotVideoItemModel>?>(:var response):
+      case Success<List<HotVideoItemModel>?>(:final response):
         Widget sliver;
         if (response != null && response.isNotEmpty) {
           sliver = SliverGrid.builder(
@@ -97,7 +97,7 @@ class _PopularSeriesPageState extends State<PopularSeriesPage> with GridMixin {
           );
         }
         return sliver;
-      case Error(:var errMsg):
+      case Error(:final errMsg):
         return HttpError(
           errMsg: errMsg,
           onReload: _controller.onReload,

@@ -9,7 +9,9 @@ import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/note/controller.dart';
 import 'package:PiliPlus/pages/webview/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/utils.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -186,7 +188,7 @@ class _NoteListPageState extends State<NoteListPage>
         itemBuilder: (_, _) => const VideoReplySkeleton(),
         itemCount: 8,
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.separated(
                 itemBuilder: (context, index) {
@@ -199,7 +201,7 @@ class _NoteListPageState extends State<NoteListPage>
                 separatorBuilder: (context, index) => divider,
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),
@@ -256,8 +258,12 @@ class _NoteListPageState extends State<NoteListPage>
                           ),
                           const SizedBox(width: 6),
                           Image.asset(
-                            'assets/images/lv/lv${item.author!.isSeniorMember == 1 ? '6_s' : item.author!.level}.png',
+                            Utils.levelName(
+                              item.author!.level!,
+                              isSeniorMember: item.author!.isSeniorMember == 1,
+                            ),
                             height: 11,
+                            cacheHeight: 11.cacheSize(context),
                           ),
                         ],
                       ),

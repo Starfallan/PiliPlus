@@ -49,7 +49,7 @@ class _FavVideoPageState extends State<FavVideoPage>
   Widget _buildBody(LoadingState<List<FavFolderInfo>?> loadingState) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -63,7 +63,7 @@ class _FavVideoPageState extends State<FavVideoPage>
                     heroTag: heroTag,
                     item: item,
                     onTap: () async {
-                      var res = await Get.toNamed(
+                      final res = await Get.toNamed(
                         '/favDetail',
                         arguments: item,
                         parameters: {
@@ -82,7 +82,7 @@ class _FavVideoPageState extends State<FavVideoPage>
                 itemCount: response.length,
               )
             : HttpError(onReload: _favController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _favController.onReload,
       ),

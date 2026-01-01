@@ -12,15 +12,17 @@ import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
+import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
@@ -34,14 +36,14 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp>
     with RouteAware, WidgetsBindingObserver, WindowListener, TrayListener {
-  final MainController _mainController = Get.put(MainController());
+  final _mainController = Get.put(MainController());
   late final _setting = GStorage.setting;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    if (Utils.isDesktop) {
+    if (PlatformUtils.isDesktop) {
       windowManager
         ..addListener(this)
         ..setPreventClose(true);
@@ -58,7 +60,7 @@ class _MainAppState extends State<MainApp>
     final brightness = Theme.brightnessOf(context);
     NetworkImgLayer.reduce =
         NetworkImgLayer.reduceLuxColor != null && brightness.isDark;
-    if (Utils.isDesktop) {
+    if (PlatformUtils.isDesktop) {
       windowManager.setBrightness(brightness);
     }
     PageUtils.routeObserver.subscribe(
@@ -95,7 +97,7 @@ class _MainAppState extends State<MainApp>
 
   @override
   void dispose() {
-    if (Utils.isDesktop) {
+    if (PlatformUtils.isDesktop) {
       trayManager.removeListener(this);
       windowManager.removeListener(this);
     }
@@ -118,12 +120,18 @@ class _MainAppState extends State<MainApp>
 
   @override
   Future<void> onWindowMoved() async {
+    if (PlPlayerController.instance?.isDesktopPip ?? false) {
+      return;
+    }
     final Offset offset = await windowManager.getPosition();
     _setting.put(SettingBoxKey.windowPosition, [offset.dx, offset.dy]);
   }
 
   @override
   Future<void> onWindowResized() async {
+    if (PlPlayerController.instance?.isDesktopPip ?? false) {
+      return;
+    }
     final Rect bounds = await windowManager.getBounds();
     _setting.putAll({
       SettingBoxKey.windowSize: [bounds.width, bounds.height],
@@ -286,7 +294,7 @@ class _MainAppState extends State<MainApp>
                               .toList(),
                         ),
                       )
-              : const SizedBox.shrink()
+              : null
         : null;
     return PopScope(
       canPop: false,
@@ -297,7 +305,7 @@ class _MainAppState extends State<MainApp>
           if (_mainController.selectedIndex.value != 0) {
             _mainController
               ..setIndex(0)
-              ..bottomBarStream?.add(true)
+              ..bottomBar?.value = true
               ..setSearchBar();
           } else {
             onBack();
@@ -431,26 +439,26 @@ class _MainAppState extends State<MainApp>
               ],
             ),
           ),
-          bottomNavigationBar: useBottomNav
-              ? _mainController.hideTabBar
-                    ? StreamBuilder(
-                        stream: _mainController.bottomBarStream?.stream
-                            .distinct(),
-                        initialData: true,
-                        builder: (context, AsyncSnapshot snapshot) {
-                          return AnimatedSlide(
-                            curve: Curves.easeInOutCubicEmphasized,
-                            duration: const Duration(milliseconds: 500),
-                            offset: Offset(0, snapshot.data ? 0 : 1),
-                            child: bottomNav,
-                          );
-                        },
-                      )
-                    : bottomNav
-              : null,
+          bottomNavigationBar: _buildBottom(bottomNav),
         ),
       ),
     );
+  }
+
+  Widget? _buildBottom(Widget? bottomNav) {
+    if (bottomNav != null) {
+      if (_mainController.bottomBar case final bottomBar?) {
+        return Obx(
+          () => AnimatedSlide(
+            curve: Curves.easeInOutCubicEmphasized,
+            duration: const Duration(milliseconds: 500),
+            offset: Offset(0, bottomBar.value ? 0 : 1),
+            child: bottomNav,
+          ),
+        );
+      }
+    }
+    return bottomNav;
   }
 
   Widget _buildIcon({

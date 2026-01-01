@@ -83,6 +83,7 @@ class _SettingsSearchPageState
           decoration: const InputDecoration(
             isDense: true,
             hintText: '搜索',
+            visualDensity: .standard,
             border: InputBorder.none,
           ),
         ),

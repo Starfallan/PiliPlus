@@ -11,25 +11,26 @@ import 'package:PiliPlus/models_new/dynamic/dyn_mention/group.dart';
 import 'package:PiliPlus/pages/dynamics_mention/controller.dart';
 import 'package:PiliPlus/pages/dynamics_mention/widgets/item.dart';
 import 'package:PiliPlus/pages/search/controller.dart' show DebounceStreamState;
-import 'package:PiliPlus/utils/context_ext.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class DynMentionPanel extends StatefulWidget {
   const DynMentionPanel({
     super.key,
     this.scrollController,
-    this.callback,
+    this.onCachePos,
   });
 
   final ScrollController? scrollController;
-  final ValueChanged<double>? callback;
+  final ValueChanged<double>? onCachePos;
 
   static Future onDynMention(
     BuildContext context, {
     double offset = 0,
-    ValueChanged<double>? callback,
+    ValueChanged<double>? onCachePos,
   }) {
     return showModalBottomSheet(
       context: Get.context!,
@@ -48,7 +49,7 @@ class DynMentionPanel extends StatefulWidget {
         snapSizes: const [0.65],
         builder: (context, scrollController) => DynMentionPanel(
           scrollController: scrollController,
-          callback: callback,
+          onCachePos: onCachePos,
         ),
       ),
     );
@@ -108,6 +109,7 @@ class _DynMentionPanelState
             controller: _controller.controller,
             onChanged: ctr!.add,
             decoration: InputDecoration(
+              visualDensity: .standard,
               border: const OutlineInputBorder(
                 gapPadding: 0,
                 borderSide: BorderSide.none,
@@ -178,7 +180,7 @@ class _DynMentionPanelState
                       _controller.focusNode.unfocus();
                     }
                   } else if (notification is ScrollEndNotification) {
-                    widget.callback?.call(notification.metrics.pixels);
+                    widget.onCachePos?.call(notification.metrics.pixels);
                   }
                   return false;
                 },
@@ -236,7 +238,7 @@ class _DynMentionPanelState
         padding: const EdgeInsets.only(top: 8),
         sliver: linearLoading,
       ),
-      Success<List<MentionGroup>?>(:var response) =>
+      Success<List<MentionGroup>?>(:final response) =>
         response != null && response.isNotEmpty
             ? SliverMainAxisGroup(
                 slivers: response.map((group) {
@@ -276,7 +278,7 @@ class _DynMentionPanelState
                 }).toList(),
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

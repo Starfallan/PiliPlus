@@ -1,7 +1,6 @@
 import 'dart:async' show FutureOr;
 import 'dart:io' show Platform;
 
-import 'package:PiliPlus/grpc/grpc_req.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/main.dart';
 import 'package:PiliPlus/models/user/info.dart';
@@ -47,11 +46,10 @@ abstract final class LoginUtils {
 
   static Future<void> onLoginMain() async {
     final account = Accounts.main;
-    GrpcReq.updateHeaders(account.accessKey);
-    setWebCookie(account);
-    RequestUtils.syncHistoryStatus();
     final result = await UserHttp.userInfo();
     if (result.isSuccess) {
+      setWebCookie(account);
+      RequestUtils.syncHistoryStatus();
       final UserInfoData data = result.data;
       if (data.isLogin == true) {
         final accountService = Get.find<AccountService>()
@@ -83,8 +81,6 @@ abstract final class LoginUtils {
       ..face.value = ''
       ..isLogin.value = false;
 
-    GrpcReq.updateHeaders(null);
-
     return Future.wait([
       if (!Platform.isLinux)
         web.CookieManager.instance(
@@ -95,7 +91,7 @@ abstract final class LoginUtils {
   }
 
   static String generateBuvid() {
-    var md5Str = Digest(
+    final md5Str = Digest(
       List.generate(16, (_) => Utils.random.nextInt(256)),
     ).toString();
     return 'XY${md5Str[2]}${md5Str[12]}${md5Str[22]}$md5Str';

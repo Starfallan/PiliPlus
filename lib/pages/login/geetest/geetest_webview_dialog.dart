@@ -31,7 +31,7 @@ class GeetestWebviewDialog extends StatelessWidget {
         extra: {'account': const NoAccount()},
       ),
     );
-    if (res.data case String data) {
+    if (res.data case final String data) {
       if (data.startsWith('(') && data.endsWith(')')) {
         final Map<String, dynamic> config;
         try {

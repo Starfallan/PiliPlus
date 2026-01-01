@@ -73,7 +73,7 @@ class ThreePoint {
   // int? watchLater;
 
   ThreePoint.fromJson(List json) {
-    for (var elem in json) {
+    for (final elem in json) {
       switch (elem['type']) {
         // case 'watch_later':
         //   watchLater = 1;

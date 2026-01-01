@@ -79,7 +79,7 @@ class _MemberDynamicsPageState extends State<MemberDynamicsPage>
   Widget _buildContent(LoadingState<List<DynamicItemModel>?> loadingState) {
     return switch (loadingState) {
       Loading() => dynSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? GlobalData().dynamicsWaterfallFlow
                   ? SliverWaterfallFlow(
@@ -114,7 +114,7 @@ class _MemberDynamicsPageState extends State<MemberDynamicsPage>
                       itemCount: response.length,
                     )
             : HttpError(onReload: _memberDynamicController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _memberDynamicController.onReload,
       ),

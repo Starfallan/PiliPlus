@@ -73,7 +73,7 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
   Widget _buildBody(LoadingState<List<SubDetailItemModel>?> loadingState) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -88,7 +88,7 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
                 itemCount: response.length,
               )
             : HttpError(onReload: _subDetailController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _subDetailController.onReload,
       ),

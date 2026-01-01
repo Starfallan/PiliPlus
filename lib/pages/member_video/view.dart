@@ -163,7 +163,7 @@ class _MemberVideoState extends State<MemberVideo>
   ) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverMainAxisGroup(
                 slivers: [
@@ -272,7 +272,7 @@ class _MemberVideoState extends State<MemberVideo>
                 ],
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

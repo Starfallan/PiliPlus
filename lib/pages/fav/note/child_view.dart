@@ -140,7 +140,7 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
   Widget _buildBody(LoadingState<List<FavNoteItemModel>?> loadingState) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -158,7 +158,7 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                 itemCount: response.length,
               )
             : HttpError(onReload: _favNoteController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _favNoteController.onReload,
       ),

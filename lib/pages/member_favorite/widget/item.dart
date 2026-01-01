@@ -6,15 +6,16 @@ import 'package:PiliPlus/models_new/space/space_fav/list.dart';
 import 'package:PiliPlus/pages/subscription_detail/view.dart';
 import 'package:PiliPlus/utils/fav_utils.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class MemberFavItem extends StatelessWidget {
-  const MemberFavItem({super.key, required this.item, this.callback});
+  const MemberFavItem({super.key, required this.item, this.onDelete});
 
   final SpaceFavItemModel item;
-  final ValueChanged<bool?>? callback;
+  final ValueChanged<bool?>? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +34,14 @@ class MemberFavItem extends StatelessWidget {
           }
 
           if (item.type == 0 || item.type == 11) {
-            var res = await Get.toNamed(
+            final isDeleted = await Get.toNamed(
               '/favDetail',
               parameters: {
                 'mediaId': item.id.toString(),
                 'heroTag': Utils.makeHeroTag(item.id),
               },
             );
-            callback?.call(res);
+            onDelete?.call(isDeleted);
           } else {
             SubDetailPage.toSubDetailPage(
               item.id!,
@@ -49,7 +50,7 @@ class MemberFavItem extends StatelessWidget {
           }
         },
         onLongPress: onLongPress,
-        onSecondaryTap: Utils.isMobile ? null : onLongPress,
+        onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: StyleString.safeSpace,

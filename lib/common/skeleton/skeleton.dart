@@ -11,7 +11,7 @@ class Skeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.surface.withAlpha(10);
-    var shimmerGradient = LinearGradient(
+    final shimmerGradient = LinearGradient(
       colors: [
         Colors.transparent,
         color,
@@ -62,7 +62,6 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     _shimmerController = AnimationController.unbounded(vsync: this)
       ..repeat(min: -0.5, max: 1.5, period: const Duration(milliseconds: 1000));
   }

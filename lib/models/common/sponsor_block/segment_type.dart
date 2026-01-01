@@ -6,9 +6,9 @@ import 'package:PiliPlus/models/common/sponsor_block/action_type.dart';
 
 enum SegmentType {
   sponsor(
-    '赞助广告',
-    '赞助广告',
-    '付费推广、付费推荐和直接广告。不是自我推广或免费提及他们喜欢的商品/创作者/网站/产品。',
+    '赞助/恰饭',
+    '赞助',
+    '付费推广、推荐和直接广告。不是自我推广或免费提及他们喜欢的商品/创作者/网站/产品。',
     Color(0xFF00d400),
     [
       ActionType.skip,
@@ -27,9 +27,16 @@ enum SegmentType {
       ActionType.full,
     ],
   ),
+  exclusive_access(
+    '独家访问/抢先体验',
+    '品牌合作',
+    '仅用于对整个视频进行标记。适用于展示UP主免费或获得补贴后使用的产品、服务或场地的视频。',
+    Color(0xFF008a5c),
+    [ActionType.full],
+  ),
   interaction(
-    '三连/订阅提醒',
-    '订阅提醒',
+    '三连/互动提醒',
+    '三连提醒',
     '视频中间简短提醒观众来一键三连或关注。 如果片段较长，或是有具体内容，则应分类为自我推广。',
     Color(0xFFcc00ff),
     [
@@ -37,9 +44,16 @@ enum SegmentType {
       ActionType.mute,
     ],
   ),
+  poi_highlight(
+    '精彩时刻/重点',
+    '精彩时刻',
+    '大部分人都在寻找的空降时间。类似于“封面在12:34”的评论。',
+    Color(0xFFff1684),
+    [ActionType.poi],
+  ),
   intro(
     '过场/开场动画',
-    '开场',
+    '开场动画',
     '没有实际内容的间隔片段。可以是暂停、静态帧或重复动画。不适用于包含内容的过场。',
     Color(0xFF00ffff),
     [
@@ -67,23 +81,16 @@ enum SegmentType {
       ActionType.mute,
     ],
   ),
-  music_offtopic(
-    '音乐:非音乐部分',
-    '非音乐',
-    '仅用于音乐视频。此分类只能用于音乐视频中未包括于其他分类的部分。',
-    Color(0xFFff9900),
+  padding(
+    '填充内容/前黑/后黑',
+    '填充内容',
+    '搬运视频片头片尾的纯粹填充内容，如黑屏或无关画面，与视频主体内容无实际意义和关联。',
+    Color(0xFF222222),
     [ActionType.skip],
-  ),
-  poi_highlight(
-    '精彩时刻/重点',
-    '精彩时刻',
-    '大部分人都在寻找的空降时间。类似于“封面在12:34”的评论。',
-    Color(0xFFff1684),
-    [ActionType.poi],
   ),
   filler(
     '离题闲聊/玩笑',
-    '闲聊',
+    '离题',
     "仅作为填充内容或增添趣味而添加的离题片段，这些内容对理解视频的主要内容并非必需。这不包括提供背景信息或上下文的片段。这是一个非常激进的分类，适用于当你不想看'娱乐性'内容的时候。",
     Color(0xFF7300FF),
     [
@@ -91,13 +98,13 @@ enum SegmentType {
       ActionType.mute,
     ],
   ),
-  exclusive_access(
-    '柔性推广/品牌合作',
-    '品牌合作',
-    '仅用于对整个视频进行标记。适用于展示UP主免费或获得补贴后使用的产品、服务或场地的视频。',
-    Color(0xFF008a5c),
-    [ActionType.full],
-  )
+  music_offtopic(
+    '音乐:非音乐部分',
+    '非音乐',
+    '仅用于音乐视频。此分类只能用于音乐视频中未包括于其他分类的部分。',
+    Color(0xFFff9900),
+    [ActionType.skip],
+  ),
   ;
 
   /// from https://github.com/hanydd/BilibiliSponsorBlock/blob/master/public/_locales/zh_CN/messages.json

@@ -8,7 +8,7 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/space/space_audio/item.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 
 class MemberAudioItem extends StatelessWidget {
@@ -31,7 +31,7 @@ class MemberAudioItem extends StatelessWidget {
           from: PlaylistSource.MEM_SPACE,
         ),
         onLongPress: onLongPress,
-        onSecondaryTap: Utils.isMobile ? null : onLongPress,
+        onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: StyleString.safeSpace,
@@ -46,10 +46,12 @@ class MemberAudioItem extends StatelessWidget {
                   builder:
                       (BuildContext context, BoxConstraints boxConstraints) {
                         return NetworkImgLayer(
-                          radius: 4,
                           src: item.cover,
                           width: boxConstraints.maxWidth,
                           height: boxConstraints.maxHeight,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(4),
+                          ),
                         );
                       },
                 ),

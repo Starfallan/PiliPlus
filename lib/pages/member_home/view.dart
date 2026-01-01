@@ -16,11 +16,11 @@ import 'package:PiliPlus/pages/member_home/widgets/fav_item.dart';
 import 'package:PiliPlus/pages/member_home/widgets/video_card_v_member_home.dart';
 import 'package:PiliPlus/pages/member_like_arc/view.dart';
 import 'package:PiliPlus/pages/member_pgc/widgets/pgc_card_v_member_pgc.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class MemberHome extends StatefulWidget {
   const MemberHome({super.key, this.heroTag});
@@ -258,7 +258,7 @@ class _MemberHomeState extends State<MemberHome>
                 ],
               )
             : scrollErrorWidget(),
-      Error(:var errMsg) => scrollErrorWidget(errMsg: errMsg),
+      Error(:final errMsg) => scrollErrorWidget(errMsg: errMsg),
     };
   }
 

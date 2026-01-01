@@ -17,7 +17,8 @@ import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/member/controller.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
@@ -80,7 +81,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
   Widget _buildUserPage(ThemeData theme, LoadingState userState) {
     return switch (userState) {
       Loading() => loadingWidget,
-      Success(:var response) => Column(
+      Success(:final response) => Column(
         children: [
           _buildUserInfo(theme, response),
           _buildHeader(theme),
@@ -108,7 +109,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
           ),
         ],
       ),
-      Error(:var errMsg) => scrollErrorWidget(
+      Error(:final errMsg) => scrollErrorWidget(
         controller: _controller.scrollController,
         errMsg: errMsg,
         onReload: () {
@@ -172,7 +173,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
         itemBuilder: (_, _) => const VideoCardHSkeleton(),
         itemExtent: 100,
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverFixedExtentList.builder(
                 itemBuilder: (context, index) {
@@ -202,7 +203,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
                 itemExtent: 100,
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),
@@ -245,8 +246,12 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
           ),
           const SizedBox(width: 8),
           Image.asset(
-            'assets/images/lv/lv${memberInfoModel.isSeniorMember == 1 ? '6_s' : memberInfoModel.level}.png',
+            Utils.levelName(
+              memberInfoModel.level!,
+              isSeniorMember: memberInfoModel.isSeniorMember == 1,
+            ),
             height: 11,
+            cacheHeight: 11.cacheSize(context),
           ),
         ],
       ),
@@ -306,7 +311,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
                     context: context,
                     mid: widget.mid,
                     isFollow: memberInfoModel.isFollowed ?? false,
-                    callback: (attribute) {
+                    afterMod: (attribute) {
                       _controller
                         ..userState.value.data.isFollowed = attribute != 0
                         ..userState.refresh();

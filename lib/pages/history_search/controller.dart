@@ -27,16 +27,18 @@ class HistorySearchController
   final account = Accounts.history;
 
   Future<void> onDelHistory(int index, kid, String business) async {
-    var res = await UserHttp.delHistory(
+    final res = await UserHttp.delHistory(
       '${business}_$kid',
       account: account,
     );
-    if (res['status']) {
+    if (res.isSuccess) {
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
+      SmartDialog.showToast('已删除');
+    } else {
+      res.toast();
     }
-    SmartDialog.showToast(res['msg']);
   }
 
   @override
@@ -48,17 +50,19 @@ class HistorySearchController
       onConfirm: () async {
         SmartDialog.showLoading(msg: '请求中');
         final removeList = allChecked.toSet();
-        var response = await UserHttp.delHistory(
+        final response = await UserHttp.delHistory(
           removeList
               .map((item) => '${item.history.business!}_${item.kid!}')
               .join(','),
           account: account,
         );
-        if (response['status']) {
+        if (response.isSuccess) {
           afterDelete(removeList);
+          SmartDialog.showToast('已删除');
+        } else {
+          response.toast();
         }
         SmartDialog.dismiss();
-        SmartDialog.showToast(response['msg']);
       },
     );
   }

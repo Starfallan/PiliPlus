@@ -65,7 +65,7 @@ class _LiveAreaDetailPageState extends State<LiveAreaDetailPage> {
   ) {
     return switch (loadingState) {
       Loading() => const SizedBox.shrink(),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? DefaultTabController(
                 initialIndex: _controller.initialIndex,

@@ -5,7 +5,7 @@ import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:hive/hive.dart';
 
-abstract class Accounts {
+abstract final class Accounts {
   static late final Box<LoginAccount> account;
   static final List<Account> accountMode = List.filled(
     AccountType.values.length,
@@ -71,8 +71,8 @@ abstract class Accounts {
   // }
 
   static Future<void> refresh() async {
-    for (var a in account.values) {
-      for (var t in a.type) {
+    for (final a in account.values) {
+      for (final t in a.type) {
         accountMode[t.index] = a;
       }
     }
@@ -93,7 +93,7 @@ abstract class Accounts {
   }
 
   static Future<void> deleteAll(Set<Account> accounts) async {
-    var isLoginMain = Accounts.main.isLogin;
+    final isLoginMain = Accounts.main.isLogin;
     for (int i = 0; i < AccountType.values.length; i++) {
       if (accounts.contains(accountMode[i])) {
         accountMode[i] = AnonymousAccount();

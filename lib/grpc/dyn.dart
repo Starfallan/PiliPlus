@@ -7,7 +7,7 @@ import 'package:PiliPlus/grpc/url.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:fixnum/fixnum.dart';
 
-class DynGrpc {
+abstract final class DynGrpc {
   // static Future dynSpace({
   //   required int uid,
   //   required int page,

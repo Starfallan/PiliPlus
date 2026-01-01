@@ -8,7 +8,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart' show PbMap;
 import 'package:uuid/uuid.dart';
 
-class ImGrpc {
+abstract final class ImGrpc {
   static Future<LoadingState<RspSendMsg>> sendMsg({
     required int senderUid,
     required int receiverId,

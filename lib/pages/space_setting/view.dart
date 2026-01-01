@@ -36,7 +36,7 @@ class _SpaceSettingPageState extends State<SpaceSettingPage> {
   Widget _buildBody(ThemeData theme, LoadingState<Privacy?> loadingState) {
     return switch (loadingState) {
       Loading() => const SizedBox.shrink(),
-      Success<Privacy?>(:var response) =>
+      Success<Privacy?>(:final response) =>
         response == null
             ? scrollErrorWidget(onReload: _controller.onReload)
             : Builder(
@@ -88,7 +88,7 @@ class _SpaceSettingPageState extends State<SpaceSettingPage> {
                   );
                 },
               ),
-      Error(:var errMsg) => scrollErrorWidget(
+      Error(:final errMsg) => scrollErrorWidget(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

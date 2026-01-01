@@ -4,9 +4,9 @@ import 'dart:math' as math;
 import 'package:PiliPlus/pages/common/common_intro_controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
-import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'
     show KeyDownEvent, KeyUpEvent, LogicalKeyboardKey, HardwareKeyboard;
@@ -28,8 +28,8 @@ class PlayerFocus extends StatelessWidget {
   final PlPlayerController plPlayerController;
   final CommonIntroController? introController;
   final VoidCallback onSendDanmaku;
-  final bool Function()? canPlay;
-  final bool Function()? onSkipSegment;
+  final ValueGetter<bool>? canPlay;
+  final ValueGetter<bool>? onSkipSegment;
 
   static bool _shouldHandle(LogicalKeyboardKey logicalKey) {
     return logicalKey == LogicalKeyboardKey.tab ||
@@ -59,7 +59,10 @@ class PlayerFocus extends StatelessWidget {
 
   void _setVolume({required bool isIncrease}) {
     final volume = isIncrease
-        ? math.min(1.0, plPlayerController.volume.value + 0.1)
+        ? math.min(
+            PlPlayerController.maxVolume,
+            plPlayerController.volume.value + 0.1,
+          )
         : math.max(0.0, plPlayerController.volume.value - 0.1);
     plPlayerController.setVolume(volume);
   }
@@ -184,7 +187,7 @@ class PlayerFocus extends StatelessWidget {
           return true;
 
         case LogicalKeyboardKey.keyP:
-          if (Utils.isDesktop && hasPlayer && !isFullScreen) {
+          if (PlatformUtils.isDesktop && hasPlayer && !isFullScreen) {
             plPlayerController
               ..toggleDesktopPip()
               ..controlsLock.value = false
@@ -251,7 +254,7 @@ class PlayerFocus extends StatelessWidget {
             return true;
 
           case LogicalKeyboardKey.keyG:
-            if (introController case UgcIntroController ugcCtr) {
+            if (introController case final UgcIntroController ugcCtr) {
               ugcCtr.actionRelationMod(Get.context!);
             }
             return true;

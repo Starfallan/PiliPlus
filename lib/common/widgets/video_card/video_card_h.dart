@@ -14,7 +14,7 @@ import 'package:PiliPlus/models/search/result.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
@@ -36,8 +36,8 @@ class VideoCardH extends StatelessWidget {
   Widget build(BuildContext context) {
     String type = 'video';
     String? badge;
-    if (videoItem case SearchVideoItemModel item) {
-      var typeOrNull = item.type;
+    if (videoItem case final SearchVideoItemModel item) {
+      final typeOrNull = item.type;
       if (typeOrNull != null && typeOrNull.isNotEmpty) {
         type = typeOrNull;
         if (type == 'ketang') {
@@ -49,7 +49,7 @@ class VideoCardH extends StatelessWidget {
       if (item.isUnionVideo == 1) {
         badge = '合作';
       }
-    } else if (videoItem case HotVideoItemModel item) {
+    } else if (videoItem case final HotVideoItemModel item) {
       if (item.isCharging == true) {
         badge = '充电专属';
       } else if (item.isCooperation == 1) {
@@ -70,7 +70,7 @@ class VideoCardH extends StatelessWidget {
         children: [
           InkWell(
             onLongPress: onLongPress,
-            onSecondaryTap: Utils.isMobile ? null : onLongPress,
+            onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
             onTap:
                 onTap ??
                 () async {
@@ -78,7 +78,7 @@ class VideoCardH extends StatelessWidget {
                     PageUtils.viewPugv(seasonId: videoItem.aid);
                     return;
                   } else if (type == 'live_room') {
-                    if (videoItem case SearchVideoItemModel item) {
+                    if (videoItem case final SearchVideoItemModel item) {
                       int? roomId = item.id;
                       if (roomId != null) {
                         PageUtils.toLiveRoom(roomId);
@@ -90,7 +90,7 @@ class VideoCardH extends StatelessWidget {
                     }
                     return;
                   }
-                  if (videoItem case HotVideoItemModel item) {
+                  if (videoItem case final HotVideoItemModel item) {
                     if (item.redirectUrl?.isNotEmpty == true &&
                         PageUtils.viewPgcFromUri(item.redirectUrl!)) {
                       return;
@@ -131,7 +131,7 @@ class VideoCardH extends StatelessWidget {
                         final double maxWidth = boxConstraints.maxWidth;
                         final double maxHeight = boxConstraints.maxHeight;
                         num? progress;
-                        if (videoItem case HotVideoItemModel item) {
+                        if (videoItem case final HotVideoItemModel item) {
                           progress = item.progress;
                         }
 
@@ -215,7 +215,7 @@ class VideoCardH extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (videoItem case SearchVideoItemModel item) ...[
+          if (videoItem case final SearchVideoItemModel item) ...[
             if (item.titleList?.isNotEmpty == true)
               Expanded(
                 child: Text.rich(

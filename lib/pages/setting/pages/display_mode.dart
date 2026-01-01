@@ -1,10 +1,10 @@
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_displaymode/flutter_displaymode.dart';
-import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 class SetDisplayMode extends StatefulWidget {
@@ -45,7 +45,7 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
       if (kDebugMode) debugPrint(e.toString());
     }
 
-    var value = setting.get(SettingBoxKey.displayMode);
+    final value = setting.get(SettingBoxKey.displayMode);
     if (value != null) {
       preferred = modes.firstWhereOrNull((e) => e.toString() == value);
     }

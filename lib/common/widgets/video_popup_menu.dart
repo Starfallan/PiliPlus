@@ -71,7 +71,7 @@ class VideoPopupMenu extends StatelessWidget {
                         '稍后再看',
                         const Icon(MdiIcons.clockTimeEightOutline, size: 16),
                         () async {
-                          var res = await UserHttp.toViewLater(
+                          final res = await UserHttp.toViewLater(
                             bvid: videoItem.bvid,
                           );
                           SmartDialog.showToast(res['msg']);
@@ -116,21 +116,13 @@ class VideoPopupMenu extends StatelessWidget {
                                 context: context,
                                 builder: (context) {
                                   return Dialog(
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(
-                                        minWidth: 280,
-                                        maxWidth: 420,
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 14,
-                                        ),
-                                        child: AiConclusionPanel.buildContent(
-                                          context,
-                                          Theme.of(context),
-                                          res,
-                                          tap: false,
-                                        ),
+                                    child: Padding(
+                                      padding: const .symmetric(vertical: 14),
+                                      child: AiConclusionPanel.buildContent(
+                                        context,
+                                        Theme.of(context),
+                                        res,
+                                        tap: false,
                                       ),
                                     ),
                                   );
@@ -157,7 +149,7 @@ class VideoPopupMenu extends StatelessWidget {
                             SmartDialog.showToast("请退出账号后重新登录");
                             return;
                           }
-                          if (videoItem case RecVideoItemAppModel item) {
+                          if (videoItem case final RecVideoItemAppModel item) {
                             ThreePoint? tp = item.threePoint;
                             if (tp == null) {
                               SmartDialog.showToast("未能获取threePoint");
@@ -176,20 +168,20 @@ class VideoPopupMenu extends StatelessWidget {
                                 onTap: (_) async {
                                   Get.back();
                                   SmartDialog.showLoading(msg: '正在提交');
-                                  var res = await VideoHttp.feedDislike(
+                                  final res = await VideoHttp.feedDislike(
                                     reasonId: r?.id,
                                     feedbackId: f?.id,
                                     id: item.param!,
                                     goto: item.goto!,
                                   );
                                   SmartDialog.dismiss();
-                                  SmartDialog.showToast(
-                                    res['status']
-                                        ? (r?.toast ?? f?.toast)
-                                        : res['msg'],
-                                  );
-                                  if (res['status']) {
+                                  if (res.isSuccess) {
+                                    SmartDialog.showToast(
+                                      r?.toast ?? f!.toast!,
+                                    );
                                     onRemove?.call();
+                                  } else {
+                                    res.toast();
                                   }
                                 },
                               );
@@ -201,8 +193,7 @@ class VideoPopupMenu extends StatelessWidget {
                                 return AlertDialog(
                                   content: SingleChildScrollView(
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: .start,
                                       children: [
                                         if (tp.dislikeReasons != null) ...[
                                           const Text('我不想看'),
@@ -236,16 +227,16 @@ class VideoPopupMenu extends StatelessWidget {
                                               SmartDialog.showLoading(
                                                 msg: '正在提交',
                                               );
-                                              var res =
+                                              final res =
                                                   await VideoHttp.feedDislikeCancel(
                                                     id: item.param!,
                                                     goto: item.goto!,
                                                   );
                                               SmartDialog.dismiss();
                                               SmartDialog.showToast(
-                                                res['status']
+                                                res.isSuccess
                                                     ? "成功"
-                                                    : res['msg'],
+                                                    : res.toString(),
                                               );
                                               Get.back();
                                             },
@@ -283,19 +274,17 @@ class VideoPopupMenu extends StatelessWidget {
                                                 SmartDialog.showLoading(
                                                   msg: '正在提交',
                                                 );
-                                                var res =
+                                                final res =
                                                     await VideoHttp.dislikeVideo(
                                                       bvid: videoItem.bvid!,
                                                       type: true,
                                                     );
                                                 SmartDialog.dismiss();
-                                                SmartDialog.showToast(
-                                                  res['status']
-                                                      ? "点踩成功"
-                                                      : res['msg'],
-                                                );
-                                                if (res['status']) {
+                                                if (res.isSuccess) {
+                                                  SmartDialog.showToast('点踩成功');
                                                   onRemove?.call();
+                                                } else {
+                                                  res.toast();
                                                 }
                                               },
                                               style: FilledButton.styleFrom(
@@ -310,16 +299,16 @@ class VideoPopupMenu extends StatelessWidget {
                                                 SmartDialog.showLoading(
                                                   msg: '正在提交',
                                                 );
-                                                var res =
+                                                final res =
                                                     await VideoHttp.dislikeVideo(
                                                       bvid: videoItem.bvid!,
                                                       type: false,
                                                     );
                                                 SmartDialog.dismiss();
                                                 SmartDialog.showToast(
-                                                  res['status']
-                                                      ? "取消踩"
-                                                      : res['msg'],
+                                                  res.isSuccess
+                                                      ? '取消踩'
+                                                      : res.toString(),
                                                 );
                                               },
                                               style: FilledButton.styleFrom(
@@ -366,15 +355,16 @@ class VideoPopupMenu extends StatelessWidget {
                                 TextButton(
                                   onPressed: () async {
                                     Get.back();
-                                    var res = await VideoHttp.relationMod(
+                                    final res = await VideoHttp.relationMod(
                                       mid: videoItem.owner.mid!,
                                       act: 5,
                                       reSrc: 11,
                                     );
-                                    if (res['status']) {
+                                    if (res.isSuccess) {
                                       onRemove?.call();
+                                    } else {
+                                      res.toast();
                                     }
-                                    SmartDialog.showToast(res['msg'] ?? '成功');
                                   },
                                   child: const Text('确认'),
                                 ),

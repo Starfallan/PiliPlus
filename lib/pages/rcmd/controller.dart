@@ -32,8 +32,8 @@ class RcmdController extends CommonListController {
         if (savedRcmdTip) {
           lastRefreshAt = dataList.length;
         }
-        if (currentList.length > 500) {
-          currentList.removeRange(50, currentList.length);
+        if (currentList.length > 200) {
+          currentList.length = 50;
         }
         dataList.addAll(currentList);
       }

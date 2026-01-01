@@ -1,4 +1,4 @@
-class HttpString {
+abstract final class HttpString {
   static const String baseUrl = 'https://www.bilibili.com';
   static const String apiBaseUrl = 'https://api.bilibili.com';
   static const String tUrl = 'https://api.vc.bilibili.com';

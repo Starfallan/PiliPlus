@@ -57,7 +57,7 @@ class _SearchVideoPanelState
                   scrollDirection: Axis.horizontal,
                   child: Wrap(
                     children: [
-                      for (var e in ArchiveFilterType.values)
+                      for (final e in ArchiveFilterType.values)
                         Obx(
                           () => SearchText(
                             fontSize: 13,

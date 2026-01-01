@@ -7,6 +7,7 @@ import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/http/sponsor_block.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/models/common/stat_type.dart';
+import 'package:PiliPlus/models_new/video/video_ai_conclusion/model_result.dart';
 import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/staff.dart';
 import 'package:PiliPlus/models_new/video/video_tag/data.dart';
@@ -21,11 +22,16 @@ import 'package:PiliPlus/pages/video/introduction/ugc/widgets/selectable_text.da
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/get_ext.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/string_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:expandable/expandable.dart';
@@ -33,7 +39,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class UgcIntroPanel extends StatefulWidget {
@@ -174,7 +180,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                   const SizedBox(height: 8),
                   if (isLoading)
                     _buildVideoTitle(theme, videoDetail)
-                  else if (isHorizontal && Utils.isDesktop)
+                  else if (isHorizontal && PlatformUtils.isDesktop)
                     SelectionArea(
                       child: _buildVideoTitle(
                         theme,
@@ -205,13 +211,15 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                         children: [
                           WidgetSpan(
                             alignment: PlaceholderAlignment.middle,
-                            child: Icon(
-                              size: 13,
-                              Icons.error_outline,
-                              color: theme.colorScheme.outline,
+                            child: Padding(
+                              padding: const .only(right: 2),
+                              child: Icon(
+                                size: 13,
+                                Icons.error_outline,
+                                color: theme.colorScheme.outline,
+                              ),
                             ),
                           ),
-                          const WidgetSpan(child: SizedBox(width: 2)),
                           TextSpan(
                             text: '${videoDetail.argueInfo!.argueMsg}',
                           ),
@@ -223,7 +231,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                       ),
                     ),
                   ],
-                  if (isHorizontal && Utils.isDesktop)
+                  if (isHorizontal && PlatformUtils.isDesktop)
                     ..._infos(theme, videoDetail)
                   else
                     ExpandablePanel(
@@ -342,10 +350,10 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
     ],
     Obx(() {
       final videoTags = introController.videoTags.value;
-      if (videoTags.isNullOrEmpty) {
+      if (videoTags == null || videoTags.isEmpty) {
         return const SizedBox.shrink();
       }
-      return _buildTags(videoTags!);
+      return _buildTags(videoTags);
     }),
   ];
 
@@ -825,7 +833,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                               context: context,
                               mid: item.mid,
                               isFollow: false,
-                              callback: (val) {
+                              afterMod: (val) {
                                 introController.staffRelations['${item.mid}'] =
                                     true;
                               },
@@ -979,9 +987,11 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           if (introController.aiConclusionResult == null) {
             await introController.aiConclusion();
           }
-          if (introController.aiConclusionResult case final res?) {
-            if (res.summary?.isNotEmpty == true ||
-                res.outline?.isNotEmpty == true) {
+          if (introController.aiConclusionResult case AiConclusionResult(
+            :final summary,
+            :final outline,
+          )) {
+            if (summary?.isNotEmpty == true || outline?.isNotEmpty == true) {
               widget.showAiBottomSheet();
             } else {
               SmartDialog.showToast("当前视频不支持AI视频总结");
@@ -993,6 +1003,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           'assets/images/ai.png',
           height: 18,
           width: 18,
+          cacheHeight: 18.cacheSize(context),
         ),
       ),
     ),

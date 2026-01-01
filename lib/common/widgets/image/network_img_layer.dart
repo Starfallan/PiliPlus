@@ -1,6 +1,6 @@
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,70 +12,57 @@ class NetworkImgLayer extends StatelessWidget {
     required this.src,
     required this.width,
     this.height,
-    this.type = ImageType.def,
-    this.fadeOutDuration,
-    this.fadeInDuration,
-    // 图片质量 默认1%
+    this.type = .def,
+    this.fadeOutDuration = const Duration(milliseconds: 120),
+    this.fadeInDuration = const Duration(milliseconds: 120),
     this.quality,
-    this.semanticsLabel,
-    this.radius,
-    this.imageBuilder,
-    this.isLongPic = false,
+    this.borderRadius = StyleString.mdRadius,
     this.forceUseCacheWidth = false,
     this.getPlaceHolder,
-    this.boxFit,
+    this.fit = .cover,
+    this.alignment = .center,
   });
 
   final String? src;
   final double width;
   final double? height;
   final ImageType type;
-  final Duration? fadeOutDuration;
-  final Duration? fadeInDuration;
+  final Duration fadeOutDuration;
+  final Duration fadeInDuration;
   final int? quality;
-  final String? semanticsLabel;
-  final double? radius;
-  final ImageWidgetBuilder? imageBuilder;
-  final bool isLongPic;
+  final BorderRadius borderRadius;
   final bool forceUseCacheWidth;
-  final Widget Function()? getPlaceHolder;
-  final BoxFit? boxFit;
+  final ValueGetter<Widget>? getPlaceHolder;
+  final BoxFit fit;
+  final Alignment alignment;
 
   static Color? reduceLuxColor = Pref.reduceLuxColor;
   static bool reduce = false;
 
   @override
   Widget build(BuildContext context) {
-    final noRadius = type == ImageType.emote || radius == 0;
-    final Widget child;
-
+    final isEmote = type == ImageType.emote;
+    final isAvatar = type == ImageType.avatar;
     if (src?.isNotEmpty == true) {
-      child = noRadius
-          ? _buildImage(context, noRadius)
-          : type == ImageType.avatar
-          ? ClipOval(child: _buildImage(context, noRadius))
-          : ClipRRect(
-              borderRadius: radius != null
-                  ? BorderRadius.circular(radius!)
-                  : StyleString.mdRadius,
-              child: _buildImage(context, noRadius),
-            );
+      Widget child = _buildImage(context, isEmote: isEmote, isAvatar: isAvatar);
+      if (isEmote) {
+        return child;
+      } else if (isAvatar) {
+        return ClipOval(child: child);
+      } else {
+        return ClipRRect(borderRadius: borderRadius, child: child);
+      }
     } else {
-      child = getPlaceHolder?.call() ?? _placeholder(context, noRadius);
+      return getPlaceHolder?.call() ??
+          _placeholder(context, isEmote: isEmote, isAvatar: isAvatar);
     }
-
-    return semanticsLabel?.isNotEmpty == true
-        ? Semantics(
-            container: true,
-            image: true,
-            excludeSemantics: true,
-            label: semanticsLabel,
-            child: child,
-          )
-        : child;
   }
 
-  Widget _buildImage(BuildContext context, bool noRadius) {
+  Widget _buildImage(
+    BuildContext context, {
+    required bool isEmote,
+    required bool isAvatar,
+  }) {
     int? memCacheWidth, memCacheHeight;
     if (height == null || forceUseCacheWidth || width <= height!) {
       memCacheWidth = width.cacheSize(context);
@@ -88,36 +75,36 @@ class NetworkImgLayer extends StatelessWidget {
       height: height,
       memCacheWidth: memCacheWidth,
       memCacheHeight: memCacheHeight,
-      fit: boxFit ?? BoxFit.cover,
-      alignment: isLongPic ? Alignment.topCenter : Alignment.center,
-      fadeOutDuration: fadeOutDuration ?? const Duration(milliseconds: 120),
-      fadeInDuration: fadeInDuration ?? const Duration(milliseconds: 120),
+      fit: fit,
+      alignment: alignment,
+      fadeOutDuration: fadeOutDuration,
+      fadeInDuration: fadeInDuration,
       filterQuality: FilterQuality.low,
-      placeholder: (BuildContext context, String url) =>
-          getPlaceHolder?.call() ?? _placeholder(context, noRadius),
-      imageBuilder: imageBuilder,
-      errorWidget: (context, url, error) => _placeholder(context, noRadius),
+      placeholder: (_, _) =>
+          getPlaceHolder?.call() ??
+          _placeholder(context, isEmote: isEmote, isAvatar: isAvatar),
+      errorWidget: (_, _, _) =>
+          _placeholder(context, isEmote: isEmote, isAvatar: isAvatar),
       colorBlendMode: reduce ? BlendMode.modulate : null,
       color: reduce ? reduceLuxColor : null,
     );
   }
 
-  Widget _placeholder(BuildContext context, bool noRadius) {
-    final isAvatar = type == ImageType.avatar;
+  Widget _placeholder(
+    BuildContext context, {
+    required bool isEmote,
+    required bool isAvatar,
+  }) {
     return Container(
       width: width,
       height: height,
-      clipBehavior: noRadius ? Clip.none : Clip.antiAlias,
+      clipBehavior: isEmote ? Clip.none : Clip.antiAlias,
       decoration: BoxDecoration(
         shape: isAvatar ? BoxShape.circle : BoxShape.rectangle,
         color: Theme.of(
           context,
         ).colorScheme.onInverseSurface.withValues(alpha: 0.4),
-        borderRadius: noRadius || isAvatar
-            ? null
-            : radius != null
-            ? BorderRadius.circular(radius!)
-            : StyleString.mdRadius,
+        borderRadius: isEmote || isAvatar ? null : borderRadius,
       ),
       child: Center(
         child: Image.asset(

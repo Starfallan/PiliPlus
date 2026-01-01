@@ -13,10 +13,11 @@ import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
+import 'package:PiliPlus/utils/extension/widget_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,9 @@ class ChatItem extends StatelessWidget {
                         Feedback.forLongPress(context);
                         onLongPress!();
                       },
-                      onSecondaryTap: Utils.isMobile ? null : onLongPress,
+                      onSecondaryTap: PlatformUtils.isMobile
+                          ? null
+                          : onLongPress,
                       child: Row(
                         mainAxisAlignment: isOwner
                             ? MainAxisAlignment.end
@@ -210,7 +213,7 @@ class ChatItem extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: () {
-              var roomId = content['sourceID'];
+              dynamic roomId = content['sourceID'];
               if (roomId is String) {
                 roomId = int.parse(roomId);
               }
@@ -263,7 +266,7 @@ class ChatItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              for (var i in content['image_urls'])
+              for (final i in content['image_urls'])
                 NetworkImgLayer(
                   width: 130,
                   height: 130 * 9 / 16,
@@ -323,7 +326,7 @@ class ChatItem extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            for (var i in content['sub_cards'])
+            for (final i in content['sub_cards'])
               GestureDetector(
                 onTap: () async {
                   String? bvid = IdUtils.bvRegex
@@ -418,7 +421,7 @@ class ChatItem extends StatelessWidget {
               onTap: () async {
                 try {
                   SmartDialog.showLoading();
-                  var bvid = content["bvid"];
+                  final bvid = content["bvid"];
                   final int? cid = await SearchHttp.ab2c(bvid: bvid);
                   SmartDialog.dismiss();
                   if (cid != null) {
@@ -634,7 +637,7 @@ class ChatItem extends StatelessWidget {
     late final Map<String, Map> emojiMap = {};
     final List<String> patterns = [Constants.urlRegex.pattern];
     if (eInfos != null) {
-      for (var e in eInfos!) {
+      for (final e in eInfos!) {
         emojiMap[e.text] ??= {
           'url': e.hasGifUrl() ? e.gifUrl : e.url,
           'size': e.size * 22.0,
@@ -754,20 +757,16 @@ class ChatItem extends StatelessWidget {
 
   Widget msgTypePictureCard_13(dynamic content) {
     final url = content['jump_url'];
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 400.0),
-        child: ClipRRect(
-          borderRadius: StyleString.mdRadius,
-          child: GestureDetector(
-            onTap: url == null ? null : () => PiliScheme.routePushFromUrl(url),
-            child: CachedNetworkImage(
-              imageUrl: ImageUtils.thumbnailUrl(content['pic_url']),
-            ),
-          ),
+    return GestureDetector(
+      onTap: url == null ? null : () => PiliScheme.routePushFromUrl(url),
+      child: ClipRRect(
+        borderRadius: StyleString.mdRadius,
+        child: CachedNetworkImage(
+          imageUrl: ImageUtils.thumbnailUrl(content['pic_url']),
+          placeholder: (_, _) => const SizedBox.shrink(),
         ),
       ),
-    );
+    ).constraintWidth(constraints: const BoxConstraints(maxWidth: 400.0));
   }
 
   Widget def(Color textColor, {err}) {

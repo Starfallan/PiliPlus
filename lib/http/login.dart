@@ -15,7 +15,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:encrypt/encrypt.dart';
 
-class LoginHttp {
+abstract final class LoginHttp {
   static final String deviceId = LoginUtils.genDeviceId();
   static String get buvid => LoginUtils.buvid;
   static final Map<String, String> headers = {
@@ -33,15 +33,14 @@ class LoginHttp {
   @pragma('vm:notify-debugger-on-exception')
   static Future<LoadingState<({String authCode, String url})>>
   getHDcode() async {
-    var params = {
+    final params = {
       // 'local_id': 'Y952A395BB157D305D8A8340FC2AAECECE17',
       'local_id': '0',
-      'ts': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
       'platform': 'android',
       'mobi_app': 'android_hd',
     };
     AppSign.appSign(params);
-    var res = await Request().post(Api.getTVCode, queryParameters: params);
+    final res = await Request().post(Api.getTVCode, queryParameters: params);
 
     if (res.data['code'] == 0) {
       try {
@@ -56,13 +55,12 @@ class LoginHttp {
   }
 
   static Future codePoll(String authCode) async {
-    var params = {
+    final params = {
       'auth_code': authCode,
       'local_id': '0',
-      'ts': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
     };
     AppSign.appSign(params);
-    var res = await Request().post(Api.qrcodePoll, queryParameters: params);
+    final res = await Request().post(Api.qrcodePoll, queryParameters: params);
     return {
       'status': res.data['code'] == 0,
       'code': res.data['code'],
@@ -72,7 +70,7 @@ class LoginHttp {
   }
 
   static Future queryCaptcha() async {
-    var res = await Request().get(Api.getCaptcha);
+    final res = await Request().get(Api.getCaptcha);
     if (res.data['code'] == 0) {
       return {
         'status': true,
@@ -85,7 +83,7 @@ class LoginHttp {
 
   // 获取salt与PubKey
   static Future getWebKey() async {
-    var res = await Request().get(Api.getWebKey);
+    final res = await Request().get(Api.getWebKey);
     //data: {'disable_rcmd': 0, 'local_id': LoginUtils.generateBuvid()});
     if (res.data['code'] == 0) {
       return {'status': true, 'data': res.data['data']};
@@ -104,7 +102,7 @@ class LoginHttp {
     String? recaptchaToken,
   }) async {
     int timestamp = DateTime.now().millisecondsSinceEpoch;
-    var data = {
+    final data = {
       'build': '2001100',
       'buvid': buvid,
       'c_locale': 'zh_CN',
@@ -118,7 +116,7 @@ class LoginHttp {
       'local_id': buvid,
       // https://chinggg.github.io/post/appre/
       'login_session_id': md5
-          .convert(utf8.encode(buvid + timestamp.toString()))
+          .convert(ascii.encode(buvid + timestamp.toString()))
           .toString(),
       'mobi_app': 'android_hd',
       'platform': 'android',
@@ -130,7 +128,7 @@ class LoginHttp {
     };
     AppSign.appSign(data);
 
-    var res = await Request().post(
+    final res = await Request().post(
       Api.appSmsCode,
       data: data,
       options: Options(
@@ -153,7 +151,7 @@ class LoginHttp {
 
   // static Future getGuestId(String key) async {
   //   dynamic publicKey = RSAKeyParser().parse(key);
-  //   var params = {
+  //   final params = {
   //     'appkey': Constants.appKey,
   //     'build': '2001100',
   //     'buvid': buvid,
@@ -176,7 +174,7 @@ class LoginHttp {
   //     Constants.appKey,
   //     Constants.appSec,
   //   );
-  //   var res = await Request().post(Api.getGuestId,
+  //   final res = await Request().post(Api.getGuestId,
   //       queryParameters: {...params, 'sign': sign},
   //       options: Options(
   //         contentType: Headers.formUrlEncodedContentType,
@@ -236,11 +234,10 @@ class LoginHttp {
       'recaptcha_token': ?recaptchaToken,
       's_locale': 'zh_CN',
       'statistics': Constants.statistics,
-      'ts': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
       'username': username,
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.loginByPwdApi,
       data: data,
       options: Options(
@@ -304,10 +301,9 @@ class LoginHttp {
       's_locale': 'zh_CN',
       'statistics': Constants.statistics,
       'tel': tel,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.logInByAppSms,
       data: data,
       options: Options(
@@ -333,7 +329,7 @@ class LoginHttp {
   static Future safeCenterGetInfo({
     required String tmpCode,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.safeCenterGetInfo,
       queryParameters: {
         'tmp_code': tmpCode,
@@ -353,7 +349,7 @@ class LoginHttp {
 
   // 风控验证手机前的极验验证码
   static Future preCapture() async {
-    var res = await Request().post(Api.preCapture);
+    final res = await Request().post(Api.preCapture);
 
     if (res.data['code'] == 0) {
       return {'status': true, 'data': res.data['data']};
@@ -387,7 +383,7 @@ class LoginHttp {
       'recaptcha_token': ?recaptchaToken,
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.safeCenterSmsCode,
       data: data,
       options: Options(
@@ -429,7 +425,7 @@ class LoginHttp {
       'captcha_key': captchaKey,
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.safeCenterSmsVerify,
       data: data,
       options: Options(
@@ -456,8 +452,7 @@ class LoginHttp {
   static Future oauth2AccessToken({
     required String code,
   }) async {
-    Map<String, String> data = {
-      'appkey': Constants.appKey,
+    final Map<String, String> data = {
       'build': '2001100',
       'buvid': buvid,
       // 'c_locale': 'zh_CN',
@@ -474,10 +469,9 @@ class LoginHttp {
       'platform': 'android',
       // 's_locale': 'zh_CN',
       // 'statistics': Constants.statistics,
-      'ts': (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString(),
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.oauth2AccessToken,
       data: data,
       options: Options(
@@ -499,7 +493,7 @@ class LoginHttp {
   }
 
   static Future<Map> logout(Account account) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.logout,
       data: {'biliCSRF': account.csrf},
       options: Options(
@@ -523,10 +517,9 @@ class LoginHttp {
       'platform': 'android',
       'access_key': account.accessKey,
       'statistics': Constants.statistics,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(params);
-    var res = await Request().get(
+    final res = await Request().get(
       Api.loginDevices,
       queryParameters: params,
     );

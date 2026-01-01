@@ -5,7 +5,8 @@ import 'package:PiliPlus/models_new/pgc/pgc_info_model/new_ep.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart'
     hide EpisodeItem;
 import 'package:PiliPlus/pages/video/controller.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -191,6 +192,7 @@ class _PgcPanelState extends State<PgcPanel> {
                                     'assets/images/live.png',
                                     color: theme.primary,
                                     height: 12,
+                                    cacheHeight: 12.cacheSize(context),
                                     semanticLabel: "正在播放：",
                                   ),
                                 ),
@@ -212,6 +214,7 @@ class _PgcPanelState extends State<PgcPanel> {
                         Image.asset(
                           'assets/images/big-vip.png',
                           height: 16,
+                          cacheHeight: 16.cacheSize(context),
                           semanticLabel: "大会员",
                         )
                       else

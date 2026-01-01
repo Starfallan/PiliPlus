@@ -7,7 +7,7 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:dio/dio.dart';
 
-class MusicHttp {
+abstract final class MusicHttp {
   static Future<LoadingState<MusicDetail>> bgmDetail(String musicId) async {
     final res = await Request().get(
       Api.bgmDetail,

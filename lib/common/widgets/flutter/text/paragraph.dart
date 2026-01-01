@@ -409,6 +409,9 @@ class RenderParagraph extends RenderBox
     if (_textPainter.textScaler == value) {
       return;
     }
+    _morePainter
+      ?..textScaler = value
+      ..layout();
     _textPainter.textScaler = value;
     _overflowShader = null;
     markNeedsLayout();

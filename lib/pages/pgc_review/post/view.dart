@@ -27,11 +27,17 @@ class PgcReviewPostPanel extends StatefulWidget {
 }
 
 class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
-  late final _controller = TextEditingController(text: widget.content);
+  late final TextEditingController _controller;
   late final RxInt _score = (widget.score ?? 0).obs;
   late final RxBool _shareFeed = false.obs;
   late final RxBool _enablePost = _isMod.obs;
   late final _isMod = widget.reviewId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.content);
+  }
 
   @override
   void dispose() {
@@ -216,17 +222,17 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
 
   Future<void> _onPost() async {
     if (_isMod) {
-      var res = await PgcHttp.pgcReviewMod(
+      final res = await PgcHttp.pgcReviewMod(
         mediaId: widget.mediaId,
         score: _score.value * 2,
         content: _controller.text,
         reviewId: widget.reviewId,
       );
-      if (res['status']) {
+      if (res.isSuccess) {
         Get.back();
         SmartDialog.showToast('编辑成功');
       } else {
-        SmartDialog.showToast(res['msg']);
+        res.toast();
       }
       return;
     }
@@ -234,17 +240,17 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
       SmartDialog.showToast('账号未登录');
       return;
     }
-    var res = await PgcHttp.pgcReviewPost(
+    final res = await PgcHttp.pgcReviewPost(
       mediaId: widget.mediaId,
       score: _score.value * 2,
       content: _controller.text,
       shareFeed: _isMod ? false : _shareFeed.value,
     );
-    if (res['status']) {
+    if (res.isSuccess) {
       Get.back();
       SmartDialog.showToast('点评成功');
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 }

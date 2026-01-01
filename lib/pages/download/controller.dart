@@ -5,6 +5,7 @@ import 'package:PiliPlus/models_new/download/download_info.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart'
     show BaseMultiSelectMixin;
 import 'package:PiliPlus/services/download/download_service.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -78,9 +79,8 @@ class DownloadPageController extends GetxController
       title: '确定删除选中视频？',
       onConfirm: () async {
         SmartDialog.showLoading();
-        final allChecked = this.allChecked.toSet();
         final watchProgress = GStorage.watchProgress;
-        for (var page in allChecked) {
+        for (final page in allChecked) {
           await watchProgress.deleteAll(
             page.entries.map((e) => e.cid.toString()),
           );

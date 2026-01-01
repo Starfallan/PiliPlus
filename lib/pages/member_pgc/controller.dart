@@ -26,7 +26,7 @@ class MemberBangumiCtr
     SpaceData? response = _ctr.loadingState.value.data;
     if (response != null) {
       page = 2;
-      var res = response.season!;
+      final res = response.season!;
       loadingState.value = Success(res.item);
       count = res.count!;
       isEnd = res.item!.length >= count!;

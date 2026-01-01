@@ -1,15 +1,20 @@
+import 'dart:io' show Platform;
+
 import 'package:PiliPlus/common/widgets/color_palette.dart';
+import 'package:PiliPlus/main.dart' show MyApp;
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models/common/theme/theme_type.dart';
 import 'package:PiliPlus/pages/home/view.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
@@ -32,17 +37,8 @@ class Item {
   bool isExpanded;
 }
 
-List<Item> generateItems(int count) {
-  return List<Item>.generate(count, (int index) {
-    return Item(
-      headerValue: 'Panel $index',
-      expandedValue: 'This is item number $index',
-    );
-  });
-}
-
 class _ColorSelectPageState extends State<ColorSelectPage> {
-  final ColorSelectController ctr = Get.put(ColorSelectController());
+  final ctr = Get.put(ColorSelectController());
   FlexSchemeVariant _dynamicSchemeVariant =
       FlexSchemeVariant.values[Pref.schemeVariant];
 
@@ -163,19 +159,29 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
               ),
             ),
           ),
-          Obx(
-            () => CheckboxListTile(
-              title: const Text('动态取色'),
-              controlAffinity: ListTileControlAffinity.leading,
-              value: ctr.dynamicColor.value,
-              onChanged: (val) {
-                ctr
-                  ..dynamicColor.value = val!
-                  ..setting.put(SettingBoxKey.dynamicColor, val);
-                Get.forceAppUpdate();
-              },
+          if (!Platform.isIOS)
+            Obx(
+              () => CheckboxListTile(
+                title: const Text('动态取色'),
+                controlAffinity: ListTileControlAffinity.leading,
+                value: ctr.dynamicColor.value,
+                onChanged: (val) async {
+                  ctr
+                    ..dynamicColor.value = val!
+                    ..setting.put(SettingBoxKey.dynamicColor, val);
+                  if (val) {
+                    if (await MyApp.initPlatformState()) {
+                      Get.forceAppUpdate();
+                    } else {
+                      SmartDialog.showToast('该设备可能不支持动态取色');
+                      ctr.dynamicColor.value = false;
+                    }
+                  } else {
+                    Get.forceAppUpdate();
+                  }
+                },
+              ),
             ),
-          ),
           Padding(
             padding: padding,
             child: AnimatedSize(
@@ -211,7 +217,10 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                                   spacing: 3,
                                   children: [
                                     ColorPalette(
-                                      color: item.color,
+                                      colorScheme: item.color.asColorSchemeSeed(
+                                        _dynamicSchemeVariant,
+                                        theme.brightness,
+                                      ),
                                       selected: ctr.currentColor.value == index,
                                     ),
                                     Text(
@@ -268,5 +277,5 @@ class ColorSelectController extends GetxController {
   final RxDouble currentTextScale = Pref.defaultTextScale.obs;
   final Rx<ThemeType> themeType = Pref.themeType.obs;
 
-  Box setting = GStorage.setting;
+  Box get setting => GStorage.setting;
 }

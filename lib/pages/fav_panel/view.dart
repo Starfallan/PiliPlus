@@ -31,7 +31,7 @@ class _FavPanelState extends State<FavPanel> {
   }
 
   Future<void> _query() async {
-    var res = await widget.ctr.queryVideoInFolder();
+    final res = await widget.ctr.queryVideoInFolder();
     if (mounted) {
       loadingState = res;
       setState(() {});
@@ -85,7 +85,7 @@ class _FavPanelState extends State<FavPanel> {
           );
         },
       ),
-      Error(:var errMsg) => scrollErrorWidget(
+      Error(:final errMsg) => scrollErrorWidget(
         controller: widget.scrollController,
         errMsg: errMsg,
         onReload: _query,

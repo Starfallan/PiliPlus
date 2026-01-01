@@ -59,11 +59,11 @@ abstract class CommonSearchPanelState<
   Widget _buildBody(ThemeData theme, LoadingState<List<T>?> loadingState) {
     return switch (loadingState) {
       Loading() => buildLoading,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? buildList(theme, response)
             : HttpError(onReload: controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: controller.onReload,
       ),

@@ -15,7 +15,10 @@ import 'package:PiliPlus/pages/login/controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/mine/widgets/item.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/get_ext.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:get/get.dart';
@@ -33,7 +36,7 @@ class MinePage extends StatefulWidget {
 class _MediaPageState extends CommonPageState<MinePage, MineController>
     with AutomaticKeepAliveClientMixin {
   @override
-  MineController controller = Get.put(MineController());
+  MineController controller = Get.putOrFind(MineController.new);
   late final MainController _mainController = Get.find<MainController>();
 
   @override
@@ -252,7 +255,7 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
               Feedback.forLongPress(context);
               controller.onLogin(true);
             },
-            onSecondaryTap: Utils.isMobile
+            onSecondaryTap: PlatformUtils.isMobile
                 ? null
                 : () => controller.onLogin(true),
             child: Row(
@@ -265,7 +268,6 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
                         children: [
                           NetworkImgLayer(
                             src: userInfo.face,
-                            semanticsLabel: '头像',
                             type: ImageType.avatar,
                             width: 55,
                             height: 55,
@@ -277,6 +279,7 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
                               child: Image.asset(
                                 'assets/images/big-vip.png',
                                 height: 19,
+                                cacheHeight: 19.cacheSize(context),
                                 semanticLabel: "大会员",
                               ),
                             ),
@@ -286,6 +289,7 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
                         child: Image.asset(
                           width: 55,
                           height: 55,
+                          cacheHeight: 55.cacheSize(context),
                           'assets/images/noface.jpeg',
                           semanticLabel: "默认头像",
                         ),
@@ -312,12 +316,12 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
                             ),
                           ),
                           Image.asset(
-                            'assets/images/lv/lv${levelInfo == null
-                                ? 0
-                                : userInfo.isSeniorMember == 1
-                                ? '6_s'
-                                : levelInfo.currentLevel}.png',
+                            Utils.levelName(
+                              levelInfo?.currentLevel ?? 0,
+                              isSeniorMember: userInfo.isSeniorMember == 1,
+                            ),
                             height: 10,
+                            cacheHeight: 10.cacheSize(context),
                           ),
                         ],
                       ),
@@ -502,7 +506,7 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
   ) {
     return switch (loadingState) {
       Loading() => const SizedBox.shrink(),
-      Success(:var response) => Builder(
+      Success(:final response) => Builder(
         builder: (context) {
           List<FavFolderInfo>? favFolderList = response.list;
           if (favFolderList == null || favFolderList.isEmpty) {
@@ -549,7 +553,7 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
                   return FavFolderItem(
                     heroTag: Utils.generateRandomString(8),
                     item: response.list[index],
-                    callback: () => Future.delayed(
+                    onPop: () => Future.delayed(
                       const Duration(milliseconds: 150),
                       controller.onRefresh,
                     ),
@@ -562,7 +566,7 @@ class _MediaPageState extends CommonPageState<MinePage, MineController>
           );
         },
       ),
-      Error(:var errMsg) => SizedBox(
+      Error(:final errMsg) => SizedBox(
         height: 160,
         child: Center(
           child: Text(

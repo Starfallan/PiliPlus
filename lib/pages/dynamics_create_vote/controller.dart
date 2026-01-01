@@ -2,10 +2,8 @@ import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/msg.dart';
 import 'package:PiliPlus/models/dynamics/vote_model.dart';
-import 'package:PiliPlus/models_new/upload_bfs/data.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/utils.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class CreateVoteController extends GetxController {
@@ -57,7 +55,7 @@ class CreateVoteController extends GetxController {
   }
 
   Future<void> queryData() async {
-    var res = await DynamicsHttp.voteInfo(voteId);
+    final res = await DynamicsHttp.voteInfo(voteId);
     if (res.isSuccess) {
       key = Utils.generateRandomString(6);
       final VoteInfo data = res.data;
@@ -97,9 +95,9 @@ class CreateVoteController extends GetxController {
       votePublisher: Accounts.main.mid,
       voteId: voteId,
     );
-    var res = voteId == null
-        ? await DynamicsHttp.createVote(voteInfo)
-        : await DynamicsHttp.updateVote(voteInfo);
+    final res = await (voteId == null
+        ? DynamicsHttp.createVote(voteInfo)
+        : DynamicsHttp.updateVote(voteInfo));
     if (res.isSuccess) {
       voteInfo.voteId = res.data;
       Get.back(result: voteInfo);
@@ -109,19 +107,18 @@ class CreateVoteController extends GetxController {
   }
 
   Future<void> onUpload(int index, String path) async {
-    var res = await MsgHttp.uploadBfs(
+    final res = await MsgHttp.uploadBfs(
       path: path,
       category: 'daily',
       biz: 'vote',
     );
-    if (res['status']) {
-      UploadBfsResData data = res['data'];
+    if (res.isSuccess) {
       options
-        ..[index].imgUrl = data.imageUrl
+        ..[index].imgUrl = res.data.imageUrl
         ..refresh();
       updateCanCreate();
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 }

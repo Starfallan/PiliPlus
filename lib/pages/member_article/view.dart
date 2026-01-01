@@ -55,7 +55,7 @@ class _MemberArticleState extends State<MemberArticle>
   Widget _buildBody(LoadingState<List<SpaceArticleItem>?> loadingState) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -70,7 +70,7 @@ class _MemberArticleState extends State<MemberArticle>
                 itemCount: response.length,
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

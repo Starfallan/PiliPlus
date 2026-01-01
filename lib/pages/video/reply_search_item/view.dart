@@ -48,6 +48,7 @@ class _ReplySearchPageState extends State<ReplySearchPage> {
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
             hintText: '搜索',
+            visualDensity: .standard,
             border: InputBorder.none,
             suffixIcon: IconButton(
               tooltip: '清空',

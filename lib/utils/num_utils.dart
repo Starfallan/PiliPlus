@@ -1,5 +1,5 @@
+import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
-import 'package:get/get_utils/get_utils.dart';
 
 abstract final class NumUtils {
   static final _numRegExp = RegExp(r'([\d\.]+)([千万亿])?');

@@ -5,7 +5,9 @@ Widget videoTabBarView({
   required List<Widget> children,
   TabController? controller,
 }) => TabBarView(
-  physics: const CustomTabBarViewClampingScrollPhysics(),
+  physics: const CustomTabBarViewScrollPhysics(
+    parent: ClampingScrollPhysics(),
+  ),
   controller: controller,
   children: children,
 );
@@ -19,6 +21,15 @@ Widget tabBarView({
   children: children,
 );
 
+SpringDescription _customSpringDescription() {
+  final List<double> springDescription = Pref.springDescription;
+  return SpringDescription(
+    mass: springDescription[0],
+    stiffness: springDescription[1],
+    damping: springDescription[2],
+  );
+}
+
 class CustomTabBarViewScrollPhysics extends ScrollPhysics {
   const CustomTabBarViewScrollPhysics({super.parent});
 
@@ -27,20 +38,10 @@ class CustomTabBarViewScrollPhysics extends ScrollPhysics {
     return CustomTabBarViewScrollPhysics(parent: buildParent(ancestor));
   }
 
-  @override
-  SpringDescription get spring => CustomSpringDescription();
-}
-
-class CustomTabBarViewClampingScrollPhysics extends ClampingScrollPhysics {
-  const CustomTabBarViewClampingScrollPhysics({super.parent});
+  static final _springDescription = _customSpringDescription();
 
   @override
-  CustomTabBarViewClampingScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return CustomTabBarViewClampingScrollPhysics(parent: buildParent(ancestor));
-  }
-
-  @override
-  SpringDescription get spring => CustomSpringDescription();
+  SpringDescription get spring => _springDescription;
 }
 
 mixin ReloadMixin {
@@ -78,31 +79,4 @@ class ReloadScrollPhysics extends AlwaysScrollableScrollPhysics {
       velocity: velocity,
     );
   }
-}
-
-class CustomSpringDescription implements SpringDescription {
-  static final List<double> springDescription = Pref.springDescription;
-
-  @override
-  final mass = springDescription[0];
-
-  @override
-  final stiffness = springDescription[1];
-
-  @override
-  final damping = springDescription[2];
-
-  CustomSpringDescription._();
-
-  static final _instance = CustomSpringDescription._();
-
-  factory CustomSpringDescription() => _instance;
-
-  /// Defaults to 0.
-  @override
-  double bounce = 0.0;
-
-  /// Defaults to 0.5 seconds.
-  @override
-  Duration duration = const Duration(milliseconds: 500);
 }

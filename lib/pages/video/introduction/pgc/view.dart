@@ -14,7 +14,7 @@ import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/pgc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/pgc/widgets/pgc_panel.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/action_item.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:flutter/material.dart';
@@ -126,7 +126,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           slivers: img.map((e) {
             return SliverToBoxAdapter(
               child: NetworkImgLayer(
-                radius: 0,
+                type: .emote,
                 src: e.url,
                 width: imgWidth,
                 height: imgWidth * e.aspectRatio,
@@ -153,7 +153,6 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               width: 115,
               height: 153,
               src: item.cover!,
-              semanticsLabel: '封面',
             ),
           ),
         ),

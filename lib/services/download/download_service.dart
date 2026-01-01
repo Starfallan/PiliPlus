@@ -15,7 +15,8 @@ import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/pages/danmaku/controller.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/file_ext.dart';
+import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:flutter/foundation.dart';
@@ -33,7 +34,7 @@ class DownloadService extends GetxService {
 
   final _lock = Lock();
 
-  final flagNotifier = <void Function()>{};
+  final flagNotifier = SetNotifier();
   final waitDownloadQueue = RxList<BiliDownloadEntryInfo>();
   final downloadList = <BiliDownloadEntryInfo>[];
 
@@ -320,7 +321,7 @@ class DownloadService extends GetxService {
         ]);
 
         final danmaku = res.removeAt(0).data;
-        for (var i in res) {
+        for (final i in res) {
           if (i.isSuccess) {
             danmaku.elems.addAll(i.data.elems);
           }
@@ -439,9 +440,9 @@ class DownloadService extends GetxService {
     }
   }
 
-  Future<void> _updateBiliDownloadEntryJson(BiliDownloadEntryInfo entry) async {
+  Future<void> _updateBiliDownloadEntryJson(BiliDownloadEntryInfo entry) {
     final entryJsonFile = File(path.join(entry.entryDirPath, _entryFile));
-    await entryJsonFile.writeAsString(jsonEncode(entry.toJson()));
+    return entryJsonFile.writeAsString(jsonEncode(entry.toJson()));
   }
 
   void _onReceive(int progress, int total) {
@@ -591,9 +592,11 @@ class DownloadService extends GetxService {
   }
 }
 
-extension SetExt on Set<void Function()> {
+typedef SetNotifier = Set<VoidCallback>;
+
+extension SetNotifierExt on SetNotifier {
   void refresh() {
-    for (var i in this) {
+    for (final i in this) {
       i();
     }
   }

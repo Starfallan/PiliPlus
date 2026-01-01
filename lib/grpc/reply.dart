@@ -7,7 +7,7 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:fixnum/fixnum.dart';
 
-class ReplyGrpc {
+abstract final class ReplyGrpc {
   static bool antiGoodsReply = Pref.antiGoodsReply;
   static RegExp replyRegExp = RegExp(
     Pref.banWordForReply,
@@ -30,8 +30,8 @@ class ReplyGrpc {
             reply.content.urls.values.any((url) {
               return url.hasExtra() &&
                   (url.extra.goodsCmControl == Int64.ONE ||
-                      url.extra.goodsItemId != Int64.ZERO ||
-                      url.extra.goodsPrefetchedCache.isNotEmpty);
+                      url.extra.hasGoodsItemId() ||
+                      url.extra.hasGoodsPrefetchedCache());
             })) ||
         reply.content.message.contains(Constants.goodsUrlPrefix);
   }
@@ -99,7 +99,7 @@ class ReplyGrpc {
         rpid: Int64(rpid),
         scene: DetailListScene.REPLY,
         mode: mode,
-        pagination: FeedPagination(offset: offset ?? ''),
+        pagination: offset == null ? null : FeedPagination(offset: offset),
       ),
       DetailListReply.fromBuffer,
     );

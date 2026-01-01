@@ -2,22 +2,21 @@ import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/flutter/dyn/ink_well.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/http/dynamics.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
-import 'package:PiliPlus/models_new/dynamic/dyn_reserve/data.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide InkWell;
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 Widget addWidget(
   BuildContext context, {
   required int floor,
   required ThemeData theme,
-  required dynamic idStr,
+  required Object idStr,
   required DynamicAddModel additional,
 }) {
   final type = additional.type;
@@ -179,25 +178,23 @@ Widget addWidget(
                               : btn.disable == 1
                               ? null
                               : () async {
-                                  var res = await DynamicsHttp.dynReserve(
+                                  final res = await DynamicsHttp.dynReserve(
                                     reserveId: reserve.rid,
                                     curBtnStatus: btn.status,
                                     dynamicIdStr: idStr,
                                     reserveTotal: reserve.reserveTotal,
                                   );
-                                  if (res['status']) {
-                                    DynReserveData data = res['data'];
+                                  if (res case Success(:final response)) {
                                     reserve
-                                      ..desc2?.text = data.descUpdate
-                                      ..reserveTotal = data.reserveUpdate
-                                      ..button!.status = data.finalBtnStatus;
+                                      ..desc2?.text = response.descUpdate
+                                      ..reserveTotal = response.reserveUpdate
+                                      ..button!.status =
+                                          response.finalBtnStatus;
                                     if (context.mounted) {
                                       (context as Element?)?.markNeedsBuild();
                                     }
                                   } else {
-                                    SmartDialog.showToast(
-                                      res['msg'],
-                                    );
+                                    res.toast();
                                   }
                                 },
                           child: Text(
@@ -333,7 +330,9 @@ Widget addWidget(
                           width: 45,
                           height: 45,
                           src: e.cover,
-                          radius: 6,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(6),
+                          ),
                         ),
                         const SizedBox(width: 10),
                       ],
@@ -438,11 +437,12 @@ Widget addWidget(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        vote.desc!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      if (vote.title case final title?)
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       Text(
                         '${NumUtils.numFormat(vote.joinNum)}人参与',
                         maxLines: 1,
@@ -500,7 +500,9 @@ Widget addWidget(
                     width: 45,
                     height: 45,
                     src: content.cover,
-                    radius: 6,
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(6),
+                    ),
                   ),
                   const SizedBox(width: 10),
                 ],
@@ -558,6 +560,56 @@ Widget addWidget(
 
       case 'ADDITIONAL_TYPE_MATCH':
         final content = additional.match!;
+        Widget teamItem(TTeam team, Alignment alignment, EdgeInsets padding) {
+          return Expanded(
+            child: Align(
+              alignment: alignment,
+              child: Padding(
+                padding: padding,
+                child: Column(
+                  spacing: 5,
+                  mainAxisSize: .min,
+                  children: [
+                    NetworkImgLayer(
+                      type: .emote,
+                      width: 30,
+                      height: 30,
+                      src: team.pic,
+                    ),
+                    Text(
+                      maxLines: 1,
+                      overflow: .ellipsis,
+                      team.name!,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        Widget? title;
+        if (content.matchInfo?.title?.isNotEmpty == true) {
+          title = Text(
+            content.matchInfo!.title!,
+            style: const TextStyle(fontSize: 13),
+          );
+        }
+        if (content.matchInfo?.subTitle?.isNotEmpty == true) {
+          title = Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ?title,
+              Text(
+                content.matchInfo!.subTitle!,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+            ],
+          );
+        }
         child = InkWell(
           borderRadius: borderRadius,
           onTap: content.jumpUrl == null
@@ -567,43 +619,13 @@ Widget addWidget(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (content.matchInfo?.title?.isNotEmpty == true)
-                      Text(
-                        content.matchInfo!.title!,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    if (content.matchInfo?.subTitle?.isNotEmpty == true)
-                      Text(
-                        content.matchInfo!.subTitle!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: theme.colorScheme.outline,
-                        ),
-                      ),
-                  ],
-                ),
-                const Spacer(),
-                if (content.matchInfo?.leftTeam != null) ...[
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      NetworkImgLayer(
-                        width: 30,
-                        height: 30,
-                        src: content.matchInfo!.leftTeam!.pic,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        content.matchInfo!.leftTeam!.name!,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
+                ?title,
+                if (content.matchInfo?.leftTeam != null)
+                  teamItem(
+                    content.matchInfo!.leftTeam!,
+                    Alignment.centerRight,
+                    const .only(right: 16),
                   ),
-                  const SizedBox(width: 16),
-                ],
                 Column(
                   children: [
                     if (content.matchInfo?.centerTop?.isNotEmpty == true)
@@ -628,25 +650,12 @@ Widget addWidget(
                       ),
                   ],
                 ),
-                if (content.matchInfo?.rightTeam != null) ...[
-                  const SizedBox(width: 16),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      NetworkImgLayer(
-                        width: 30,
-                        height: 30,
-                        src: content.matchInfo!.rightTeam!.pic,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        content.matchInfo!.rightTeam!.name!,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                    ],
+                if (content.matchInfo?.rightTeam != null)
+                  teamItem(
+                    content.matchInfo!.rightTeam!,
+                    Alignment.centerLeft,
+                    const .only(left: 16),
                   ),
-                ],
-                const Spacer(),
                 if (content.button case final button?)
                   FilledButton.tonal(
                     onPressed: () =>

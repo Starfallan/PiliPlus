@@ -204,7 +204,6 @@ class LiveRoomChatPanel extends StatelessWidget {
               : isUpower
               ? uemote.height!
               : uemote.height! / devicePixelRatio,
-          semanticsLabel: obj.text,
         ),
       );
     }
@@ -224,7 +223,6 @@ class LiveRoomChatPanel extends StatelessWidget {
                 type: ImageType.emote,
                 width: emote.width,
                 height: emote.height,
-                semanticsLabel: key,
               ),
             ),
           );

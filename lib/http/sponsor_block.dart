@@ -58,7 +58,7 @@ abstract final class SponsorBlock {
     );
 
     if (res.statusCode == 200) {
-      if (res.data case List list) {
+      if (res.data case final List list) {
         return Success(list.map((i) => SegmentItemModel.fromJson(i)).toList());
       }
     }
@@ -73,7 +73,7 @@ abstract final class SponsorBlock {
     assert((type == null) == (category == null));
     final res = await Request().post(
       _api(SponsorBlockApi.voteOnSponsorTime),
-      data: {
+      queryParameters: {
         'UUID': uuid,
         'type': ?type,
         'category': ?category?.name,
@@ -152,7 +152,7 @@ abstract final class SponsorBlock {
     );
 
     if (res.statusCode == 200) {
-      if (res.data case List list) {
+      if (res.data case final List list) {
         return Success(list.map((i) => SegmentItemModel.fromJson(i)).toList());
       }
     }
@@ -182,7 +182,7 @@ abstract final class SponsorBlock {
     );
 
     if (res.statusCode == 200) {
-      if (res.data case Map<String, dynamic> data) {
+      if (res.data case final Map<String, dynamic> data) {
         if (data['ytbID'] case String ytbId) {
           return Success(ytbId);
         }
@@ -210,7 +210,7 @@ abstract final class SponsorBlock {
     );
 
     if (res.statusCode == 200) {
-      if (res.data case Map<String, dynamic> data) {
+      if (res.data case final Map<String, dynamic> data) {
         if (data['UUID'] case String uuid) {
           return Success(uuid);
         }

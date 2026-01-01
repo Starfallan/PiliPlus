@@ -1,9 +1,8 @@
 import 'package:PiliPlus/common/constants.dart';
-import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/avatars.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
-import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/models/common/member/user_info_type.dart';
 import 'package:PiliPlus/models_new/space/space/card.dart';
 import 'package:PiliPlus/models_new/space/space/followings_followed_upper.dart';
@@ -15,15 +14,17 @@ import 'package:PiliPlus/pages/follow/view.dart';
 import 'package:PiliPlus/pages/follow_type/followed/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/string_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class UserInfoCard extends StatelessWidget {
   const UserInfoCard({
@@ -49,12 +50,13 @@ class UserInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isLight = colorScheme.isLight;
-    final isPortrait = context.width < 600;
+    final width = context.width;
+    final isPortrait = width < 600;
     return ViewSafeArea(
       top: !isPortrait,
       child: isPortrait
-          ? _buildV(context, colorScheme, isLight)
-          : _buildH(colorScheme, isLight),
+          ? _buildV(context, colorScheme, isLight, width)
+          : _buildH(context, colorScheme, isLight),
     );
   }
 
@@ -107,7 +109,12 @@ class UserInfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(ColorScheme colorScheme, bool isLight) {
+  Widget _buildHeader(
+    BuildContext context,
+    ColorScheme colorScheme,
+    bool isLight,
+    double width,
+  ) {
     String imgUrl =
         (isLight
                 ? images.imgUrl
@@ -115,32 +122,29 @@ class UserInfoCard extends StatelessWidget {
                 ? images.imgUrl
                 : images.nightImgurl)
             .http2https;
-    return Hero(
-      tag: imgUrl,
-      child: GestureDetector(
-        onTap: () => PageUtils.imageView(imgList: [SourceModel(url: imgUrl)]),
+    return GestureDetector(
+      onTap: () => PageUtils.imageView(imgList: [SourceModel(url: imgUrl)]),
+      child: Hero(
+        tag: imgUrl,
         child: CachedNetworkImage(
-          imageUrl: ImageUtils.thumbnailUrl(imgUrl),
-          width: double.infinity,
+          fit: .cover,
           height: 135,
-          imageBuilder: (context, imageProvider) => DecoratedBox(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: imageProvider,
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  isLight ? const Color(0x5DFFFFFF) : const Color(0x8D000000),
-                  isLight ? BlendMode.lighten : BlendMode.darken,
-                ),
-              ),
-            ),
-          ),
+          width: width,
+          memCacheWidth: width.cacheSize(context),
+          imageUrl: ImageUtils.thumbnailUrl(imgUrl),
+          placeholder: (_, _) => const SizedBox.shrink(),
+          color: isLight ? const Color(0x5DFFFFFF) : const Color(0x8D000000),
+          colorBlendMode: isLight ? BlendMode.lighten : BlendMode.darken,
         ),
       ),
     );
   }
 
-  List<Widget> _buildLeft(ColorScheme colorScheme, bool isLight) => [
+  List<Widget> _buildLeft(
+    BuildContext context,
+    ColorScheme colorScheme,
+    bool isLight,
+  ) => [
     Padding(
       padding: const EdgeInsets.only(left: 20, right: 20),
       child: Wrap(
@@ -169,8 +173,12 @@ class UserInfoCard extends StatelessWidget {
             ),
           ),
           Image.asset(
-            'assets/images/lv/lv${card.levelInfo?.identity == 2 ? '6_s' : card.levelInfo?.currentLevel}.png',
+            Utils.levelName(
+              card.levelInfo!.currentLevel!,
+              isSeniorMember: card.levelInfo?.identity == 2,
+            ),
             height: 11,
+            cacheHeight: 11.cacheSize(context),
             semanticLabel: '等级${card.levelInfo?.currentLevel}',
           ),
           if (card.vip?.status == 1)
@@ -195,14 +203,14 @@ class UserInfoCard extends StatelessWidget {
                 ),
               ),
             ),
-          if (card.nameplate?.imageSmall?.isNotEmpty == true)
-            CachedNetworkImage(
-              imageUrl: ImageUtils.thumbnailUrl(card.nameplate!.imageSmall!),
-              height: 20,
-              placeholder: (context, url) {
-                return const SizedBox.shrink();
-              },
-            ),
+          // if (card.nameplate?.imageSmall?.isNotEmpty == true)
+          //   CachedNetworkImage(
+          //     imageUrl: ImageUtils.thumbnailUrl(card.nameplate!.imageSmall!),
+          //     height: 20,
+          //     placeholder: (context, url) {
+          //       return const SizedBox.shrink();
+          //     },
+          //   ),
         ],
       ),
     ),
@@ -389,8 +397,8 @@ class UserInfoCard extends StatelessWidget {
                   width: 1.0,
                   color: colorScheme.outline.withValues(alpha: 0.3),
                 ),
+                tapTargetSize: .padded,
                 padding: EdgeInsets.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),
             ),
@@ -401,6 +409,7 @@ class UserInfoCard extends StatelessWidget {
                 backgroundColor: relation != 0
                     ? colorScheme.onInverseSurface
                     : null,
+                tapTargetSize: .padded,
                 visualDensity: const VisualDensity(vertical: -1.8),
               ),
               child: Text.rich(
@@ -460,47 +469,52 @@ class UserInfoCard extends StatelessWidget {
     ),
   );
 
-  Column _buildV(BuildContext context, ColorScheme colorScheme, bool isLight) =>
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Column _buildV(
+    BuildContext context,
+    ColorScheme colorScheme,
+    bool isLight,
+    double width,
+  ) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Stack(
+        clipBehavior: Clip.none,
         children: [
-          Stack(
-            clipBehavior: Clip.none,
+          Column(
+            crossAxisAlignment: .stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildHeader(colorScheme, isLight),
-                  SizedBox(
-                    width: double.infinity,
-                    height: MediaQuery.textScalerOf(context).scale(30) + 60,
-                  ),
-                ],
-              ),
-              Positioned(
-                top: 110,
-                left: 20,
-                child: _buildAvatar,
-              ),
-              Positioned(
-                left: 160,
-                top: 140,
-                right: 15,
-                bottom: 0,
-                child: _buildRight(colorScheme),
+              _buildHeader(context, colorScheme, isLight, width),
+              SizedBox(
+                height: MediaQuery.textScalerOf(context).scale(30) + 60,
               ),
             ],
           ),
-          const SizedBox(height: 5),
-          ..._buildLeft(colorScheme, isLight),
-          if (card.prInfo?.content?.isNotEmpty == true)
-            buildPrInfo(colorScheme, isLight, card.prInfo!),
-          const SizedBox(height: 5),
+          Positioned(
+            top: 110,
+            left: 20,
+            child: _buildAvatar,
+          ),
+          Positioned(
+            left: 160,
+            top: 140,
+            right: 15,
+            bottom: 0,
+            child: _buildRight(colorScheme),
+          ),
         ],
-      );
+      ),
+      const SizedBox(height: 5),
+      ..._buildLeft(context, colorScheme, isLight),
+      if (card.prInfo?.content?.isNotEmpty == true)
+        buildPrInfo(context, colorScheme, isLight, card.prInfo!),
+      const SizedBox(height: 5),
+    ],
+  );
 
   Widget buildPrInfo(
+    BuildContext context,
     ColorScheme colorScheme,
     bool isLight,
     SpacePrInfo prInfo,
@@ -508,22 +522,24 @@ class UserInfoCard extends StatelessWidget {
     final textColor = Utils.parseColor(
       isLight ? prInfo.textColor : prInfo.textColorNight,
     );
+    String? icon = !isLight && prInfo.iconNight?.isNotEmpty == true
+        ? prInfo.iconNight
+        : prInfo.icon?.isNotEmpty == true
+        ? prInfo.icon
+        : null;
+
     Widget child = Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       color: Utils.parseColor(isLight ? prInfo.bgColor : prInfo.bgColorNight),
       child: Row(
         children: [
-          if (!isLight && prInfo.iconNight?.isNotEmpty == true) ...[
+          if (icon != null) ...[
             CachedNetworkImage(
-              imageUrl: ImageUtils.thumbnailUrl(card.prInfo!.iconNight!),
               height: 20,
-            ),
-            const SizedBox(width: 16),
-          ] else if (prInfo.icon?.isNotEmpty == true) ...[
-            CachedNetworkImage(
-              imageUrl: ImageUtils.thumbnailUrl(card.prInfo!.icon!),
-              height: 20,
+              memCacheHeight: 20.cacheSize(context),
+              imageUrl: ImageUtils.thumbnailUrl(icon),
+              placeholder: (_, _) => const SizedBox.shrink(),
             ),
             const SizedBox(width: 16),
           ],
@@ -552,46 +568,47 @@ class UserInfoCard extends StatelessWidget {
     return child;
   }
 
-  Column _buildH(ColorScheme colorScheme, bool isLight) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // _buildHeader(context),
-      const SizedBox(height: 56),
-      Row(
+  Column _buildH(BuildContext context, ColorScheme colorScheme, bool isLight) =>
+      Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(width: 20),
-          Padding(
-            padding: EdgeInsets.only(
-              top: 10,
-              bottom: card.prInfo?.content?.isNotEmpty == true ? 0 : 10,
-            ),
-            child: _buildAvatar,
+          // _buildHeader(context),
+          const SizedBox(height: 56),
+          Row(
+            children: [
+              const SizedBox(width: 20),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: 10,
+                  bottom: card.prInfo?.content?.isNotEmpty == true ? 0 : 10,
+                ),
+                child: _buildAvatar,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 5,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 10),
+                    ..._buildLeft(context, colorScheme, isLight),
+                    const SizedBox(height: 5),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: _buildRight(colorScheme),
+              ),
+              const SizedBox(width: 20),
+            ],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 5,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                ..._buildLeft(colorScheme, isLight),
-                const SizedBox(height: 5),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: _buildRight(colorScheme),
-          ),
-          const SizedBox(width: 20),
+          if (card.prInfo?.content?.isNotEmpty == true)
+            buildPrInfo(context, colorScheme, isLight, card.prInfo!),
         ],
-      ),
-      if (card.prInfo?.content?.isNotEmpty == true)
-        buildPrInfo(colorScheme, isLight, card.prInfo!),
-    ],
-  );
+      );
 
   Widget _buildFollowedUp(
     ColorScheme colorScheme,
@@ -600,50 +617,11 @@ class UserInfoCard extends StatelessWidget {
     var list = item.items!;
     final flag = list.length > 3;
     if (flag) list = list.sublist(0, 3);
-    final length = list.length;
-    const size = 22.0;
-    Widget avatar(String url) => NetworkImgLayer(
-      src: url,
-      width: size,
-      height: size,
-      type: ImageType.avatar,
-    );
-    Widget avatars;
-    if (length == 1) {
-      avatars = avatar(list.first.face!);
-    } else {
-      const gap = 4.0;
-      const offset = size - gap;
-      final decoration = BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: colorScheme.surface),
-      );
-      avatars = SizedBox(
-        width: length * size - (length - 1) * gap,
-        height: size + 1.6,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: List.generate(
-            length,
-            (index) => Positioned(
-              right: index * offset,
-              child: DecoratedBox(
-                decoration: decoration,
-                child: Padding(
-                  padding: const EdgeInsets.all(.8),
-                  child: avatar(list[length - 1 - index].face!),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
     Widget child = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(width: 20),
-        avatars,
+        avatars(colorScheme: colorScheme, users: list),
         const SizedBox(width: 4),
         Flexible(
           child: Text(

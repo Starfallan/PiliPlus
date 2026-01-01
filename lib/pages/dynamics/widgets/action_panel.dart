@@ -24,6 +24,7 @@ class ActionPanel extends StatelessWidget {
     final comment = moduleStat.comment!;
     final like = moduleStat.like!;
     final btnStyle = TextButton.styleFrom(
+      tapTargetSize: .padded,
       padding: const EdgeInsets.symmetric(horizontal: 15),
       foregroundColor: outline,
     );
@@ -38,7 +39,7 @@ class ActionPanel extends StatelessWidget {
               useSafeArea: true,
               builder: (_) => RepostPanel(
                 item: item,
-                callback: () {
+                onSuccess: () {
                   int count = forward.count ?? 0;
                   forward.count = count + 1;
                   if (context.mounted) {

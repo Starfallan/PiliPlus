@@ -25,7 +25,7 @@ class PgcIndexController
   }
 
   Future<void> getPgcIndexCondition() async {
-    var res = await PgcHttp.pgcIndexCondition(
+    final res = await PgcHttp.pgcIndexCondition(
       seasonType: indexType == null ? 1 : null,
       type: 0,
       indexType: indexType,

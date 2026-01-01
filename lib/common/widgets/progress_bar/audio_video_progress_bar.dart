@@ -763,7 +763,7 @@ class _RenderProgressBar extends RenderBox {
     final adjustedWidth = availableSize.width - barHeight;
     final dx = widthProportion * adjustedWidth + capRadius;
     final startPoint = Offset(capRadius, availableSize.height / 2);
-    var endPoint = Offset(dx, availableSize.height / 2);
+    final endPoint = Offset(dx, availableSize.height / 2);
     canvas.drawLine(startPoint, endPoint, baseBarPaint);
   }
 

@@ -47,10 +47,10 @@ class HttpError extends StatelessWidget {
         if (onReload != null)
           FilledButton.tonal(
             onPressed: onReload,
-            style: ButtonStyle(
-              backgroundColor: WidgetStatePropertyAll(
-                theme.colorScheme.primary.withAlpha(20),
-              ),
+            style: FilledButton.styleFrom(
+              tapTargetSize: .padded,
+              backgroundColor: theme.colorScheme.primary.withAlpha(20),
+              shadowColor: Colors.transparent,
             ),
             child: Text(
               btnText ?? '点击重试',

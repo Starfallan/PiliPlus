@@ -445,7 +445,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
         content: SlideColorPicker(
           color: color,
           showResetBtn: true,
-          callback: (Color? color) {
+          onChanged: (Color? color) {
             _blockColor[index] = color ?? item.first.color;
             setting.put(
               SettingBoxKey.blockColor,
@@ -597,32 +597,38 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                         .toList(),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            item.second.title,
-                            style: TextStyle(
-                              height: 1,
-                              fontSize: 14,
-                              color: isDisable
-                                  ? theme.colorScheme.outline.withValues(
-                                      alpha: 0.7,
-                                    )
-                                  : theme.colorScheme.secondary,
+                      child: Text.rich(
+                        style: TextStyle(
+                          height: 1,
+                          fontSize: 14,
+                          color: isDisable
+                              ? theme.colorScheme.outline.withValues(
+                                  alpha: 0.7,
+                                )
+                              : theme.colorScheme.secondary,
+                        ),
+                        strutStyle: const StrutStyle(
+                          height: 1,
+                          leading: 0,
+                          fontSize: 14,
+                        ),
+                        TextSpan(
+                          children: [
+                            TextSpan(text: item.second.title),
+                            WidgetSpan(
+                              alignment: .middle,
+                              child: Icon(
+                                size: 14,
+                                MdiIcons.unfoldMoreHorizontal,
+                                color: isDisable
+                                    ? theme.colorScheme.outline.withValues(
+                                        alpha: 0.7,
+                                      )
+                                    : theme.colorScheme.secondary,
+                              ),
                             ),
-                            strutStyle: const StrutStyle(height: 1, leading: 0),
-                          ),
-                          Icon(
-                            MdiIcons.unfoldMoreHorizontal,
-                            size: MediaQuery.textScalerOf(context).scale(14),
-                            color: isDisable
-                                ? theme.colorScheme.outline.withValues(
-                                    alpha: 0.7,
-                                  )
-                                : theme.colorScheme.secondary,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   );

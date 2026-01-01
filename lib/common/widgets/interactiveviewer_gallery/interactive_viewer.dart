@@ -503,7 +503,9 @@ class _InteractiveViewerState extends State<InteractiveViewer>
   final GlobalKey _childKey = GlobalKey();
   final GlobalKey _parentKey = GlobalKey();
   Animation<Offset>? _animation;
+  CurvedAnimation? _curvedAnimation;
   Animation<double>? _scaleAnimation;
+  CurvedAnimation? _curvedScaleAnimation;
   late Offset _scaleAnimationFocalPoint;
   late AnimationController _controller;
   late AnimationController _scaleController;
@@ -930,7 +932,10 @@ class _InteractiveViewerState extends State<InteractiveViewer>
                 frictionSimulationY.finalX,
               ),
             ).animate(
-              CurvedAnimation(parent: _controller, curve: Curves.decelerate),
+              _curvedAnimation ??= CurvedAnimation(
+                parent: _controller,
+                curve: Curves.decelerate,
+              ),
             );
         _controller.duration = Duration(milliseconds: (tFinal * 1000).round());
         _animation!.addListener(_handleInertiaAnimation);
@@ -956,7 +961,7 @@ class _InteractiveViewerState extends State<InteractiveViewer>
               begin: scale,
               end: frictionSimulation.x(tFinal),
             ).animate(
-              CurvedAnimation(
+              _curvedScaleAnimation ??= CurvedAnimation(
                 parent: _scaleController,
                 curve: Curves.decelerate,
               ),
@@ -1150,7 +1155,9 @@ class _InteractiveViewerState extends State<InteractiveViewer>
 
   @override
   void dispose() {
+    _curvedAnimation?.dispose();
     _controller.dispose();
+    _curvedScaleAnimation?.dispose();
     _scaleController.dispose();
     _transformer.removeListener(_handleTransformation);
     if (widget.transformationController == null) {

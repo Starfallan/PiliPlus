@@ -45,8 +45,8 @@ class BiliDownloadEntryInfo with MultiSelectData {
   int get sortKey => ep?.sortIndex ?? pageData!.cid;
 
   String get showTitle {
-    if (pageData case final pageData?) {
-      return pageData.part?.isNotEmpty == true ? pageData.part! : title;
+    if (pageData case PageInfo(:final part)) {
+      return part != null && part.isNotEmpty ? part : title;
     }
     if (ep case final ep?) {
       return ep.showTitle ?? '${ep.index} ${ep.indexTitle}';

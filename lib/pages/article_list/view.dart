@@ -12,7 +12,6 @@ import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -26,7 +25,7 @@ class ArticleListPage extends StatefulWidget {
 class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
   final _controller = Get.put(
     ArticleListController(),
-    tag: Utils.generateRandomString(8),
+    tag: Get.parameters['id']!,
   );
 
   late EdgeInsets padding;
@@ -73,7 +72,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
   ) {
     return switch (loadingState) {
       Loading() => gridSkeleton,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -82,7 +81,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                 itemCount: response.length,
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),
@@ -118,7 +117,9 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                   width: 91,
                   height: 120,
                   src: item.imageUrl,
-                  radius: 6,
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(6),
+                  ),
                 ),
                 const SizedBox(width: 10),
               ],

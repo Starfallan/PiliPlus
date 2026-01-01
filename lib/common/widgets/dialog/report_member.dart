@@ -151,7 +151,7 @@ Future<void> showMemberReportDialog(
                 SmartDialog.showToast('至少选择一项作为举报内容');
               } else {
                 Get.back();
-                var result = await MemberHttp.reportMember(
+                final result = await MemberHttp.reportMember(
                   mid,
                   reason: reason.join(','),
                   reasonV2: reasonV2 != null ? reasonV2! + 1 : null,

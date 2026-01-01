@@ -44,6 +44,6 @@ List<Widget> dynContent(
         floor: floor,
       ),
     if (moduleDynamic?.major?.blocked case final blocked?)
-      blockedItem(theme: theme, blocked: blocked, maxWidth: maxWidth),
+      blockedItem(context, theme: theme, blocked: blocked, maxWidth: maxWidth),
   ];
 }

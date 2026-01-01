@@ -3,10 +3,10 @@ import 'dart:io';
 import 'dart:math' show max;
 
 import 'package:PiliPlus/models/common/publish_panel_type.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:chat_bottom_container/chat_bottom_container.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 abstract class CommonPublishPage<T> extends StatefulWidget {
   const CommonPublishPage({
@@ -26,7 +26,7 @@ abstract class CommonPublishPage<T> extends StatefulWidget {
 abstract class CommonPublishPageState<T extends CommonPublishPage>
     extends State<T>
     with WidgetsBindingObserver {
-  late final focusNode = FocusNode();
+  late final FocusNode focusNode;
   late final controller = ChatBottomPanelContainerController<PanelType>();
   TextEditingController get editController;
 
@@ -43,6 +43,8 @@ abstract class CommonPublishPageState<T extends CommonPublishPage>
     if (Platform.isAndroid) {
       WidgetsBinding.instance.addObserver(this);
     }
+
+    focusNode = FocusNode();
 
     initPubState();
 
@@ -198,6 +200,12 @@ abstract class CommonPublishPageState<T extends CommonPublishPage>
       },
       panelBgColor: panelBgColor ?? Theme.of(context).colorScheme.surface,
     );
+  }
+
+  void onSubmitted(String value) {
+    if (enablePublish.value) {
+      onPublish();
+    }
   }
 
   Future<void> onPublish();

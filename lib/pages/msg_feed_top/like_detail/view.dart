@@ -66,7 +66,7 @@ class _LikeDetailPageState extends State<LikeDetailPage> {
         itemCount: 12,
         itemBuilder: (context, index) => const MsgFeedTopSkeleton(),
       ),
-      Success(:var response) => SliverMainAxisGroup(
+      Success(:final response) => SliverMainAxisGroup(
         slivers: [
           if (_controller.card != null) ...[
             _buildCard(_controller.card!),
@@ -89,7 +89,7 @@ class _LikeDetailPageState extends State<LikeDetailPage> {
           ),
         ],
       ),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

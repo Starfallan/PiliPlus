@@ -48,7 +48,7 @@ class LiveController extends CommonListController with AccountMixin {
   bool customHandleResponse(bool isRefresh, Success response) {
     if (isRefresh) {
       final res = response.response;
-      if (res case LiveIndexData data) {
+      if (res case final LiveIndexData data) {
         if (data.hasMore == 0) {
           isEnd = true;
         }
@@ -56,7 +56,7 @@ class LiveController extends CommonListController with AccountMixin {
           first: data.followItem,
           second: data.areaItem,
         );
-      } else if (res case LiveSecondData data) {
+      } else if (res case final LiveSecondData data) {
         count = data.count;
         newTags = data.newTags;
         if (sortType != null) {

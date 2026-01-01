@@ -69,7 +69,7 @@ class _MemberSearchChildPageState extends State<MemberSearchChildPage>
   Widget _buildBody(LoadingState<List?> loadingState) {
     return switch (loadingState) {
       Loading() => _buildLoading,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? Builder(
                 builder: (context) {
@@ -119,7 +119,7 @@ class _MemberSearchChildPageState extends State<MemberSearchChildPage>
                 },
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

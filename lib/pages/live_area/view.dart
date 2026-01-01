@@ -10,7 +10,7 @@ import 'package:PiliPlus/models_new/live/live_area_list/area_list.dart';
 import 'package:PiliPlus/pages/live_area/controller.dart';
 import 'package:PiliPlus/pages/live_area_detail/view.dart';
 import 'package:PiliPlus/pages/search/widgets/search_text.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sortable_wrap/sortable_wrap.dart';
 import 'package:get/get.dart';
@@ -78,7 +78,7 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
   ) {
     return switch (loadingState) {
       Loading() => const SizedBox.shrink(),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? DefaultTabController(
                 length: response.length,
@@ -158,7 +158,7 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
                 ),
               )
             : scrollErrorWidget(onReload: _controller.onReload),
-      Error(:var errMsg) => scrollErrorWidget(
+      Error(:final errMsg) => scrollErrorWidget(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

@@ -54,7 +54,7 @@ abstract class FollowTypePageState<T extends StatefulWidget> extends State<T> {
         itemBuilder: (context, index) => const MsgFeedTopSkeleton(),
         itemCount: 16,
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -67,7 +67,7 @@ abstract class FollowTypePageState<T extends StatefulWidget> extends State<T> {
                 itemCount: response.length,
               )
             : HttpError(onReload: controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: controller.onReload,
       ),

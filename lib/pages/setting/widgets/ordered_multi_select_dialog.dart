@@ -27,7 +27,7 @@ class _OrderedMultiSelectDialogState<T>
   @override
   void initState() {
     super.initState();
-    _tempValues = {for (var (i, j) in widget.initValues.indexed) j: i + 1};
+    _tempValues = {for (final (i, j) in widget.initValues.indexed) j: i + 1};
   }
 
   @override

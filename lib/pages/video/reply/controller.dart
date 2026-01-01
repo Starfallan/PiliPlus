@@ -27,33 +27,38 @@ class VideoReplyController extends ReplyController<MainListReply>
   dynamic get sourceId => IdUtils.av2bv(aid);
 
   bool _isFabVisible = true;
-  late final AnimationController fabAnimationCtr = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 100),
-  )..forward();
+  late final AnimationController _fabAnimationCtr;
+  late final CurvedAnimation _curvedAnimation;
+  late final Animation<Offset> animation;
 
-  late final anim =
-      Tween<Offset>(
-        begin: const Offset(0, 2),
-        end: Offset.zero,
-      ).animate(
-        CurvedAnimation(
-          parent: fabAnimationCtr,
-          curve: Curves.easeInOut,
-        ),
-      );
+  @override
+  void onInit() {
+    super.onInit();
+    _fabAnimationCtr = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    )..forward();
+    _curvedAnimation = CurvedAnimation(
+      parent: _fabAnimationCtr,
+      curve: Curves.easeInOut,
+    );
+    animation = Tween<Offset>(
+      begin: const Offset(0, 2),
+      end: Offset.zero,
+    ).animate(_curvedAnimation);
+  }
 
   void showFab() {
     if (!_isFabVisible) {
       _isFabVisible = true;
-      fabAnimationCtr.forward();
+      _fabAnimationCtr.forward();
     }
   }
 
   void hideFab() {
     if (_isFabVisible) {
       _isFabVisible = false;
-      fabAnimationCtr.reverse();
+      _fabAnimationCtr.reverse();
     }
   }
 
@@ -73,7 +78,8 @@ class VideoReplyController extends ReplyController<MainListReply>
 
   @override
   void onClose() {
-    fabAnimationCtr.dispose();
+    _curvedAnimation.dispose();
+    _fabAnimationCtr.dispose();
     super.onClose();
   }
 }

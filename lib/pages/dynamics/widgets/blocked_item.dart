@@ -3,13 +3,14 @@ import 'package:PiliPlus/pages/article/widgets/opus_content.dart'
     show moduleBlockedItem;
 import 'package:flutter/material.dart';
 
-Widget blockedItem({
+Widget blockedItem(
+  BuildContext context, {
   required ThemeData theme,
   required ModuleBlocked blocked,
   required double maxWidth,
 }) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 1),
-    child: moduleBlockedItem(theme, blocked, maxWidth - 26),
+    child: moduleBlockedItem(context, theme, blocked, maxWidth - 26),
   );
 }

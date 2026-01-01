@@ -56,7 +56,7 @@ class DownloadSearchController
       onConfirm: () async {
         SmartDialog.showLoading();
         final allChecked = this.allChecked.toSet();
-        for (var entry in allChecked) {
+        for (final entry in allChecked) {
           await GStorage.watchProgress.delete(entry.cid.toString());
           await _downloadService.deleteDownload(
             entry: entry,

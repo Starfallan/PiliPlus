@@ -8,7 +8,8 @@ import 'package:PiliPlus/pages/fav_detail/view.dart';
 import 'package:PiliPlus/pages/later/base_controller.dart';
 import 'package:PiliPlus/pages/later/controller.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/get_ext.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -24,10 +25,7 @@ class LaterPage extends StatefulWidget {
 class _LaterPageState extends State<LaterPage>
     with SingleTickerProviderStateMixin {
   final LaterBaseController _baseCtr = Get.put(LaterBaseController());
-  late final TabController _tabController = TabController(
-    length: LaterViewType.values.length,
-    vsync: this,
-  );
+  late final TabController _tabController;
 
   LaterController currCtr([int? index]) {
     final type = LaterViewType.values[index ?? _tabController.index];
@@ -45,7 +43,10 @@ class _LaterPageState extends State<LaterPage>
   @override
   void initState() {
     super.initState();
-    _tabController.addListener(listener);
+    _tabController = TabController(
+      length: LaterViewType.values.length,
+      vsync: this,
+    )..addListener(listener);
   }
 
   @override
@@ -115,7 +116,7 @@ class _LaterPageState extends State<LaterPage>
                     // tabAlignment: TabAlignment.start,
                     controller: _tabController,
                     tabs: LaterViewType.values.map((item) {
-                      final count = _baseCtr.counts[item];
+                      final count = _baseCtr.counts[item.index];
                       return Tab(
                         text: '${item.title}${count != -1 ? '($count)' : ''}',
                       );
@@ -215,7 +216,7 @@ class _LaterPageState extends State<LaterPage>
                   'mediaId': mid,
                   'mid': mid,
                   'title': '稍后再看',
-                  'count': _baseCtr.counts[LaterViewType.all],
+                  'count': _baseCtr.counts[LaterViewType.all.index],
                 },
               );
             },
@@ -243,14 +244,19 @@ class _LaterPageState extends State<LaterPage>
                       vertical: 6,
                     ),
                     child: Text.rich(
+                      style: TextStyle(fontSize: 14, height: 1, color: color),
+                      strutStyle: const StrutStyle(
+                        leading: 0,
+                        height: 1,
+                        fontSize: 14,
+                      ),
                       TextSpan(
                         children: [
-                          TextSpan(
-                            text: value ? '最早添加' : '最近添加',
-                          ),
+                          TextSpan(text: value ? '最早添加' : '最近添加'),
                           WidgetSpan(
+                            alignment: .middle,
                             child: Icon(
-                              size: 16,
+                              size: 14,
                               MdiIcons.unfoldMoreHorizontal,
                               color: color,
                             ),
@@ -286,14 +292,19 @@ class _LaterPageState extends State<LaterPage>
                   vertical: 6,
                 ),
                 child: Text.rich(
+                  style: TextStyle(fontSize: 14, height: 1, color: color),
+                  strutStyle: const StrutStyle(
+                    leading: 0,
+                    height: 1,
+                    fontSize: 14,
+                  ),
                   TextSpan(
                     children: [
-                      const TextSpan(
-                        text: '清空',
-                      ),
+                      const TextSpan(text: '清空'),
                       WidgetSpan(
+                        alignment: .middle,
                         child: Icon(
-                          size: 16,
+                          size: 14,
                           MdiIcons.unfoldMoreHorizontal,
                           color: color,
                         ),

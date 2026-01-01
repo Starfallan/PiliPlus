@@ -15,7 +15,7 @@ enum LiveQuality {
   const LiveQuality(this.code, this.desc);
 
   static LiveQuality? fromCode(int? code) {
-    for (var e in LiveQuality.values) {
+    for (final e in LiveQuality.values) {
       if (e.code == code) {
         return e;
       }

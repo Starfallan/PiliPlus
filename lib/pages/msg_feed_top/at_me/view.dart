@@ -13,7 +13,7 @@ import 'package:PiliPlus/pages/msg_feed_top/at_me/controller.dart';
 import 'package:PiliPlus/pages/whisper_settings/view.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:get/get.dart';
 
@@ -84,7 +84,7 @@ class _AtMePageState extends State<AtMePage> {
         itemCount: 12,
         itemBuilder: (context, index) => const MsgFeedTopSkeleton(),
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.separated(
                 itemCount: response.length,
@@ -96,7 +96,7 @@ class _AtMePageState extends State<AtMePage> {
                   void onLongPress() => showConfirmDialog(
                     context: context,
                     title: '确定删除该通知?',
-                    onConfirm: () => _atMeController.onRemove(item.id, index),
+                    onConfirm: () => _atMeController.onRemove(item.id!, index),
                   );
                   return ListTile(
                     safeArea: true,
@@ -110,7 +110,7 @@ class _AtMePageState extends State<AtMePage> {
                       PiliScheme.routePushFromUrl(nativeUri);
                     },
                     onLongPress: onLongPress,
-                    onSecondaryTap: Utils.isMobile ? null : onLongPress,
+                    onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
                     leading: GestureDetector(
                       onTap: () => Get.toNamed('/member?mid=${item.user?.mid}'),
                       child: NetworkImgLayer(
@@ -166,8 +166,10 @@ class _AtMePageState extends State<AtMePage> {
                         ? NetworkImgLayer(
                             width: 45,
                             height: 45,
-                            radius: 8,
                             src: item.item?.image,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(8),
+                            ),
                           )
                         : null,
                   );
@@ -175,7 +177,7 @@ class _AtMePageState extends State<AtMePage> {
                 separatorBuilder: (context, index) => divider,
               )
             : HttpError(onReload: _atMeController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _atMeController.onReload,
       ),

@@ -50,6 +50,7 @@ class LoadingWidget extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(15)),
       ),
       child: Column(
+        spacing: 20,
         mainAxisSize: MainAxisSize.min,
         children: [
           //loading animation
@@ -59,10 +60,7 @@ class LoadingWidget extends StatelessWidget {
           ),
 
           //msg
-          Container(
-            margin: const EdgeInsets.only(top: 20),
-            child: Text(msg, style: TextStyle(color: onSurfaceVariant)),
-          ),
+          Text(msg, style: TextStyle(color: onSurfaceVariant)),
         ],
       ),
     );

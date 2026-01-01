@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:PiliPlus/common/widgets/image/cached_network_svg_image.dart';
 import 'package:PiliPlus/common/widgets/image/custom_grid_view.dart';
@@ -11,15 +11,17 @@ import 'package:PiliPlus/models/dynamics/article_content_model.dart'
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/string_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide ContextExtensionss, Node;
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:re_highlight/languages/all.dart';
 import 'package:re_highlight/re_highlight.dart';
@@ -40,6 +42,7 @@ class OpusContent extends StatelessWidget {
     required Node item,
     required ColorScheme colorScheme,
     bool isQuote = false,
+    required ValueGetter<double> surfaceLuminance,
   }) {
     switch (item.type) {
       case 'TEXT_NODE_TYPE_RICH' when (item.rich != null):
@@ -101,7 +104,8 @@ class OpusContent extends StatelessWidget {
       default:
         return _getSpan(
           item.word,
-          isQuote ? colorScheme.onSurfaceVariant : null,
+          surfaceLuminance: surfaceLuminance,
+          defaultColor: isQuote ? colorScheme.onSurfaceVariant : null,
         );
     }
   }
@@ -118,14 +122,36 @@ class OpusContent extends StatelessWidget {
         fontSize: fontSize,
       );
 
-  static TextSpan _getSpan(Word? word, [Color? defaultColor]) => TextSpan(
-    text: word?.words,
-    style: _getStyle(
-      word?.style,
-      word?.color != null ? Color(word!.color!) : defaultColor,
-      word?.fontSize,
-    ),
-  );
+  static TextSpan _getSpan(
+    Word? word, {
+    Color? defaultColor,
+    required ValueGetter<double> surfaceLuminance,
+  }) {
+    Color? color;
+    if (word?.color case final c?) {
+      final tmpColor = Color(c);
+      double max = tmpColor.computeLuminance();
+      double min = surfaceLuminance();
+      if (max < min) {
+        final tmp = max;
+        max = min;
+        min = tmp;
+      }
+
+      // WCAG AA : (max + 0.05) / (min + 0.05) > 3.0
+      if (max > 3.0 * min + 0.1) {
+        color = tmpColor;
+      }
+    }
+    return TextSpan(
+      text: word?.words,
+      style: _getStyle(
+        word?.style,
+        color ?? defaultColor,
+        word?.fontSize,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,10 +160,14 @@ class OpusContent extends StatelessWidget {
       return const SliverToBoxAdapter();
     }
 
-    late final highlight = Highlight()..registerLanguages(builtinAllLanguages);
-    late final isDarkMode = context.isDarkMode;
-
     final colorScheme = Theme.of(context).colorScheme;
+    late final isDarkMode = colorScheme.isDark;
+    double? surfaceLuminance;
+    double getSurfaceLuminance() =>
+        surfaceLuminance ??= colorScheme.surface.computeLuminance();
+
+    late final highlight = Highlight()..registerLanguages(builtinAllLanguages);
+
     return SliverList.separated(
       itemCount: opus.length,
       itemBuilder: (context, index) {
@@ -151,8 +181,11 @@ class OpusContent extends StatelessWidget {
                 TextSpan(
                   children: element.text?.nodes
                       ?.map(
-                        (item) =>
-                            _node2Widget(item: item, colorScheme: colorScheme),
+                        (item) => _node2Widget(
+                          item: item,
+                          colorScheme: colorScheme,
+                          surfaceLuminance: getSurfaceLuminance,
+                        ),
                       )
                       .toList(),
                 ),
@@ -184,25 +217,26 @@ class OpusContent extends StatelessWidget {
                 final pic = element.pic!.pics!.first;
                 final width = pic.width == null
                     ? null
-                    : min(maxWidth.toDouble(), pic.width!);
+                    : math.min(maxWidth, pic.width!);
                 final height = width == null || pic.height == null
                     ? null
                     : width * pic.height! / pic.width!;
-                return Hero(
-                  tag: pic.url!,
-                  child: GestureDetector(
-                    onTap: () => PageUtils.imageView(
-                      imgList: [SourceModel(url: pic.url!)],
-                      quality: 60,
-                    ),
-                    child: Center(
+                return GestureDetector(
+                  onTap: () => PageUtils.imageView(
+                    imgList: [SourceModel(url: pic.url!)],
+                    quality: 60,
+                  ),
+                  child: Center(
+                    child: Hero(
+                      tag: pic.url!,
                       child: CachedNetworkImage(
                         width: width,
                         height: height,
+                        memCacheWidth: width?.cacheSize(context),
                         imageUrl: ImageUtils.thumbnailUrl(pic.url!, 60),
                         fadeInDuration: const Duration(milliseconds: 120),
                         fadeOutDuration: const Duration(milliseconds: 120),
-                        placeholder: (context, url) =>
+                        placeholder: (_, _) =>
                             Image.asset('assets/images/loading.png'),
                       ),
                     ),
@@ -223,11 +257,14 @@ class OpusContent extends StatelessWidget {
                 );
               }
             case 3 when (element.line != null):
+              final height = element.line!.pic!.height?.toDouble();
               return CachedNetworkImage(
                 width: maxWidth,
                 fit: BoxFit.contain,
-                height: element.line!.pic!.height?.toDouble(),
+                height: height,
+                memCacheHeight: height?.cacheSize(context),
                 imageUrl: ImageUtils.thumbnailUrl(element.line!.pic!.url!),
+                placeholder: (_, _) => const SizedBox.shrink(),
               );
             case 5 when (element.list != null):
               return SelectableText.rich(
@@ -241,18 +278,23 @@ class OpusContent extends StatelessWidget {
                         ),
                         ...entry.$2.nodes!.map((item) {
                           if (item.word != null) {
-                            return _getSpan(item.word);
+                            return _getSpan(
+                              item.word,
+                              surfaceLuminance: getSurfaceLuminance,
+                            );
                           }
-                          if (item.rich case final rich?) {
-                            final hasUrl = rich.jumpUrl?.isNotEmpty == true;
+                          if (item.rich case Rich(
+                            :final text,
+                            :final jumpUrl,
+                          )) {
+                            final hasUrl =
+                                jumpUrl != null && jumpUrl.isNotEmpty;
                             return TextSpan(
-                              text: '${hasUrl ? '\u{1F517}' : ''}${rich.text}',
+                              text: '${hasUrl ? '\u{1F517}' : ''}$text',
                               recognizer: hasUrl
                                   ? (TapGestureRecognizer()
                                       ..onTap = () =>
-                                          PiliScheme.routePushFromUrl(
-                                            rich.jumpUrl!,
-                                          ))
+                                          PiliScheme.routePushFromUrl(jumpUrl))
                                   : null,
                               style: hasUrl
                                   ? TextStyle(color: colorScheme.primary)
@@ -315,10 +357,12 @@ class OpusContent extends StatelessWidget {
                         spacing: 10,
                         children: [
                           NetworkImgLayer(
-                            radius: 6,
                             width: 104,
                             height: 65,
                             src: element.linkCard!.card!.ugc!.cover,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(6),
+                            ),
                           ),
                           Expanded(
                             child: Column(
@@ -354,10 +398,12 @@ class OpusContent extends StatelessWidget {
                         spacing: 10,
                         children: [
                           NetworkImgLayer(
-                            radius: 6,
                             width: 104,
                             height: 65,
                             src: element.linkCard!.card!.common!.cover,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(6),
+                            ),
                           ),
                           Expanded(
                             child: Column(
@@ -391,10 +437,12 @@ class OpusContent extends StatelessWidget {
                         spacing: 10,
                         children: [
                           NetworkImgLayer(
-                            radius: 6,
                             width: 104,
                             height: 65,
                             src: element.linkCard!.card!.live!.cover,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(6),
+                            ),
                           ),
                           Expanded(
                             child: Column(
@@ -428,10 +476,12 @@ class OpusContent extends StatelessWidget {
                         spacing: 10,
                         children: [
                           NetworkImgLayer(
-                            radius: 6,
                             width: 104,
                             height: 65,
                             src: element.linkCard!.card!.opus!.cover,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(6),
+                            ),
                           ),
                           Expanded(
                             child: Column(
@@ -489,10 +539,12 @@ class OpusContent extends StatelessWidget {
                         spacing: 10,
                         children: [
                           NetworkImgLayer(
-                            radius: 6,
                             width: 104,
                             height: 65,
                             src: element.linkCard!.card!.music!.cover,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(6),
+                            ),
                           ),
                           Expanded(
                             child: Column(
@@ -527,10 +579,12 @@ class OpusContent extends StatelessWidget {
                               spacing: 10,
                               children: [
                                 NetworkImgLayer(
-                                  radius: 6,
                                   width: 104,
                                   height: 65,
                                   src: e.cover,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(6),
+                                  ),
                                 ),
                                 Expanded(
                                   child: Column(
@@ -600,7 +654,11 @@ class OpusContent extends StatelessWidget {
                 TextSpan(
                   children: element.heading!.nodes!
                       .map(
-                        (e) => _node2Widget(item: e, colorScheme: colorScheme),
+                        (e) => _node2Widget(
+                          item: e,
+                          colorScheme: colorScheme,
+                          surfaceLuminance: getSurfaceLuminance,
+                        ),
                       )
                       .toList(),
                 ),
@@ -612,7 +670,12 @@ class OpusContent extends StatelessWidget {
                   textAlign: element.align == 1 ? TextAlign.center : null,
                   TextSpan(
                     children: element.text!.nodes!
-                        .map<TextSpan>((item) => _getSpan(item.word))
+                        .map<TextSpan>(
+                          (item) => _getSpan(
+                            item.word,
+                            surfaceLuminance: getSurfaceLuminance,
+                          ),
+                        )
                         .toList(),
                   ),
                 );
@@ -642,11 +705,12 @@ class OpusContent extends StatelessWidget {
 }
 
 Widget moduleBlockedItem(
+  BuildContext context,
   ThemeData theme,
   ModuleBlocked moduleBlocked,
   double maxWidth,
 ) {
-  late final isDarkMode = Get.isDarkMode;
+  late final isDarkMode = theme.brightness.isDark;
 
   BoxDecoration? bgImg() {
     return moduleBlocked.bgImg == null
@@ -668,14 +732,17 @@ Widget moduleBlockedItem(
   Widget icon(double width) {
     return CachedNetworkImage(
       width: width,
+      memCacheWidth: width.cacheSize(context),
       fit: BoxFit.contain,
       imageUrl: ImageUtils.thumbnailUrl(
         isDarkMode ? moduleBlocked.icon!.imgDark : moduleBlocked.icon!.imgDay,
       ),
+      placeholder: (_, _) => const SizedBox.shrink(),
     );
   }
 
-  Widget btn({
+  Widget btn(
+    BuildContext context, {
     OutlinedBorder? shape,
     VisualDensity? visualDensity,
     EdgeInsetsGeometry? padding,
@@ -703,7 +770,9 @@ Widget moduleBlockedItem(
             CachedNetworkImage(
               height: 16,
               color: Colors.white,
-              imageUrl: moduleBlocked.button!.icon!.http2https,
+              memCacheHeight: 16.cacheSize(context),
+              placeholder: (_, _) => const SizedBox.shrink(),
+              imageUrl: ImageUtils.safeThumbnailUrl(moduleBlocked.button!.icon),
             ),
           Text(moduleBlocked.button!.text ?? ''),
         ],
@@ -712,7 +781,7 @@ Widget moduleBlockedItem(
   }
 
   if (moduleBlocked.blockedType == 1) {
-    maxWidth = maxWidth <= 255 ? maxWidth : min(400, maxWidth * 0.8);
+    maxWidth = maxWidth <= 255 ? maxWidth : math.min(400, maxWidth * 0.8);
     return UnconstrainedBox(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -723,7 +792,7 @@ Widget moduleBlockedItem(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (moduleBlocked.icon != null) icon(max(40, maxWidth / 7)),
+            if (moduleBlocked.icon != null) icon(math.max(40, maxWidth / 7)),
             if (moduleBlocked.hintMessage?.isNotEmpty == true) ...[
               const SizedBox(height: 5),
               Text(
@@ -735,6 +804,7 @@ Widget moduleBlockedItem(
             if (moduleBlocked.button != null) ...[
               const SizedBox(height: 8),
               btn(
+                context,
                 visualDensity: const VisualDensity(vertical: -2.5),
               ),
             ],
@@ -771,6 +841,7 @@ Widget moduleBlockedItem(
         ),
         if (moduleBlocked.button != null)
           btn(
+            context,
             visualDensity: const VisualDensity(vertical: -3, horizontal: -4),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(6)),

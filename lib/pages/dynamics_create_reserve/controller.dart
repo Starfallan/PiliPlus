@@ -28,7 +28,7 @@ class CreateReserveController extends GetxController {
   }
 
   Future<void> queryData() async {
-    var res = await DynamicsHttp.reserveInfo(sid: sid);
+    final res = await DynamicsHttp.reserveInfo(sid: sid);
     if (res.isSuccess) {
       ReserveInfoData data = res.data;
       key = Utils.generateRandomString(6);
@@ -44,7 +44,7 @@ class CreateReserveController extends GetxController {
 
   Future<void> onCreate() async {
     final livePlanStartTime = date.value.millisecondsSinceEpoch ~/ 1000;
-    var res = sid == null
+    final res = sid == null
         ? await DynamicsHttp.createReserve(
             title: title.value,
             subType: subType.value,

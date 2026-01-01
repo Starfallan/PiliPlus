@@ -23,7 +23,7 @@ class MatchInfoController extends CommonDynController {
   }
 
   Future<void> getMatchInfo() async {
-    var res = await MatchHttp.matchInfo(oid);
+    final res = await MatchHttp.matchInfo(oid);
     if (res.isSuccess) {
       queryData();
     }

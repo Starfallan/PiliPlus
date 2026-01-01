@@ -1,6 +1,6 @@
 import 'package:PiliPlus/http/constants.dart';
 
-class Api {
+abstract final class Api {
   // 推荐视频
   static const String recommendListApp =
       '${HttpString.appBaseUrl}/x/v2/feed/index';
@@ -688,7 +688,8 @@ class Api {
   // static const String videoTags = '/x/tag/archive/tags';
   static const String videoTags = '/x/web-interface/view/detail/tag';
 
-  static const String reportMember = '/ajax/report/add';
+  static const String reportMember =
+      '${HttpString.spaceBaseUrl}/ajax/report/add';
 
   static const String removeMsg = '/session_svr/v1/session_svr/remove_session';
 
@@ -974,4 +975,10 @@ class Api {
   static const String sameFollowing = '/x/relation/same/followings';
 
   static const String seasonStatus = '/pgc/view/web/season/user/status';
+
+  static const String followeeVotes =
+      '${HttpString.tUrl}/vote_svr/v1/vote_svr/followee_votes';
+
+  static const String liveContributionRank =
+      '${HttpString.liveBaseUrl}/xlive/general-interface/v1/rank/queryContributionRank';
 }

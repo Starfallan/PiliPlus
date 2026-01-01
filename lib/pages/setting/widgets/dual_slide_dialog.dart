@@ -1,5 +1,5 @@
+import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_utils/get_utils.dart';
 
 class DualSlideDialog extends StatefulWidget {
   final double value1;

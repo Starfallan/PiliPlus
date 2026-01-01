@@ -21,8 +21,8 @@ class DynamicDetailController extends CommonDynController {
   void onInit() {
     super.onInit();
     dynItem = Get.arguments['item'];
-    var commentType = dynItem.basic?.commentType;
-    var commentIdStr = dynItem.basic?.commentIdStr;
+    final commentType = dynItem.basic?.commentType;
+    final commentIdStr = dynItem.basic?.commentIdStr;
     if (commentType != null &&
         commentType != 0 &&
         commentIdStr != null &&

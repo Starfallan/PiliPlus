@@ -4,7 +4,7 @@ import 'package:PiliPlus/grpc/grpc_req.dart';
 import 'package:PiliPlus/grpc/url.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 
-class ViewGrpc {
+abstract final class ViewGrpc {
   static Future<LoadingState<ViewReply>> view({
     required String bvid,
   }) {

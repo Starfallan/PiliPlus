@@ -15,9 +15,10 @@ import 'package:PiliPlus/pages/download/detail/view.dart';
 import 'package:PiliPlus/pages/download/detail/widgets/item.dart';
 import 'package:PiliPlus/pages/download/search/view.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart' show IterableExt;
 import 'package:PiliPlus/utils/grid.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
-import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart'
     hide SliverGridDelegateWithMaxCrossAxisExtent;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -33,7 +34,7 @@ class DownloadPage extends StatefulWidget {
 class _DownloadPageState extends State<DownloadPage> {
   final _downloadService = Get.find<DownloadService>();
   final _controller = Get.put(DownloadPageController());
-  final _progress = ValueNotifier(null);
+  final _progress = ChangeNotifier();
 
   @override
   void dispose() {
@@ -67,7 +68,7 @@ class _DownloadPageState extends State<DownloadPage> {
                   final allChecked = _controller.allChecked.toSet();
                   _controller.handleSelect();
                   final list = <BiliDownloadEntryInfo>[];
-                  for (var page in allChecked) {
+                  for (final page in allChecked) {
                     list.addAll(page.entries);
                   }
                   final res = await Future.wait(
@@ -197,7 +198,7 @@ class _DownloadPageState extends State<DownloadPage> {
                                     entry.cid.toString(),
                                   );
                                 },
-                                checked: item.checked ?? false,
+                                checked: item.checked,
                                 onSelect: (_) => _controller.onSelect(item),
                                 controller: _controller,
                               );
@@ -309,7 +310,7 @@ class _DownloadPageState extends State<DownloadPage> {
           );
         },
         onLongPress: onLongPress,
-        onSecondaryTap: Utils.isMobile ? null : onLongPress,
+        onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: StyleString.safeSpace,
@@ -354,7 +355,7 @@ class _DownloadPageState extends State<DownloadPage> {
                       top: 6.0,
                     ),
                   Positioned.fill(
-                    child: selectMask(theme, pageInfo.checked ?? false),
+                    child: selectMask(theme, pageInfo.checked),
                   ),
                 ],
               ),

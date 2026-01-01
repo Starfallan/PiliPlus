@@ -11,10 +11,12 @@ import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/controller.dart';
 import 'package:PiliPlus/pages/save_panel/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -22,7 +24,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart' hide InkWell;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class AuthorPanel extends StatelessWidget {
   final DynamicItemModel item;
@@ -30,7 +32,7 @@ class AuthorPanel extends StatelessWidget {
   final bool isSave;
   final bool isDetail;
   final ValueChanged? onRemove;
-  final Function(bool isTop, dynamic dynId)? onSetTop;
+  final void Function(bool isTop, Object dynId)? onSetTop;
   final VoidCallback? onBlock;
 
   const AuthorPanel({
@@ -45,14 +47,15 @@ class AuthorPanel extends StatelessWidget {
   });
 
   Widget _buildAvatar(ModuleAuthorModel moduleAuthor) {
-    String? pendant = moduleAuthor.pendant?.image;
+    final pendant = moduleAuthor.pendant?.image;
+    final hasPendant = pendant != null && pendant.isNotEmpty;
     Widget avatar = PendantAvatar(
       avatar: moduleAuthor.face,
-      size: pendant.isNullOrEmpty ? 40 : 34,
+      size: hasPendant ? 34 : 40,
       officialType: null, // 已被注释
       garbPendantImage: pendant,
     );
-    if (!pendant.isNullOrEmpty) {
+    if (hasPendant) {
       avatar = Padding(padding: const EdgeInsets.all(3), child: avatar);
     }
     return avatar;
@@ -81,9 +84,7 @@ class AuthorPanel extends StatelessWidget {
             onTap: moduleAuthor.type == 'AUTHOR_TYPE_NORMAL'
                 ? () {
                     feedBack();
-                    Get.toNamed(
-                      '/member?mid=${moduleAuthor.mid}',
-                    );
+                    Get.toNamed('/member?mid=${moduleAuthor.mid}');
                   }
                 : null,
             child: Row(
@@ -148,8 +149,8 @@ class AuthorPanel extends StatelessWidget {
                           color: theme.colorScheme.primary,
                         ),
                         strutStyle: const StrutStyle(
-                          leading: 0,
                           height: 1,
+                          leading: 0,
                           fontSize: 12,
                         ),
                       ),
@@ -167,9 +168,13 @@ class AuthorPanel extends StatelessWidget {
                       children: [
                         CachedNetworkImage(
                           height: 32,
-                          imageUrl: moduleAuthor.decorate!.cardUrl.http2https,
+                          memCacheHeight: 32.cacheSize(context),
+                          imageUrl: ImageUtils.safeThumbnailUrl(
+                            moduleAuthor.decorate!.cardUrl,
+                          ),
+                          placeholder: (_, _) => const SizedBox.shrink(),
                         ),
-                        if (moduleAuthor.decorate?.fan?.numStr?.isNotEmpty ==
+                        if (moduleAuthor.decorate!.fan?.numStr?.isNotEmpty ==
                             true)
                           Padding(
                             padding: const EdgeInsets.only(right: 32),
@@ -274,7 +279,7 @@ class AuthorPanel extends StatelessWidget {
                   onTap: () async {
                     Get.back();
                     try {
-                      var res = await UserHttp.toViewLater(bvid: bvid);
+                      final res = await UserHttp.toViewLater(bvid: bvid);
                       SmartDialog.showToast(res['msg']);
                     } catch (err) {
                       SmartDialog.showToast('出错了：${err.toString()}');
@@ -476,7 +481,7 @@ class AuthorPanel extends StatelessWidget {
                           );
                         }
                         return UserHttp.dynamicReport(
-                          mid: moduleAuthor.mid,
+                          mid: moduleAuthor.mid!,
                           dynId: item.idStr,
                           reasonType: reasonType,
                           reasonDesc: reasonType == 0 ? reasonDesc : null,

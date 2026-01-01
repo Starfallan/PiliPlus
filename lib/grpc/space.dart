@@ -5,7 +5,7 @@ import 'package:PiliPlus/grpc/url.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:fixnum/fixnum.dart';
 
-class SpaceGrpc {
+abstract final class SpaceGrpc {
   static Future<LoadingState<OpusSpaceFlowResp>> opusSpaceFlow({
     required int hostMid,
     String? next,

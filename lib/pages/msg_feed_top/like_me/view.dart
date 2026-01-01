@@ -14,7 +14,7 @@ import 'package:PiliPlus/pages/msg_feed_top/like_me/controller.dart';
 import 'package:PiliPlus/pages/whisper_settings/view.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:get/get.dart';
 
@@ -82,7 +82,7 @@ class _LikeMePageState extends State<LikeMePage> {
         itemCount: 12,
         itemBuilder: (context, index) => const MsgFeedTopSkeleton(),
       ),
-      Success(:var response) => Builder(
+      Success(:final response) => Builder(
         builder: (context) {
           Pair<List<MsgLikeItem>, List<MsgLikeItem>> pair = response;
           List<MsgLikeItem> latest = pair.first;
@@ -134,7 +134,7 @@ class _LikeMePageState extends State<LikeMePage> {
           return HttpError(onReload: _likeMeController.onReload);
         },
       ),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _likeMeController.onReload,
       ),
@@ -271,7 +271,7 @@ class _LikeMePageState extends State<LikeMePage> {
         PiliScheme.routePushFromUrl(nativeUri);
       },
       onLongPress: onLongPress,
-      onSecondaryTap: Utils.isMobile ? null : onLongPress,
+      onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
       leading: avatar,
       title: Text.rich(
         TextSpan(
@@ -335,8 +335,10 @@ class _LikeMePageState extends State<LikeMePage> {
             NetworkImgLayer(
               width: 45,
               height: 45,
-              radius: 8,
               src: item.item!.image,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(8),
+              ),
             ),
           if (item.noticeState == 1) ...[
             if (item.item?.image?.isNotEmpty == true) const SizedBox(width: 4),

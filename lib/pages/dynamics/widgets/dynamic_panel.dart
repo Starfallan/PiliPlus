@@ -1,11 +1,13 @@
+import 'package:PiliPlus/common/widgets/avatars.dart';
 import 'package:PiliPlus/common/widgets/flutter/dyn/ink_well.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/action_panel.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/author_panel.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/dyn_content.dart';
+import 'package:PiliPlus/pages/dynamics/widgets/interaction.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart' hide InkWell;
 
 class DynamicPanel extends StatelessWidget {
@@ -14,7 +16,7 @@ class DynamicPanel extends StatelessWidget {
   final bool isDetail;
   final ValueChanged? onRemove;
   final bool isSave;
-  final Function(bool isTop, dynamic dynId)? onSetTop;
+  final void Function(bool isTop, Object dynId)? onSetTop;
   final VoidCallback? onBlock;
   final VoidCallback? onUnfold;
   final bool isDetailPortraitW;
@@ -67,7 +69,7 @@ class DynamicPanel extends StatelessWidget {
             ? null
             : () => PageUtils.pushDynDetail(item),
         onLongPress: showMore,
-        onSecondaryTap: Utils.isMobile ? null : showMore,
+        onSecondaryTap: PlatformUtils.isMobile ? null : showMore,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,45 +89,21 @@ class DynamicPanel extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             if (!isDetail) ...[
+              if (item.modules.moduleInteraction case ModuleInteraction(
+                :final items,
+              ))
+                if (items != null && items.isNotEmpty)
+                  dynInteraction(
+                    theme: theme,
+                    items: items,
+                  ),
               ActionPanel(item: item),
               if (item.modules.moduleFold case final moduleFold?) ...[
                 Divider(
                   height: 1,
                   color: theme.dividerColor.withValues(alpha: 0.1),
                 ),
-                InkWell(
-                  onTap: onUnfold,
-                  child: Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text.rich(
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        height: 1,
-                        fontSize: 13,
-                        color: theme.colorScheme.outline,
-                      ),
-                      strutStyle: const StrutStyle(
-                        height: 1,
-                        leading: 0,
-                        fontSize: 13,
-                      ),
-                      TextSpan(
-                        children: [
-                          TextSpan(text: moduleFold.statement ?? '展开'),
-                          WidgetSpan(
-                            alignment: PlaceholderAlignment.middle,
-                            child: Icon(
-                              size: 19,
-                              Icons.keyboard_arrow_down,
-                              color: theme.colorScheme.outline,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                _buildFoldItem(theme, moduleFold),
               ],
             ] else if (!isSave)
               const SizedBox(height: 12),
@@ -214,6 +192,54 @@ class DynamicPanel extends StatelessWidget {
       title: title,
       cover: cover,
       bvid: bvid,
+    );
+  }
+
+  Widget _buildFoldItem(ThemeData theme, ModuleFold moduleFold) {
+    Widget child = Text.rich(
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        height: 1,
+        fontSize: 13,
+        color: theme.colorScheme.outline,
+      ),
+      strutStyle: const StrutStyle(
+        height: 1,
+        leading: 0,
+        fontSize: 13,
+      ),
+      TextSpan(
+        children: [
+          TextSpan(text: moduleFold.statement ?? '展开'),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Icon(
+              size: 19,
+              Icons.keyboard_arrow_down,
+              color: theme.colorScheme.outline,
+            ),
+          ),
+        ],
+      ),
+    );
+    final users = moduleFold.users;
+    if (users != null && users.isNotEmpty) {
+      child = Row(
+        spacing: 5,
+        mainAxisAlignment: .center,
+        children: [
+          avatars(colorScheme: theme.colorScheme, users: users),
+          child,
+        ],
+      );
+    }
+    return InkWell(
+      onTap: onUnfold,
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: child,
+      ),
     );
   }
 }

@@ -60,11 +60,11 @@ class PgcReviewController
   );
 
   Future<void> onLike(PgcReviewItemModel item, bool isLike, reviewId) async {
-    var res = await PgcHttp.pgcReviewLike(
+    final res = await PgcHttp.pgcReviewLike(
       mediaId: mediaId,
       reviewId: reviewId,
     );
-    if (res['status']) {
+    if (res.isSuccess) {
       int likes = item.stat?.likes ?? 0;
       item.stat
         ?..liked = isLike ? 0 : 1
@@ -74,7 +74,7 @@ class PgcReviewController
       }
       loadingState.refresh();
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 
@@ -83,11 +83,11 @@ class PgcReviewController
     bool isDislike,
     reviewId,
   ) async {
-    var res = await PgcHttp.pgcReviewDislike(
+    final res = await PgcHttp.pgcReviewDislike(
       mediaId: mediaId,
       reviewId: reviewId,
     );
-    if (res['status']) {
+    if (res.isSuccess) {
       item.stat?.disliked = isDislike ? 0 : 1;
       if (!isDislike) {
         if (item.stat?.liked == 1) {
@@ -97,22 +97,22 @@ class PgcReviewController
       }
       loadingState.refresh();
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 
-  Future<void> onDel(int index, int? reviewId) async {
-    var res = await PgcHttp.pgcReviewDel(
+  Future<void> onDel(int index, int reviewId) async {
+    final res = await PgcHttp.pgcReviewDel(
       mediaId: mediaId,
       reviewId: reviewId,
     );
-    if (res['status']) {
+    if (res.isSuccess) {
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
       SmartDialog.showToast('删除成功');
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 

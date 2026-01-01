@@ -3,7 +3,7 @@ import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:dio/dio.dart';
 
-class ValidateHttp {
+abstract final class ValidateHttp {
   static Future gaiaVgateRegister(String vVoucher) async {
     final res = await Request().post(
       Api.gaiaVgateRegister,

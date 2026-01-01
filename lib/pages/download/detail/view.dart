@@ -10,6 +10,7 @@ import 'package:PiliPlus/pages/common/multi_select/base.dart'
 import 'package:PiliPlus/pages/download/controller.dart';
 import 'package:PiliPlus/pages/download/detail/widgets/item.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:flutter/material.dart'
@@ -27,7 +28,7 @@ class DownloadDetailPage extends StatefulWidget {
 
   final String pageId;
   final String title;
-  final ValueNotifier progress;
+  final ChangeNotifier progress;
 
   @override
   State<DownloadDetailPage> createState() => _DownloadDetailPageState();
@@ -81,6 +82,7 @@ class _DownloadDetailPageState extends State<DownloadDetailPage>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.of(context);
     return Obx(() {
       final enableMultiSelect = this.enableMultiSelect.value;
       return PopScope(
@@ -118,7 +120,7 @@ class _DownloadDetailPageState extends State<DownloadDetailPage>
                 },
                 child: Text(
                   '更新',
-                  style: TextStyle(color: Get.theme.colorScheme.onSurface),
+                  style: TextStyle(color: colorScheme.onSurface),
                 ),
               ),
             ],
@@ -204,7 +206,7 @@ class _DownloadDetailPageState extends State<DownloadDetailPage>
         if (isDeleteAll) {
           await _closeSub();
         }
-        for (var entry in allChecked) {
+        for (final entry in allChecked) {
           await watchProgress.deleteAll(
             allChecked.map((e) => e.cid.toString()),
           );

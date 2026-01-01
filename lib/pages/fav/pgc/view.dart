@@ -1,6 +1,6 @@
 import 'package:PiliPlus/pages/fav/pgc/child_view.dart';
 import 'package:PiliPlus/pages/fav/pgc/controller.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,11 +15,17 @@ class FavPgcPage extends StatefulWidget {
 
 class _FavPgcPageState extends State<FavPgcPage>
     with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
-  late final TabController _tabController = TabController(
-    length: 3,
-    vsync: this,
-    initialIndex: 1,
-  );
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: 1,
+    );
+  }
 
   @override
   bool get wantKeepAlive => true;

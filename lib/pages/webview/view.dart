@@ -50,7 +50,7 @@ class _WebviewPageState extends State<WebviewPage> {
     this.uaType =
         widget.uaType ??
         (uaType != null ? UaType.values.byName(uaType) : UaType.platformUA);
-    if (Get.arguments case Map map) {
+    if (Get.arguments case final Map map) {
       _inApp = map['inApp'] ?? false;
       _off = map['off'] ?? false;
     }
@@ -67,6 +67,7 @@ class _WebviewPageState extends State<WebviewPage> {
     if (Platform.isLinux) {
       return Scaffold(
         appBar: AppBar(),
+        resizeToAvoidBottomInset: false,
         body: Center(
           child: TextButton(
             onPressed: () => PageUtils.launchURL(_url),

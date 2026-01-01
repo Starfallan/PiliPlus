@@ -41,6 +41,7 @@ class _DownloadingPageState extends State<DownloadingPage>
           }
         },
         child: Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: MultiSelectAppBarWidget(
             ctr: this,
             child: AppBar(
@@ -114,7 +115,7 @@ class _DownloadingPageState extends State<DownloadingPage>
         final isDownloading =
             _downloadService.curDownload.value?.status ==
             DownloadStatus.downloading;
-        for (var entry in allChecked) {
+        for (final entry in allChecked) {
           await _downloadService.deleteDownload(
             entry: entry,
             refresh: false,

@@ -1,4 +1,4 @@
-abstract class Em {
+abstract final class Em {
   static final _exp = RegExp('<[^>]*>([^<]*)</[^>]*>');
   static final _htmlRegExp = RegExp(r'&(lt|gt|quot|apos|nbsp|amp);');
 

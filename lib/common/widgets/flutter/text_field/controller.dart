@@ -50,7 +50,7 @@ mixin RichTextTypeMixin {
 
 extension TextEditingDeltaExt on TextEditingDelta {
   ({RichTextType type, String? rawText, Emote? emote, String? id}) get config {
-    if (this case RichTextTypeMixin e) {
+    if (this case final RichTextTypeMixin e) {
       return (type: e.type, rawText: e.rawText, emote: e.emote, id: e.id);
     }
     return (
@@ -62,7 +62,7 @@ extension TextEditingDeltaExt on TextEditingDelta {
   }
 
   bool get isText {
-    if (this case RichTextTypeMixin e) {
+    if (this case final RichTextTypeMixin e) {
       return e.type == RichTextType.text;
     }
     return !composing.isValid;
@@ -588,7 +588,7 @@ class RichTextEditingController extends TextEditingController {
       return '';
     }
     final buffer = StringBuffer();
-    for (var e in items) {
+    for (final e in items) {
       buffer.write(e.text);
     }
     return buffer.toString();
@@ -599,7 +599,7 @@ class RichTextEditingController extends TextEditingController {
       return '';
     }
     final buffer = StringBuffer();
-    for (var e in items) {
+    for (final e in items) {
       if (e.type == RichTextType.at) {
         buffer.write(e.text);
       } else {
@@ -708,7 +708,7 @@ class RichTextEditingController extends TextEditingController {
       items.insertAll(addIndex, toAdd);
     }
     if (toDel != null && toDel.isNotEmpty) {
-      for (var item in toDel) {
+      for (final item in toDel) {
         items.remove(item);
       }
     }
@@ -736,7 +736,7 @@ class RichTextEditingController extends TextEditingController {
 
     // bool isValid = true;
     // int cursor = 0;
-    // for (var e in items) {
+    // for (final e in items) {
     //   final range = e.range;
     //   if (range.start == cursor) {
     //     cursor = range.end;
@@ -787,7 +787,7 @@ class RichTextEditingController extends TextEditingController {
                     width: 22, // emote.width,
                     height: 22, // emote.height,
                     type: ImageType.emote,
-                    boxFit: BoxFit.contain,
+                    fit: BoxFit.contain,
                   ),
                 ),
               );
@@ -846,7 +846,7 @@ class RichTextEditingController extends TextEditingController {
 
   TextPosition dragOffset(TextPosition position) {
     final offset = position.offset;
-    for (var e in items) {
+    for (final e in items) {
       final range = e.range;
       if (offset >= range.end) {
         continue;
@@ -866,7 +866,7 @@ class RichTextEditingController extends TextEditingController {
   }
 
   int tapOffsetSimple(int offset) {
-    for (var e in items) {
+    for (final e in items) {
       final range = e.range;
       if (offset >= range.end) {
         continue;
@@ -891,7 +891,7 @@ class RichTextEditingController extends TextEditingController {
     required Offset localPos,
     required Offset lastTapDownPosition,
   }) {
-    for (var e in items) {
+    for (final e in items) {
       final range = e.range;
       if (offset >= range.end) {
         continue;
@@ -930,7 +930,7 @@ class RichTextEditingController extends TextEditingController {
     int startOffset,
     int endOffset,
   ) {
-    for (var e in items) {
+    for (final e in items) {
       final range = e.range;
       if (startOffset >= range.end) {
         continue;
@@ -963,7 +963,7 @@ class RichTextEditingController extends TextEditingController {
 
   TextSelection keyboardOffset(TextSelection newSelection) {
     final offset = newSelection.baseOffset;
-    for (var e in items) {
+    for (final e in items) {
       final range = e.range;
       if (offset >= range.end) {
         continue;
@@ -994,7 +994,7 @@ class RichTextEditingController extends TextEditingController {
     final startOffset = newSelection.start;
     final endOffset = newSelection.end;
     final isNormalized = newSelection.baseOffset < newSelection.extentOffset;
-    for (var e in items) {
+    for (final e in items) {
       final range = e.range;
       if (startOffset >= range.end) {
         continue;
@@ -1046,7 +1046,7 @@ class RichTextEditingController extends TextEditingController {
       String text = '';
       final start = selection.start;
       final end = selection.end;
-      for (var e in items) {
+      for (final e in items) {
         final range = e.range;
         if (start >= range.end) {
           continue;

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/models/common/super_chat_type.dart';
 import 'package:PiliPlus/models/common/video/subtitle_pref_type.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
@@ -10,10 +11,10 @@ import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart'
     show allowRotateScreen;
 import 'package:PiliPlus/services/service_locator.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -27,7 +28,7 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.enableShowDanmaku,
     defaultVal: true,
   ),
-  if (Utils.isMobile)
+  if (PlatformUtils.isMobile)
     const SwitchModel(
       title: '启用点击弹幕',
       subtitle: '点击弹幕悬停，支持点赞、复制、举报操作',
@@ -64,7 +65,7 @@ List<SettingsModel> get playSettings => [
     title: '全屏显示电池电量',
     leading: const Icon(Icons.battery_3_bar),
     setKey: SettingBoxKey.showBatteryLevel,
-    defaultVal: Utils.isMobile,
+    defaultVal: PlatformUtils.isMobile,
   ),
   const SwitchModel(
     title: '双击快退/快进',
@@ -139,7 +140,7 @@ List<SettingsModel> get playSettings => [
       }
     },
   ),
-  if (Utils.isDesktop)
+  if (PlatformUtils.isDesktop)
     SwitchModel(
       title: '最小化时暂停/还原时播放',
       leading: const Icon(Icons.pause_circle_outline),
@@ -157,11 +158,26 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.keyboardControl,
     defaultVal: true,
   ),
-  const SwitchModel(
-    title: '显示 SuperChat (醒目留言)',
-    leading: Icon(Icons.live_tv),
-    setKey: SettingBoxKey.showSuperChat,
-    defaultVal: true,
+  NormalModel(
+    title: 'SuperChat (醒目留言) 显示类型',
+    leading: const Icon(Icons.live_tv),
+    getSubtitle: () => '当前:「${Pref.superChatType.title}」',
+    onTap: (context, setState) async {
+      final result = await showDialog<SuperChatType>(
+        context: context,
+        builder: (context) {
+          return SelectDialog<SuperChatType>(
+            title: 'SuperChat (醒目留言) 显示类型',
+            value: Pref.superChatType,
+            values: SuperChatType.values.map((e) => (e, e.title)).toList(),
+          );
+        },
+      );
+      if (result != null) {
+        await GStorage.setting.put(SettingBoxKey.superChatType, result.index);
+        setState();
+      }
+    },
   ),
   const SwitchModel(
     title: '竖屏扩大展示',
@@ -295,7 +311,7 @@ List<SettingsModel> get playSettings => [
       }
     },
   ),
-  if (Utils.isMobile)
+  if (PlatformUtils.isMobile)
     SwitchModel(
       title: '后台音频服务',
       subtitle: '避免画中画没有播放暂停功能',

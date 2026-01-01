@@ -13,13 +13,12 @@ import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/post_panel/popup_menu_text.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
-import 'package:PiliPlus/utils/extension.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/get.dart' hide Response;
+import 'package:get/get.dart';
 
 class PostPanel extends CommonSlidePage {
   const PostPanel({
@@ -251,7 +250,7 @@ class _PostPanelState extends State<PostPanel>
 
   @override
   Widget buildList(ThemeData theme) {
-    if (list.isNullOrEmpty) {
+    if (list.isEmpty) {
       return errorWidget();
     }
     final bottom = MediaQuery.viewPaddingOf(context).bottom;
@@ -361,7 +360,7 @@ class _PostPanelState extends State<PostPanel>
                   children: [
                     PopupMenuText(
                       title: '分类',
-                      initialValue: item.category,
+                      value: () => item.category,
                       onSelected: (e) {
                         bool flag = false;
                         if (item.category == SegmentType.exclusive_access ||
@@ -406,7 +405,7 @@ class _PostPanelState extends State<PostPanel>
                     ),
                     PopupMenuText(
                       title: '行为类别',
-                      initialValue: item.actionType,
+                      value: () => item.actionType,
                       onSelected: (e) {
                         bool flag = false;
                         if (item.actionType == ActionType.full) {

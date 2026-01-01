@@ -64,9 +64,9 @@ class ImSettingsItem extends StatelessWidget {
       SelectItem? selected;
       SettingSwitch? sw1tch;
       if (item.redirect.settingPage.subSettings.isNotEmpty) {
-        for (var subItem in item.redirect.settingPage.subSettings.values) {
+        for (final subItem in item.redirect.settingPage.subSettings.values) {
           if (subItem.hasSelect()) {
-            for (var i in subItem.select.item) {
+            for (final i in subItem.select.item) {
               if (i.selected) {
                 selected = i;
                 break;
@@ -138,7 +138,7 @@ class ImSettingsItem extends StatelessWidget {
               dense: true,
               onTap: () async {
                 if (!e.selected) {
-                  for (var i in item.select.item) {
+                  for (final i in item.select.item) {
                     i.selected = false;
                   }
                   e.selected = true;
@@ -147,7 +147,7 @@ class ImSettingsItem extends StatelessWidget {
                   if (await onSet()) {
                     selected = e.text;
                   } else {
-                    for (var i in item.select.item) {
+                    for (final i in item.select.item) {
                       i.selected = i.text == selected;
                     }
                     rebuild();

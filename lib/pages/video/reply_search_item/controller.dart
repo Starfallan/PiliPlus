@@ -1,6 +1,6 @@
 import 'package:PiliPlus/models/common/reply/reply_search_type.dart';
 import 'package:PiliPlus/pages/video/reply_search_item/child/controller.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,9 +11,9 @@ class ReplySearchController extends GetxController
   final int type;
   final int oid;
 
-  late final tabController = TabController(vsync: this, length: 2);
-  final editingController = TextEditingController();
-  final focusNode = FocusNode();
+  late final FocusNode focusNode;
+  late final TabController tabController;
+  late final TextEditingController editingController;
 
   late final videoCtr = Get.put(
     ReplySearchChildController(this, ReplySearchType.video),
@@ -36,6 +36,9 @@ class ReplySearchController extends GetxController
   @override
   void onInit() {
     super.onInit();
+    focusNode = FocusNode();
+    tabController = TabController(vsync: this, length: 2);
+    editingController = TextEditingController();
     submit();
   }
 
@@ -50,9 +53,9 @@ class ReplySearchController extends GetxController
 
   @override
   void onClose() {
-    editingController.dispose();
     focusNode.dispose();
     tabController.dispose();
+    editingController.dispose();
     super.onClose();
   }
 }

@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:uuid/v4.dart';
 
-abstract class IdUtils {
+abstract final class IdUtils {
   static const XOR_CODE = 23442827791579;
   static const MASK_CODE = 2251799813685247;
   static const MAX_AID = 1 << 51;
@@ -13,7 +13,7 @@ abstract class IdUtils {
 
   static const data =
       'FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf';
-  static final invData = {for (var (i, c) in data.codeUnits.indexed) c: i};
+  static final invData = {for (final (i, c) in data.codeUnits.indexed) c: i};
 
   static final bvRegex = RegExp(r'bv1[0-9a-zA-Z]{9}', caseSensitive: false);
   static final bvRegexExact = RegExp(
@@ -84,7 +84,7 @@ abstract class IdUtils {
       return '';
     }
 
-    var midByte = utf8.encode(uid.toString());
+    final midByte = ascii.encode(uid.toString());
 
     const key = 'ad1va46a7lza';
     for (int i = 0; i < midByte.length; i++) {
@@ -96,19 +96,15 @@ abstract class IdUtils {
     return base64Encoded;
   }
 
+  // https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/grpc_api/readme.md#x-bili-trace-id-生成算法
   static String genTraceId() {
-    String randomId = Utils.generateRandomString(32);
+    final randomTraceId = StringBuffer(Utils.generateRandomString(24));
 
-    StringBuffer randomTraceId = StringBuffer(randomId.substring(0, 24));
+    final ts = (DateTime.now().millisecondsSinceEpoch ~/ 1000) >> 8;
 
-    int ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-
-    for (int i = 2; i >= 0; i--) {
-      ts >>= 8;
-      randomTraceId.write((ts & 0xFF).toRadixString(16).padLeft(2, '0'));
-    }
-
-    randomTraceId.write(randomId.substring(30, 32));
+    randomTraceId
+      ..write((ts & 0xFFFFFF).toRadixString(16).padLeft(6, '0'))
+      ..write(Utils.generateRandomString(2));
 
     return '${randomTraceId.toString()}:${randomTraceId.toString().substring(16, 32)}:0:0';
   }

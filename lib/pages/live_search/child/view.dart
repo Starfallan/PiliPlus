@@ -4,7 +4,7 @@ import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
-import 'package:PiliPlus/models/common/live_search_type.dart';
+import 'package:PiliPlus/models/common/live/live_search_type.dart';
 import 'package:PiliPlus/pages/live_search/child/controller.dart';
 import 'package:PiliPlus/pages/live_search/widgets/live_search_room.dart';
 import 'package:PiliPlus/pages/live_search/widgets/live_search_user.dart';
@@ -39,6 +39,7 @@ class _LiveSearchChildPageState extends State<LiveSearchChildPage>
       onRefresh: _controller.onRefresh,
       child: CustomScrollView(
         controller: _controller.scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(
             padding: EdgeInsets.only(
@@ -85,7 +86,7 @@ class _LiveSearchChildPageState extends State<LiveSearchChildPage>
   Widget _buildBody(LoadingState<List?> loadingState) {
     return switch (loadingState) {
       Loading() => _buildLoading,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? Builder(
                 builder: (context) {
@@ -118,7 +119,7 @@ class _LiveSearchChildPageState extends State<LiveSearchChildPage>
                 },
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

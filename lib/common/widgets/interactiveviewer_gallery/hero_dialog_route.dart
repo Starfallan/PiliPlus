@@ -31,6 +31,18 @@ class HeroDialogRoute<T> extends PageRoute<T> {
   @override
   Color? get barrierColor => null;
 
+  CurvedAnimation? _curvedAnimation;
+
+  void _setAnimation(Animation<double> animation) {
+    if (_curvedAnimation?.parent != animation) {
+      _curvedAnimation?.dispose();
+      _curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   @override
   Widget buildTransitions(
     BuildContext context,
@@ -38,10 +50,17 @@ class HeroDialogRoute<T> extends PageRoute<T> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
+    _setAnimation(animation);
     return FadeTransition(
-      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+      opacity: _curvedAnimation!,
       child: child,
     );
+  }
+
+  @override
+  void dispose() {
+    _curvedAnimation?.dispose();
+    super.dispose();
   }
 
   @override

@@ -1,6 +1,6 @@
-import 'package:PiliPlus/models/common/live_search_type.dart';
+import 'package:PiliPlus/models/common/live/live_search_type.dart';
 import 'package:PiliPlus/pages/live_search/child/controller.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 
 class LiveSearchController extends GetxController
     with GetSingleTickerProviderStateMixin {
-  late final tabController = TabController(vsync: this, length: 2);
+  late final TabController tabController;
   final editingController = TextEditingController();
   final focusNode = FocusNode();
 
@@ -27,6 +27,12 @@ class LiveSearchController extends GetxController
     LiveSearchChildController(this, LiveSearchType.user),
     tag: Utils.generateRandomString(8),
   );
+
+  @override
+  void onInit() {
+    super.onInit();
+    tabController = TabController(vsync: this, length: 2);
+  }
 
   void onClear() {
     if (editingController.value.text.isNotEmpty) {

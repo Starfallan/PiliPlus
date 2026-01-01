@@ -17,9 +17,9 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/app_sign.dart';
 import 'package:dio/dio.dart';
 
-class FavHttp {
-  static Future favFavFolder(mediaId) async {
-    var res = await Request().post(
+abstract final class FavHttp {
+  static Future<LoadingState<Null>> favFavFolder(Object mediaId) async {
+    final res = await Request().post(
       Api.favFavFolder,
       data: {
         'media_id': mediaId,
@@ -28,14 +28,14 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return const {'status': true, 'msg': '收藏成功'};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future unfavFavFolder(mediaId) async {
-    var res = await Request().post(
+  static Future<LoadingState<Null>> unfavFavFolder(Object mediaId) async {
+    final res = await Request().post(
       Api.unfavFavFolder,
       data: {
         'media_id': mediaId,
@@ -44,9 +44,9 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return const {'status': true, 'msg': '取消收藏成功'};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
@@ -58,7 +58,7 @@ class FavHttp {
     FavOrderType order = FavOrderType.mtime,
     int type = 0,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favResourceList,
       queryParameters: {
         'media_id': mediaId,
@@ -79,8 +79,11 @@ class FavHttp {
   }
 
   // 取消订阅
-  static Future cancelSub({required int id, required int type}) async {
-    var res = type == 11
+  static Future<LoadingState<Null>> cancelSub({
+    required int id,
+    required int type,
+  }) async {
+    final res = type == 11
         ? await Request().post(
             Api.unfavFolder,
             data: {
@@ -99,9 +102,9 @@ class FavHttp {
             options: Options(contentType: Headers.formUrlEncodedContentType),
           );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
@@ -110,7 +113,7 @@ class FavHttp {
     required int pn,
     required int ps,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favSeasonList,
       queryParameters: {
         'season_id': id,
@@ -129,7 +132,7 @@ class FavHttp {
     required int mid,
     required int page,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favPugv,
       queryParameters: {
         'mid': mid,
@@ -145,8 +148,8 @@ class FavHttp {
     }
   }
 
-  static Future addFavPugv(seasonId) async {
-    var res = await Request().post(
+  static Future<LoadingState<Null>> addFavPugv(Object seasonId) async {
+    final res = await Request().post(
       Api.addFavPugv,
       data: {
         'season_id': seasonId,
@@ -155,14 +158,14 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future delFavPugv(seasonId) async {
-    var res = await Request().post(
+  static Future<LoadingState<Null>> delFavPugv(Object seasonId) async {
+    final res = await Request().post(
       Api.delFavPugv,
       data: {
         'season_id': seasonId,
@@ -171,16 +174,16 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   static Future<LoadingState<FavTopicData>> favTopic({
     required int page,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favTopicList,
       queryParameters: {
         'page_size': 24,
@@ -195,8 +198,8 @@ class FavHttp {
     }
   }
 
-  static Future addFavTopic(topicId) async {
-    var res = await Request().post(
+  static Future<LoadingState<Null>> addFavTopic(Object topicId) async {
+    final res = await Request().post(
       Api.addFavTopic,
       data: {
         'topic_id': topicId,
@@ -205,14 +208,14 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future delFavTopic(topicId) async {
-    var res = await Request().post(
+  static Future<LoadingState<Null>> delFavTopic(Object topicId) async {
+    final res = await Request().post(
       Api.delFavTopic,
       data: {
         'topic_id': topicId,
@@ -221,14 +224,17 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future likeTopic(topicId, bool isLike) async {
-    var res = await Request().post(
+  static Future<LoadingState<Null>> likeTopic(
+    Object topicId,
+    bool isLike,
+  ) async {
+    final res = await Request().post(
       Api.likeTopic,
       data: {
         'action': isLike ? 'cancel_like' : 'like',
@@ -240,16 +246,16 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   static Future<LoadingState<FavArticleData>> favArticle({
     required int page,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favArticle,
       queryParameters: {
         'page_size': 20,
@@ -263,10 +269,10 @@ class FavHttp {
     }
   }
 
-  static Future addFavArticle({
-    required dynamic id,
+  static Future<LoadingState<Null>> addFavArticle({
+    required Object id,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.addFavArticle,
       data: {
         'id': id,
@@ -277,16 +283,16 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future delFavArticle({
-    required dynamic id,
+  static Future<LoadingState<Null>> delFavArticle({
+    required Object id,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.delFavArticle,
       data: {
         'id': id,
@@ -297,16 +303,16 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   static Future<LoadingState<List<FavNoteItemModel>?>> userNoteList({
     required int page,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.userNoteList,
       queryParameters: {
         'pn': page,
@@ -327,7 +333,7 @@ class FavHttp {
   static Future<LoadingState<List<FavNoteItemModel>?>> noteList({
     required int page,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.noteList,
       queryParameters: {
         'pn': page,
@@ -345,7 +351,7 @@ class FavHttp {
     }
   }
 
-  static Future delNote({
+  static Future<LoadingState<Null>> delNote({
     required bool isPublish,
     required String noteIds,
   }) async {
@@ -360,9 +366,9 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
@@ -372,7 +378,7 @@ class FavHttp {
     int? followStatus,
     Object? mid,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favPgc,
       queryParameters: {
         'vmid': mid ?? Accounts.main.mid,
@@ -394,7 +400,7 @@ class FavHttp {
     required int ps,
     required dynamic mid,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.userFavFolder,
       queryParameters: {
         'pn': pn,
@@ -409,7 +415,7 @@ class FavHttp {
     }
   }
 
-  static Future sortFavFolder({
+  static Future<LoadingState<Null>> sortFavFolder({
     required String sort,
   }) async {
     Map<String, dynamic> data = {
@@ -417,7 +423,7 @@ class FavHttp {
       'csrf': Accounts.main.csrf,
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.sortFavFolder,
       data: data,
       options: Options(
@@ -425,14 +431,14 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future sortFav({
-    required dynamic mediaId,
+  static Future<LoadingState<Null>> sortFav({
+    required Object mediaId,
     required String sort,
   }) async {
     Map<String, dynamic> data = {
@@ -441,7 +447,7 @@ class FavHttp {
       'csrf': Accounts.main.csrf,
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.sortFav,
       data: data,
       options: Options(
@@ -449,16 +455,16 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future cleanFav({
-    required dynamic mediaId,
+  static Future<LoadingState<Null>> cleanFav({
+    required Object mediaId,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.cleanFav,
       data: {
         'media_id': mediaId,
@@ -470,16 +476,16 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future deleteFolder({
+  static Future<LoadingState<Null>> deleteFolder({
     required String mediaIds,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.deleteFolder,
       data: {
         'media_ids': mediaIds,
@@ -491,13 +497,13 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future addOrEditFolder({
+  static Future<LoadingState<FavFolderInfo>> addOrEditFolder({
     required bool isAdd,
     dynamic mediaId,
     required String title,
@@ -505,7 +511,7 @@ class FavHttp {
     required String cover,
     required String intro,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       isAdd ? Api.addFolder : Api.editFolder,
       data: {
         'title': title,
@@ -520,33 +526,33 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': FavFolderInfo.fromJson(res.data['data'])};
+      return Success(FavFolderInfo.fromJson(res.data['data']));
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future favFolderInfo({
-    dynamic mediaId,
+  static Future<LoadingState<FavFolderInfo>> favFolderInfo({
+    required Object mediaId,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favFolderInfo,
       queryParameters: {
         'media_id': mediaId,
       },
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': FavFolderInfo.fromJson(res.data['data'])};
+      return Success(FavFolderInfo.fromJson(res.data['data']));
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future seasonFav({
+  static Future<LoadingState<Null>> seasonFav({
     required bool isFav,
     required dynamic seasonId,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       isFav ? Api.unfavSeason : Api.favSeason,
       data: {
         'platform': 'web',
@@ -558,14 +564,9 @@ class FavHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {
-        'status': true,
-      };
+      return const Success(null);
     } else {
-      return {
-        'status': false,
-        'msg': res.data['message'],
-      };
+      return Error(res.data['message']);
     }
   }
 
@@ -583,7 +584,7 @@ class FavHttp {
       'statistics': Constants.statisticsApp,
       'up_mid': mid,
     };
-    var res = await Request().get(
+    final res = await Request().get(
       Api.spaceFav,
       queryParameters: params,
       options: Options(
@@ -604,11 +605,11 @@ class FavHttp {
     }
   }
 
-  static Future communityAction({
-    required dynamic opusId,
-    required dynamic action,
+  static Future<LoadingState<Null>> communityAction({
+    required Object opusId,
+    required Object action,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.communityAction,
       queryParameters: {
         'csrf': Accounts.main.csrf,
@@ -622,19 +623,19 @@ class FavHttp {
       },
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   // （取消）收藏
-  static Future favVideo({
+  static Future<LoadingState<Null>> favVideo({
     required String resources,
     String? addIds,
     String? delIds,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.favVideo,
       data: {
         'resources': resources,
@@ -645,18 +646,18 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   // （取消）收藏
-  static Future unfavAll({
-    required rid,
-    required type,
+  static Future<LoadingState<Null>> unfavAll({
+    required Object rid,
+    required Object type,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.unfavAll,
       data: {
         'rid': rid,
@@ -666,9 +667,9 @@ class FavHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
@@ -680,7 +681,7 @@ class FavHttp {
     dynamic mid,
     required String resources,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       isFav
           ? isCopy
                 ? Api.copyFav
@@ -706,7 +707,7 @@ class FavHttp {
   }
 
   static Future<LoadingState<FavFolderData>> allFavFolders(Object mid) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favFolder,
       queryParameters: {'up_mid': mid},
     );
@@ -723,7 +724,7 @@ class FavHttp {
     dynamic rid,
     dynamic type,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.favFolder,
       queryParameters: {
         'up_mid': mid,

@@ -3,7 +3,7 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/self_sized_horizontal_list.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/pages/contact/view.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show LengthLimitingTextInputFormatter;
@@ -11,15 +11,17 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class UserModel {
-  const UserModel({
+  UserModel({
     required this.mid,
     required this.name,
     required this.avatar,
+    this.selected = false,
   });
 
   final int mid;
   final String name;
   final String avatar;
+  bool selected;
 
   @override
   bool operator ==(Object other) {
@@ -41,11 +43,9 @@ class SharePanel extends StatefulWidget {
     super.key,
     required this.content,
     this.userList,
-    this.selectedIndex,
   });
 
   final Map content;
-  final int? selectedIndex;
   final List<UserModel>? userList;
 
   @override
@@ -53,7 +53,6 @@ class SharePanel extends StatefulWidget {
 }
 
 class _SharePanelState extends State<SharePanel> {
-  int _selectedIndex = -1;
   final List<UserModel> _userList = <UserModel>[];
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
@@ -72,9 +71,6 @@ class _SharePanelState extends State<SharePanel> {
     super.initState();
     if (widget.userList?.isNotEmpty == true) {
       _userList.addAll(widget.userList!);
-      if (widget.selectedIndex != null) {
-        _selectedIndex = widget.selectedIndex!;
-      }
     }
   }
 
@@ -114,61 +110,66 @@ class _SharePanelState extends State<SharePanel> {
                   padding: EdgeInsets.zero,
                   childBuilder: (index) {
                     final item = _userList[index];
-                    return GestureDetector(
-                      onTap: () {
-                        _selectedIndex = index;
-                        setState(() {});
-                      },
-                      behavior: HitTestBehavior.opaque,
-                      child: SizedBox(
-                        width: 65,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          alignment: Alignment.topCenter,
-                          children: [
-                            Column(
+                    return Builder(
+                      builder: (context) {
+                        return GestureDetector(
+                          onTap: () {
+                            item.selected = !item.selected;
+                            (context as Element).markNeedsBuild();
+                          },
+                          behavior: HitTestBehavior.opaque,
+                          child: SizedBox(
+                            width: 65,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.topCenter,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(5),
-                                  child: NetworkImgLayer(
-                                    width: 40,
-                                    height: 40,
-                                    src: item.avatar,
-                                    type: ImageType.avatar,
+                                Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(5),
+                                      child: NetworkImgLayer(
+                                        width: 40,
+                                        height: 40,
+                                        src: item.avatar,
+                                        type: ImageType.avatar,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      item.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                                if (item.selected)
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary
+                                          .withValues(
+                                            alpha: 0.3,
+                                          ),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        width: 1.5,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.check,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  item.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
                               ],
                             ),
-                            if (index == _selectedIndex)
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    width: 1.5,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.check,
-                                  size: 20,
-                                  color: Colors.white,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -176,14 +177,13 @@ class _SharePanelState extends State<SharePanel> {
               GestureDetector(
                 onTap: () async {
                   _focusNode.unfocus();
-                  UserModel? userModel = await Navigator.of(context).push(
+                  final UserModel? userModel = await Navigator.of(context).push(
                     GetPageRoute(page: () => const ContactPage()),
                   );
                   if (userModel != null) {
                     _userList
                       ..remove(userModel)
                       ..insert(0, userModel);
-                    _selectedIndex = 0;
                     _scrollController.jumpToTop();
                     setState(() {});
                   }
@@ -202,11 +202,11 @@ class _SharePanelState extends State<SharePanel> {
                           height: 40,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: theme.colorScheme.secondaryContainer,
+                            color: theme.colorScheme.onInverseSurface,
                           ),
                           child: Icon(
                             Icons.person_add_alt,
-                            color: theme.colorScheme.onSecondaryContainer,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -230,6 +230,7 @@ class _SharePanelState extends State<SharePanel> {
                   textInputAction: TextInputAction.newline,
                   decoration: InputDecoration(
                     hintText: '说说你的想法吧...',
+                    visualDensity: .standard,
                     hintStyle: const TextStyle(fontSize: 14),
                     border: const OutlineInputBorder(
                       borderSide: BorderSide.none,
@@ -237,9 +238,9 @@ class _SharePanelState extends State<SharePanel> {
                     ),
                     filled: true,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                    contentPadding: const .symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
                     fillColor: theme.colorScheme.onInverseSurface,
                   ),
@@ -248,17 +249,7 @@ class _SharePanelState extends State<SharePanel> {
               ),
               const SizedBox(width: 12),
               FilledButton.tonal(
-                onPressed: () {
-                  if (_selectedIndex == -1) {
-                    SmartDialog.showToast('请选择分享的用户');
-                    return;
-                  }
-                  RequestUtils.pmShare(
-                    receiverId: _userList[_selectedIndex].mid,
-                    content: widget.content,
-                    message: _controller.text,
-                  );
-                },
+                onPressed: _onSend,
                 style: FilledButton.styleFrom(
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: const VisualDensity(
@@ -273,5 +264,32 @@ class _SharePanelState extends State<SharePanel> {
         ],
       ),
     );
+  }
+
+  Future<void> _onSend() async {
+    final list = _userList.where((user) => user.selected);
+    if (list.isEmpty) {
+      SmartDialog.showToast('请选择分享的用户');
+      return;
+    }
+    SmartDialog.showLoading();
+    final res = await Future.wait(
+      list.map(
+        (user) => RequestUtils.pmShare(
+          receiverId: user.mid,
+          content: widget.content,
+          message: _controller.text,
+        ),
+      ),
+    );
+    SmartDialog.dismiss();
+    if (res.every((e) => e)) {
+      Get.back();
+      SmartDialog.showToast('分享成功');
+    } else if (res.every((e) => !e)) {
+      SmartDialog.showToast('分享失败');
+    } else {
+      SmartDialog.showToast('部分分享失败');
+    }
   }
 }

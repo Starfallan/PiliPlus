@@ -55,7 +55,7 @@ List<SettingsModel> get recommendSettings => [
     values: [0, 1, 2, 3, 4],
     onChanged: (value) => RecommendFilter.minLikeRatioForRecommend = value,
   ),
-  getBanwordModel(
+  getBanWordModel(
     title: '标题关键词过滤',
     key: SettingBoxKey.banWordForRecommend,
     onChanged: (value) {
@@ -63,7 +63,7 @@ List<SettingsModel> get recommendSettings => [
       RecommendFilter.enableFilter = value.pattern.isNotEmpty;
     },
   ),
-  getBanwordModel(
+  getBanWordModel(
     title: 'App推荐/热门/排行榜: 视频分区关键词过滤',
     key: SettingBoxKey.banWordForZone,
     onChanged: (value) {

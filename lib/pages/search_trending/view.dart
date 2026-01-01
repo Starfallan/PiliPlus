@@ -7,14 +7,17 @@ import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/search/search_trending/list.dart';
 import 'package:PiliPlus/pages/search_trending/controller.dart';
-import 'package:PiliPlus/utils/context_ext.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
+import 'package:PiliPlus/utils/extension/get_ext.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class SearchTrendingPage extends StatefulWidget {
   const SearchTrendingPage({super.key});
@@ -122,6 +125,7 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                     child: Image.asset(
                       width: width,
                       height: height,
+                      cacheWidth: width.cacheSize(context),
                       'assets/images/trending_banner.png',
                       filterQuality: FilterQuality.low,
                     ),
@@ -152,7 +156,7 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
     );
     return switch (loadingState) {
       Loading() => linearLoading,
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.separated(
                 itemCount: response.length,
@@ -176,12 +180,10 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                             '${index + 1 - _controller.topCount}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: switch (index - _controller.topCount) {
-                                0 => const Color(0xFFfdad13),
-                                1 => const Color(0xFF8aace1),
-                                2 => const Color(0xFFdfa777),
-                                _ => theme.colorScheme.outline,
-                              },
+                              color: Utils.index2Color(
+                                index - _controller.topCount,
+                                theme.colorScheme.outline,
+                              ),
                               fontSize: 17,
                               fontStyle: FontStyle.italic,
                             ),
@@ -200,8 +202,10 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                         if (item.icon?.isNotEmpty == true) ...[
                           const SizedBox(width: 4),
                           CachedNetworkImage(
-                            imageUrl: ImageUtils.thumbnailUrl(item.icon!),
                             height: 16,
+                            memCacheHeight: 16.cacheSize(context),
+                            imageUrl: ImageUtils.thumbnailUrl(item.icon!),
+                            placeholder: (_, _) => const SizedBox.shrink(),
                           ),
                         ] else if (item.showLiveIcon == true) ...[
                           const SizedBox(width: 4),
@@ -209,6 +213,7 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                             'assets/images/live/live.gif',
                             width: 51,
                             height: 16,
+                            cacheHeight: 16.cacheSize(context),
                           ),
                         ],
                       ],
@@ -218,7 +223,7 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                 separatorBuilder: (context, index) => divider,
               )
             : HttpError(onReload: _controller.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

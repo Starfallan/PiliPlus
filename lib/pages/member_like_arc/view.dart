@@ -78,7 +78,7 @@ class _MemberLikeArcPageState extends State<MemberLikeArcPage> {
         itemCount: 16,
         itemBuilder: (context, index) => const VideoCardVSkeleton(),
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
@@ -91,7 +91,7 @@ class _MemberLikeArcPageState extends State<MemberLikeArcPage> {
                 },
               )
             : HttpError(onReload: _ctr.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _ctr.onReload,
       ),

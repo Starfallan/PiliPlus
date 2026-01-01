@@ -4,7 +4,7 @@ import 'package:PiliPlus/http/msg.dart';
 import 'package:PiliPlus/models_new/msg/msg_like/data.dart';
 import 'package:PiliPlus/models_new/msg/msg_like/item.dart';
 import 'package:PiliPlus/pages/common/common_data_controller.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 class LikeMeController
@@ -27,7 +27,7 @@ class LikeMeController
   @override
   Future<void> queryData([bool isRefresh = true]) {
     if (!isRefresh && isEnd) {
-      return Future.value();
+      return Future.syncValue(null);
     }
     return super.queryData(isRefresh);
   }
@@ -65,8 +65,8 @@ class LikeMeController
 
   Future<void> onRemove(dynamic id, int index, bool isLatest) async {
     try {
-      var res = await MsgHttp.delMsgfeed(0, id);
-      if (res['status']) {
+      final res = await MsgHttp.delMsgfeed(0, id);
+      if (res.isSuccess) {
         Pair<List<MsgLikeItem>, List<MsgLikeItem>> pair =
             loadingState.value.data;
         if (isLatest) {
@@ -77,20 +77,23 @@ class LikeMeController
         loadingState.refresh();
         SmartDialog.showToast('删除成功');
       } else {
-        SmartDialog.showToast(res['msg']);
+        res.toast();
       }
     } catch (_) {}
   }
 
   Future<void> onSetNotice(MsgLikeItem item, bool isNotice) async {
     int noticeState = isNotice ? 1 : 0;
-    var res = await MsgHttp.msgSetNotice(id: item.id, noticeState: noticeState);
-    if (res['status']) {
+    final res = await MsgHttp.msgSetNotice(
+      id: item.id!,
+      noticeState: noticeState,
+    );
+    if (res.isSuccess) {
       item.noticeState = noticeState;
       loadingState.refresh();
       SmartDialog.showToast('操作成功');
     } else {
-      SmartDialog.showToast(res['msg']);
+      res.toast();
     }
   }
 }

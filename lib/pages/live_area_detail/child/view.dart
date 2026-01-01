@@ -77,7 +77,7 @@ class _LiveAreaChildPageState extends State<LiveAreaChildPage>
         itemBuilder: (context, index) => const VideoCardVSkeleton(),
         itemCount: 10,
       ),
-      Success(:var response) => SliverMainAxisGroup(
+      Success(:final response) => SliverMainAxisGroup(
         slivers: [
           if (_controller.newTags?.isNotEmpty == true)
             SliverToBoxAdapter(
@@ -131,7 +131,7 @@ class _LiveAreaChildPageState extends State<LiveAreaChildPage>
               : HttpError(onReload: _controller.onReload),
         ],
       ),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),

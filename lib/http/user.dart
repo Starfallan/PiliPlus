@@ -1,4 +1,3 @@
-import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/http/api.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -20,11 +19,13 @@ import 'package:PiliPlus/utils/app_sign.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
-class UserHttp {
+abstract final class UserHttp {
   static Future<dynamic> userStat({required int mid}) async {
-    var res = await Request().get(Api.userStat, queryParameters: {'vmid': mid});
+    final res = await Request().get(
+      Api.userStat,
+      queryParameters: {'vmid': mid},
+    );
     if (res.data['code'] == 0) {
       return {'status': true, 'data': res.data['data']};
     } else {
@@ -33,7 +34,7 @@ class UserHttp {
   }
 
   static Future<LoadingState<UserInfoData>> userInfo() async {
-    var res = await Request().get(Api.userInfo);
+    final res = await Request().get(Api.userInfo);
     if (res.data['code'] == 0) {
       UserInfoData data = UserInfoData.fromJson(res.data['data']);
       GlobalData().coins = data.money;
@@ -44,7 +45,7 @@ class UserHttp {
   }
 
   static Future<dynamic> userStatOwner() async {
-    var res = await Request().get(Api.userStatOwner);
+    final res = await Request().get(Api.userStatOwner);
     if (res.data['code'] == 0) {
       UserStat data = UserStat.fromJson(res.data['data']);
       return {'status': true, 'data': data};
@@ -60,7 +61,7 @@ class UserHttp {
     String keyword = '',
     bool asc = false,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.seeYouLater,
       queryParameters: await WbiSign.makSign({
         'pn': page,
@@ -86,7 +87,7 @@ class UserHttp {
     int? viewAt,
     Account? account,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.historyList,
       queryParameters: {
         'type': type,
@@ -104,10 +105,13 @@ class UserHttp {
   }
 
   // 暂停观看历史
-  static Future pauseHistory(bool switchStatus, {Account? account}) async {
+  static Future<LoadingState<Null>> pauseHistory(
+    bool switchStatus, {
+    Account? account,
+  }) async {
     // 暂停switchStatus传true 否则false
     account ??= Accounts.history;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.pauseHistory,
       data: {
         'switch': switchStatus,
@@ -119,26 +123,30 @@ class UserHttp {
         contentType: Headers.formUrlEncodedContentType,
       ),
     );
-    return res;
+    if (res.data['code'] == 0) {
+      return const Success(null);
+    } else {
+      return Error(res.data['message']);
+    }
   }
 
   // 观看历史暂停状态
-  static Future historyStatus({Account? account}) async {
-    var res = await Request().get(
+  static Future<LoadingState<bool>> historyStatus({Account? account}) async {
+    final res = await Request().get(
       Api.historyStatus,
       options: Options(extra: {'account': account ?? Accounts.history}),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return Success(res.data['data']);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   // 清空历史记录
-  static Future clearHistory({Account? account}) async {
+  static Future<LoadingState<Null>> clearHistory({Account? account}) async {
     account ??= Accounts.history;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.clearHistory,
       data: {
         'jsonp': 'jsonp',
@@ -149,12 +157,20 @@ class UserHttp {
         contentType: Headers.formUrlEncodedContentType,
       ),
     );
-    return res;
+    if (res.data['code'] == 0) {
+      return const Success(null);
+    } else {
+      return Error(res.data['message']);
+    }
   }
 
   // 稍后再看
-  static Future toViewLater({String? bvid, dynamic aid}) async {
-    var res = await Request().post(
+  static Future toViewLater({
+    String? bvid,
+    Object? aid,
+  }) async {
+    assert(aid != null || bvid != null);
+    final res = await Request().post(
       Api.toViewLater,
       data: {
         'aid': ?aid,
@@ -176,7 +192,7 @@ class UserHttp {
       'csrf': Accounts.main.csrf,
       'resources': aids,
     };
-    var res = await Request().post(
+    final res = await Request().post(
       Api.toViewDel,
       data: params,
       options: Options(contentType: Headers.formUrlEncodedContentType),
@@ -189,27 +205,27 @@ class UserHttp {
   }
 
   // 获取用户凭证 失效
-  static Future thirdLogin() async {
-    var res = await Request().get(
-      'https://passport.bilibili.com/login/app/third',
-      queryParameters: {
-        'appkey': Constants.appKey,
-        'api': Constants.thirdApi,
-        'sign': Constants.thirdSign,
-      },
-    );
-    try {
-      if (res.data['code'] == 0 && res.data['data']['has_login'] == 1) {
-        Request().get(res.data['data']['confirm_uri']);
-      }
-    } catch (err) {
-      SmartDialog.showNotify(msg: '获取用户凭证: $err', notifyType: NotifyType.error);
-    }
-  }
+  // static Future thirdLogin() async {
+  //   final res = await Request().get(
+  //     'https://passport.bilibili.com/login/app/third',
+  //     queryParameters: {
+  //       'appkey': Constants.appKey,
+  //       'api': Constants.thirdApi,
+  //       'sign': Constants.thirdSign,
+  //     },
+  //   );
+  //   try {
+  //     if (res.data['code'] == 0 && res.data['data']['has_login'] == 1) {
+  //       Request().get(res.data['data']['confirm_uri']);
+  //     }
+  //   } catch (err) {
+  //     SmartDialog.showNotify(msg: '获取用户凭证: $err', notifyType: NotifyType.error);
+  //   }
+  // }
 
   // 清空稍后再看 // clean_type: null->all, 1->invalid, 2->viewed
-  static Future toViewClear([int? cleanType]) async {
-    var res = await Request().post(
+  static Future<LoadingState<Null>> toViewClear([int? cleanType]) async {
+    final res = await Request().post(
       Api.toViewClear,
       data: {
         'clean_type': ?cleanType,
@@ -218,16 +234,19 @@ class UserHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'msg': '操作完成'};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   // 删除历史记录
-  static Future delHistory(String kid, {Account? account}) async {
+  static Future<LoadingState<Null>> delHistory(
+    String kid, {
+    Account? account,
+  }) async {
     account ??= Accounts.history;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.delHistory,
       data: {
         'kid': kid,
@@ -240,14 +259,14 @@ class UserHttp {
       ),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'msg': '已删除'};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   static Future hasFollow(int mid) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.relation,
       queryParameters: {
         'fid': mid,
@@ -266,7 +285,7 @@ class UserHttp {
     required String keyword,
     Account? account,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.searchHistory,
       queryParameters: {
         'pn': pn,
@@ -288,7 +307,7 @@ class UserHttp {
     required int pn,
     required int ps,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.userSubFolder,
       queryParameters: {
         'up_mid': mid,
@@ -308,7 +327,7 @@ class UserHttp {
     required String bvid,
     Object? cid,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.videoTags,
       queryParameters: {'bvid': bvid, 'cid': ?cid},
     );
@@ -324,9 +343,9 @@ class UserHttp {
   }
 
   // 稍后再看列表
-  static Future getMediaList({
-    required dynamic type,
-    required bizId,
+  static Future<LoadingState<MediaListData>> getMediaList({
+    required Object type,
+    required Object bizId,
     required int ps,
     dynamic oid,
     int? otype,
@@ -335,7 +354,7 @@ class UserHttp {
     dynamic sortField = 1,
     bool direction = false,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.mediaList,
       queryParameters: {
         'mobi_app': 'web',
@@ -352,24 +371,24 @@ class UserHttp {
       },
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': MediaListData.fromJson(res.data['data'])};
+      return Success(MediaListData.fromJson(res.data['data']));
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future getCoin() async {
+  static Future<LoadingState<num?>> getCoin() async {
     final res = await Request().get(Api.getCoin);
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']?['money']};
+      return Success(res.data['data']?['money']);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future<Map> dynamicReport({
-    required dynamic mid,
-    required dynamic dynId,
+  static Future<LoadingState<Null>> dynamicReport({
+    required Object mid,
+    required Object dynId,
     required int reasonType,
     String? reasonDesc,
   }) async {
@@ -386,7 +405,11 @@ class UserHttp {
       },
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
-    return res.data as Map;
+    if (res.data['code'] == 0) {
+      return const Success(null);
+    } else {
+      return Error(res.data['message']);
+    }
   }
 
   static Future<LoadingState<SpaceSettingData>> spaceSetting() async {
@@ -403,7 +426,7 @@ class UserHttp {
     }
   }
 
-  static Future spaceSettingMod(data) async {
+  static Future<LoadingState<Null>> spaceSettingMod(Map data) async {
     final res = await Request().post(
       Api.spaceSettingMod,
       queryParameters: {
@@ -413,13 +436,13 @@ class UserHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future vipExpAdd() async {
+  static Future<LoadingState<Null>> vipExpAdd() async {
     final res = await Request().post(
       Api.vipExpAdd,
       queryParameters: {
@@ -428,9 +451,9 @@ class UserHttp {
       },
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 

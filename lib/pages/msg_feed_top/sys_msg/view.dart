@@ -9,7 +9,7 @@ import 'package:PiliPlus/pages/msg_feed_top/sys_msg/controller.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide ListTile;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -70,7 +70,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
           itemBuilder: (context, index) => const MsgFeedSysMsgSkeleton(),
         ),
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.separated(
                 itemCount: response.length,
@@ -87,7 +87,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
                   return ListTile(
                     safeArea: true,
                     onLongPress: onLongPress,
-                    onSecondaryTap: Utils.isMobile ? null : onLongPress,
+                    onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
                     title: Text(
                       "${item.title}",
                       style: theme.textTheme.titleMedium,
@@ -125,7 +125,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
                 separatorBuilder: (context, index) => divider,
               )
             : HttpError(onReload: _sysMsgController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _sysMsgController.onReload,
       ),

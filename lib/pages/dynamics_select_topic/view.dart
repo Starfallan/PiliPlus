@@ -9,25 +9,25 @@ import 'package:PiliPlus/models_new/dynamic/dyn_topic_top/topic_item.dart';
 import 'package:PiliPlus/pages/dynamics_select_topic/controller.dart';
 import 'package:PiliPlus/pages/dynamics_select_topic/widgets/item.dart';
 import 'package:PiliPlus/pages/search/controller.dart' show DebounceStreamState;
-import 'package:PiliPlus/utils/context_ext.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart' hide ContextExtensionss;
+import 'package:get/get.dart';
 
 class SelectTopicPanel extends StatefulWidget {
   const SelectTopicPanel({
     super.key,
     this.scrollController,
-    this.callback,
+    this.onCachePos,
   });
 
   final ScrollController? scrollController;
-  final ValueChanged<double>? callback;
+  final ValueChanged<double>? onCachePos;
 
   static Future<TopicItem?> onSelectTopic(
     BuildContext context, {
     double offset = 0,
-    ValueChanged<double>? callback,
+    ValueChanged<double>? onCachePos,
   }) {
     return showModalBottomSheet<TopicItem?>(
       context: Get.context!,
@@ -46,7 +46,7 @@ class SelectTopicPanel extends StatefulWidget {
         snapSizes: const [0.65],
         builder: (context, scrollController) => SelectTopicPanel(
           scrollController: scrollController,
-          callback: callback,
+          onCachePos: onCachePos,
         ),
       ),
     );
@@ -104,6 +104,7 @@ class _SelectTopicPanelState
             controller: _controller.controller,
             onChanged: ctr!.add,
             decoration: InputDecoration(
+              visualDensity: .standard,
               border: const OutlineInputBorder(
                 gapPadding: 0,
                 borderSide: BorderSide.none,
@@ -171,7 +172,7 @@ class _SelectTopicPanelState
                   _controller.focusNode.unfocus();
                 }
               } else if (notification is ScrollEndNotification) {
-                widget.callback?.call(notification.metrics.pixels);
+                widget.onCachePos?.call(notification.metrics.pixels);
               }
               return false;
             },
@@ -188,7 +189,7 @@ class _SelectTopicPanelState
   ) {
     return switch (loadingState) {
       Loading() => loadingWidget,
-      Success<List<TopicItem>?>(:var response) =>
+      Success<List<TopicItem>?>(:final response) =>
         response != null && response.isNotEmpty
             ? ListView.builder(
                 padding: EdgeInsets.only(
@@ -207,7 +208,7 @@ class _SelectTopicPanelState
                 itemCount: response.length,
               )
             : _errWidget(),
-      Error(:var errMsg) => _errWidget(errMsg),
+      Error(:final errMsg) => _errWidget(errMsg),
     };
   }
 

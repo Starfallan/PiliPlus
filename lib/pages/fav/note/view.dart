@@ -1,6 +1,6 @@
 import 'package:PiliPlus/pages/fav/note/child_view.dart';
 import 'package:PiliPlus/pages/fav/note/controller.dart';
-import 'package:PiliPlus/utils/extension.dart';
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -13,10 +13,16 @@ class FavNotePage extends StatefulWidget {
 
 class _FavNotePageState extends State<FavNotePage>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late final TabController _tabController = TabController(
-    length: 2,
-    vsync: this,
-  );
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+    );
+  }
 
   @override
   bool get wantKeepAlive => true;

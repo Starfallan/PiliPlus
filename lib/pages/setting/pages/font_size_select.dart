@@ -1,4 +1,4 @@
-import 'package:PiliPlus/common/widgets/view_safe_area.dart';
+import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -43,7 +43,7 @@ class _FontSizeSelectPageState extends State<FontSizeSelectPage> {
           const SizedBox(width: 12),
         ],
       ),
-      body: ViewSafeArea(
+      body: SafeArea(
         child: Column(
           children: [
             Expanded(

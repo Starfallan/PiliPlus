@@ -19,7 +19,13 @@ class ContactPage extends StatefulWidget {
 class _ContactPageState extends State<ContactPage>
     with SingleTickerProviderStateMixin {
   late final mid = Accounts.main.mid;
-  late final _controller = TabController(length: 2, vsync: this);
+  late final TabController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TabController(length: 2, vsync: this);
+  }
 
   @override
   void dispose() {
@@ -47,7 +53,7 @@ class _ContactPageState extends State<ContactPage>
         actions: [
           IconButton(
             onPressed: () async {
-              UserModel? userModel = await Navigator.of(context).push(
+              final UserModel? userModel = await Navigator.of(context).push(
                 GetPageRoute(
                   page: () => FollowSearchPage(
                     mid: mid,

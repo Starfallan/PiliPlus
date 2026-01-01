@@ -7,7 +7,7 @@ import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models_new/fav/fav_pgc/list.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 
 class FavPgcItem extends StatelessWidget {
@@ -48,7 +48,7 @@ class FavPgcItem extends StatelessWidget {
               PageUtils.viewPgc(seasonId: item.seasonId);
             },
             onLongPress: onLongPress,
-            onSecondaryTap: Utils.isMobile ? null : onLongPress,
+            onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: StyleString.safeSpace,
@@ -69,10 +69,12 @@ class FavPgcItem extends StatelessWidget {
                               clipBehavior: Clip.none,
                               children: [
                                 NetworkImgLayer(
-                                  radius: 4,
                                   src: item.cover,
                                   width: boxConstraints.maxWidth,
                                   height: boxConstraints.maxHeight,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(4),
+                                  ),
                                 ),
                                 PBadge(
                                   right: 4,
@@ -88,7 +90,7 @@ class FavPgcItem extends StatelessWidget {
                                 Positioned.fill(
                                   child: selectMask(
                                     theme,
-                                    item.checked == true,
+                                    item.checked,
                                     borderRadius: const BorderRadius.all(
                                       Radius.circular(4),
                                     ),

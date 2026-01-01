@@ -5,11 +5,14 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/login.dart';
 import 'package:PiliPlus/http/ua_type.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
-import 'package:PiliPlus/models/common/live_search_type.dart';
+import 'package:PiliPlus/models/common/live/live_contribution_rank_type.dart';
+import 'package:PiliPlus/models/common/live/live_search_type.dart';
 import 'package:PiliPlus/models_new/live/live_area_list/area_item.dart';
 import 'package:PiliPlus/models_new/live/live_area_list/area_list.dart';
+import 'package:PiliPlus/models_new/live/live_contribution_rank/data.dart';
 import 'package:PiliPlus/models_new/live/live_dm_block/data.dart';
 import 'package:PiliPlus/models_new/live/live_dm_block/shield_info.dart';
+import 'package:PiliPlus/models_new/live/live_dm_block/shield_user_list.dart';
 import 'package:PiliPlus/models_new/live/live_dm_info/data.dart';
 import 'package:PiliPlus/models_new/live/live_emote/data.dart';
 import 'package:PiliPlus/models_new/live/live_emote/datum.dart';
@@ -29,14 +32,14 @@ import 'package:dio/dio.dart';
 abstract final class LiveHttp {
   static Account get recommend => Accounts.get(AccountType.recommend);
 
-  static Future sendLiveMsg({
+  static Future<LoadingState<Null>> sendLiveMsg({
     required Object roomId,
     required Object msg,
     Object? dmType,
     Object? emoticonOptions,
   }) async {
     String csrf = Accounts.main.csrf;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.sendLiveMsg,
       data: FormData.fromMap({
         'bubble': 0,
@@ -64,31 +67,25 @@ abstract final class LiveHttp {
       }),
     );
     if (res.data['code'] == 0) {
-      return {
-        'status': true,
-        'data': res.data['data'],
-      };
+      return const Success(null);
     } else {
-      return {
-        'status': false,
-        'msg': res.data['message'],
-      };
+      return Error(res.data['message']);
     }
   }
 
   static Future<LoadingState<RoomPlayInfoData>> liveRoomInfo({
-    roomId,
-    qn,
+    required Object roomId,
+    Object? qn,
     bool onlyAudio = false,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.liveRoomInfo,
       queryParameters: await WbiSign.makSign({
         'room_id': roomId,
         'protocol': '0,1',
         'format': '0,1,2',
         'codec': '0,1,2',
-        'qn': qn,
+        'qn': ?qn,
         'platform': 'web',
         'ptype': 8,
         'dolby': 5,
@@ -104,25 +101,24 @@ abstract final class LiveHttp {
     }
   }
 
-  static Future liveRoomInfoH5({roomId, qn}) async {
-    var res = await Request().get(
+  static Future<LoadingState<RoomInfoH5Data>> liveRoomInfoH5({
+    required Object roomId,
+  }) async {
+    final res = await Request().get(
       Api.liveRoomInfoH5,
       queryParameters: {
         'room_id': roomId,
       },
     );
     if (res.data['code'] == 0) {
-      return {
-        'status': true,
-        'data': RoomInfoH5Data.fromJson(res.data['data']),
-      };
+      return Success(RoomInfoH5Data.fromJson(res.data['data']));
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future liveRoomDanmaPrefetch({roomId}) async {
-    var res = await Request().get(
+  static Future liveRoomDanmaPrefetch({required Object roomId}) async {
+    final res = await Request().get(
       Api.liveRoomDmPrefetch,
       queryParameters: {'roomid': roomId},
       options: Options(
@@ -139,8 +135,10 @@ abstract final class LiveHttp {
     }
   }
 
-  static Future liveRoomGetDanmakuToken({roomId}) async {
-    var res = await Request().get(
+  static Future<LoadingState<LiveDmInfoData>> liveRoomGetDanmakuToken({
+    required Object roomId,
+  }) async {
+    final res = await Request().get(
       Api.liveRoomDmToken,
       queryParameters: await WbiSign.makSign({
         'id': roomId,
@@ -148,19 +146,16 @@ abstract final class LiveHttp {
       }),
     );
     if (res.data['code'] == 0) {
-      return {
-        'status': true,
-        'data': LiveDmInfoData.fromJson(res.data['data']),
-      };
+      return Success(LiveDmInfoData.fromJson(res.data['data']));
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
   static Future<LoadingState<List<LiveEmoteDatum>?>> getLiveEmoticons({
     required int roomId,
   }) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.getLiveEmoticons,
       queryParameters: {
         'platform': 'pc',
@@ -180,7 +175,6 @@ abstract final class LiveHttp {
   }) async {
     final params = {
       'access_key': ?recommend.accessKey,
-      'appkey': Constants.appKey,
       'channel': 'master',
       'actionKey': 'appkey',
       'build': 8430300,
@@ -201,10 +195,9 @@ abstract final class LiveHttp {
       's_locale': 'zh_CN',
       'scale': 2,
       'statistics': Constants.statisticsApp,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(params);
-    var res = await Request().get(
+    final res = await Request().get(
       Api.liveFeedIndex,
       queryParameters: params,
       options: Options(
@@ -233,7 +226,7 @@ abstract final class LiveHttp {
   }
 
   static Future<LoadingState<LiveFollowData>> liveFollow(int page) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.liveFollow,
       queryParameters: {
         'page': page,
@@ -257,7 +250,6 @@ abstract final class LiveHttp {
   }) async {
     final params = {
       'access_key': ?recommend.accessKey,
-      'appkey': Constants.appKey,
       'actionKey': 'appkey',
       'channel': 'master',
       'area_id': ?areaId,
@@ -283,10 +275,9 @@ abstract final class LiveHttp {
       's_locale': 'zh_CN',
       'scale': 2,
       'statistics': Constants.statisticsApp,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(params);
-    var res = await Request().get(
+    final res = await Request().get(
       Api.liveSecondList,
       queryParameters: params,
       options: Options(
@@ -317,7 +308,6 @@ abstract final class LiveHttp {
   static Future<LoadingState<List<AreaList>?>> liveAreaList() async {
     final params = {
       'access_key': ?recommend.accessKey,
-      'appkey': Constants.appKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
@@ -329,10 +319,9 @@ abstract final class LiveHttp {
       'platform': 'android',
       's_locale': 'zh_CN',
       'statistics': Constants.statisticsApp,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(params);
-    var res = await Request().get(
+    final res = await Request().get(
       Api.liveAreaList,
       queryParameters: params,
     );
@@ -350,7 +339,6 @@ abstract final class LiveHttp {
   static Future<LoadingState<List<AreaItem>>> getLiveFavTag() async {
     final params = {
       'access_key': ?Accounts.main.accessKey,
-      'appkey': Constants.appKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
@@ -362,10 +350,9 @@ abstract final class LiveHttp {
       'platform': 'android',
       's_locale': 'zh_CN',
       'statistics': Constants.statisticsApp,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(params);
-    var res = await Request().get(
+    final res = await Request().get(
       Api.getLiveFavTag,
       queryParameters: params,
     );
@@ -382,13 +369,12 @@ abstract final class LiveHttp {
     }
   }
 
-  static Future setLiveFavTag({
+  static Future<LoadingState<Null>> setLiveFavTag({
     required String ids,
   }) async {
     final data = {
       'tags': ids,
       'access_key': Accounts.main.accessKey,
-      'appkey': Constants.appKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
@@ -400,19 +386,18 @@ abstract final class LiveHttp {
       'platform': 'android',
       's_locale': 'zh_CN',
       'statistics': Constants.statisticsApp,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(data);
-    var res = await Request().post(
+    final res = await Request().post(
       Api.setLiveFavTag,
       data: data,
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
 
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
@@ -421,7 +406,6 @@ abstract final class LiveHttp {
   }) async {
     final params = {
       'access_key': ?recommend.accessKey,
-      'appkey': Constants.appKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
@@ -436,10 +420,9 @@ abstract final class LiveHttp {
       'platform': 'android',
       's_locale': 'zh_CN',
       'statistics': Constants.statisticsApp,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
     AppSign.appSign(params);
-    var res = await Request().get(
+    final res = await Request().get(
       Api.liveRoomAreaList,
       queryParameters: params,
     );
@@ -459,7 +442,6 @@ abstract final class LiveHttp {
   }) async {
     final params = {
       'access_key': ?recommend.accessKey,
-      'appkey': Constants.appKey,
       'actionKey': 'appkey',
       'build': 8430300,
       'channel': 'master',
@@ -474,11 +456,10 @@ abstract final class LiveHttp {
       'platform': 'android',
       's_locale': 'zh_CN',
       'statistics': Constants.statisticsApp,
-      'ts': DateTime.now().millisecondsSinceEpoch ~/ 1000,
       'type': type.name,
     };
     AppSign.appSign(params);
-    var res = await Request().get(
+    final res = await Request().get(
       Api.liveSearch,
       queryParameters: params,
     );
@@ -490,9 +471,9 @@ abstract final class LiveHttp {
   }
 
   static Future<LoadingState<ShieldInfo?>> getLiveInfoByUser(
-    dynamic roomId,
+    Object roomId,
   ) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.getLiveInfoByUser,
       queryParameters: await WbiSign.makSign({
         'room_id': roomId,
@@ -508,12 +489,12 @@ abstract final class LiveHttp {
     }
   }
 
-  static Future liveSetSilent({
+  static Future<LoadingState<Null>> liveSetSilent({
     required String type,
     required int level,
   }) async {
     final csrf = Accounts.main.csrf;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.liveSetSilent,
       data: {
         'type': type,
@@ -524,17 +505,17 @@ abstract final class LiveHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future addShieldKeyword({
+  static Future<LoadingState<Null>> addShieldKeyword({
     required String keyword,
   }) async {
     final csrf = Accounts.main.csrf;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.addShieldKeyword,
       data: {
         'keyword': keyword,
@@ -544,17 +525,17 @@ abstract final class LiveHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future delShieldKeyword({
+  static Future<LoadingState<Null>> delShieldKeyword({
     required String keyword,
   }) async {
     final csrf = Accounts.main.csrf;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.delShieldKeyword,
       data: {
         'keyword': keyword,
@@ -564,19 +545,19 @@ abstract final class LiveHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future liveShieldUser({
-    required dynamic uid,
-    required dynamic roomid,
+  static Future<LoadingState<ShieldUserList>> liveShieldUser({
+    required Object uid,
+    required Object roomid,
     required int type,
   }) async {
     final csrf = Accounts.main.csrf;
-    var res = await Request().post(
+    final res = await Request().post(
       Api.liveShieldUser,
       data: {
         'uid': uid,
@@ -588,34 +569,34 @@ abstract final class LiveHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true, 'data': res.data['data']};
+      return Success(ShieldUserList.fromJson(res.data['data']));
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
-  static Future liveLikeReport({
+  static Future<LoadingState<Null>> liveLikeReport({
     required int clickTime,
-    required dynamic roomId,
-    required dynamic uid,
-    required dynamic anchorId,
+    required Object roomId,
+    required Object uid,
+    Object? anchorId,
   }) async {
-    var res = await Request().post(
+    final res = await Request().post(
       Api.liveLikeReport,
       data: await WbiSign.makSign({
         'click_time': clickTime,
         'room_id': roomId,
         'uid': uid,
-        'anchor_id': anchorId,
+        'anchor_id': ?anchorId,
         'web_location': 444.8,
         'csrf': Accounts.heartbeat.csrf,
       }),
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return {'status': true};
+      return const Success(null);
     } else {
-      return {'status': false, 'msg': res.data['message']};
+      return Error(res.data['message']);
     }
   }
 
@@ -623,7 +604,7 @@ abstract final class LiveHttp {
   static Future<LoadingState<SuperChatData>> superChatMsg(
     Object roomId,
   ) async {
-    var res = await Request().get(
+    final res = await Request().get(
       Api.superChatMsg,
       queryParameters: {
         'room_id': roomId,
@@ -640,7 +621,7 @@ abstract final class LiveHttp {
     }
   }
 
-  static Future<Map<String, dynamic>> liveDmReport({
+  static Future<LoadingState<Null>> liveDmReport({
     required int roomId,
     required Object mid,
     required String msg,
@@ -673,6 +654,40 @@ abstract final class LiveHttp {
       data: data,
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
-    return res.data as Map<String, dynamic>;
+    if (res.data['code'] == 0) {
+      return const Success(null);
+    } else {
+      return Error(res.data['message']);
+    }
+  }
+
+  static Future<LoadingState<LiveContributionRankData>> liveContributionRank({
+    required Object ruid,
+    required Object roomId,
+    required int page,
+    required LiveContributionRankType type,
+  }) async {
+    final res = await Request().get(
+      Api.liveContributionRank,
+      queryParameters: await WbiSign.makSign({
+        'ruid': ruid,
+        'room_id': roomId,
+        'page': page,
+        'page_size': 100,
+        'type': type.name,
+        'switch': type.sw1tch,
+        'platform': 'web',
+        'web_location': 444.8,
+      }),
+    );
+    if (res.data['code'] == 0) {
+      try {
+        return Success(LiveContributionRankData.fromJson(res.data['data']));
+      } catch (e, s) {
+        return Error('$e\n\n$s');
+      }
+    } else {
+      return Error(res.data['message']);
+    }
   }
 }

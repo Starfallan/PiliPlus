@@ -74,7 +74,7 @@ class _BlackListPageState extends State<BlackListPage> {
         itemCount: 12,
         itemBuilder: (context, index) => const MsgFeedTopSkeleton(),
       ),
-      Success(:var response) =>
+      Success(:final response) =>
         response != null && response.isNotEmpty
             ? SliverList.builder(
                 itemCount: response.length,
@@ -118,7 +118,7 @@ class _BlackListPageState extends State<BlackListPage> {
                 },
               )
             : HttpError(onReload: _blackListController.onReload),
-      Error(:var errMsg) => HttpError(
+      Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _blackListController.onReload,
       ),
