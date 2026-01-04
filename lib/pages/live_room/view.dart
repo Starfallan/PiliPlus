@@ -1035,7 +1035,6 @@ class _LiveDanmakuState extends State<LiveDanmaku> {
                   plPlayerController.danmakuController = e;
             },
             option: DanmakuOptions.get(notFullscreen: widget.notFullscreen),
-            size: widget.size,
           ),
         );
       },

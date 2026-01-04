@@ -191,7 +191,6 @@ class _PlDanmakuState extends State<PlDanmaku> {
             notFullscreen: widget.notFullscreen,
             speed: playerController.playbackSpeed,
           ),
-          size: widget.size,
         ),
       ),
     );
