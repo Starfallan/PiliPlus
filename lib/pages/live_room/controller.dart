@@ -4,9 +4,11 @@ import 'dart:convert';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/live.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/super_chat_type.dart';
 import 'package:PiliPlus/models/common/video/live_quality.dart';
+import 'package:PiliPlus/models/model_owner.dart';
 import 'package:PiliPlus/models_new/live/live_danmaku/danmaku_msg.dart';
 import 'package:PiliPlus/models_new/live/live_danmaku/live_emote.dart';
 import 'package:PiliPlus/models_new/live/live_dm_info/data.dart';
@@ -221,25 +223,24 @@ class LiveRoomController extends GetxController {
       qn: currentQn,
       onlyAudio: plPlayerController.onlyPlayAudio.value,
     );
-    if (res.isSuccess) {
-      final data = res.data;
-      if (data.liveStatus != 1) {
+    if (res case Success(:final response)) {
+      if (response.liveStatus != 1) {
         _showDialog('当前直播间未开播');
         return;
       }
-      if (data.playurlInfo?.playurl == null) {
+      if (response.playurlInfo?.playurl == null) {
         _showDialog('无法获取播放地址');
         return;
       }
-      ruid = data.uid;
-      if (data.roomId != null) {
-        roomId = data.roomId!;
+      ruid = response.uid;
+      if (response.roomId != null) {
+        roomId = response.roomId!;
       }
-      liveTime.value = data.liveTime;
+      liveTime.value = response.liveTime;
       startLiveTimer();
-      isPortrait.value = data.isPortrait ?? false;
+      isPortrait.value = response.isPortrait ?? false;
       List<CodecItem> codec =
-          data.playurlInfo!.playurl!.stream!.first.format!.first.codec!;
+          response.playurlInfo!.playurl!.stream!.first.format!.first.codec!;
       CodecItem item = codec.first;
       // 以服务端返回的码率为准
       currentQn = item.currentQn!;
@@ -261,12 +262,11 @@ class LiveRoomController extends GetxController {
 
   Future<void> queryLiveInfoH5() async {
     final res = await LiveHttp.liveRoomInfoH5(roomId: roomId);
-    if (res.isSuccess) {
-      final data = res.data;
-      roomInfoH5.value = data;
-      title.value = data.roomInfo?.title ?? '';
-      watchedShow.value = data.watchedShow?.textLarge;
-      videoPlayerServiceHandler?.onVideoDetailChange(data, roomId, heroTag);
+    if (res case Success(:final response)) {
+      roomInfoH5.value = response;
+      title.value = response.roomInfo?.title ?? '';
+      watchedShow.value = response.watchedShow?.textLarge;
+      videoPlayerServiceHandler?.onVideoDetailChange(response, roomId, heroTag);
     } else {
       res.toast();
     }
@@ -358,8 +358,8 @@ class LiveRoomController extends GetxController {
       return;
     }
     LiveHttp.liveRoomGetDanmakuToken(roomId: roomId).then((res) {
-      if (res.isSuccess) {
-        initDm(dmInfo = res.data);
+      if (res case Success(:final response)) {
+        initDm(dmInfo = response);
       }
     });
   }
@@ -392,6 +392,7 @@ class LiveRoomController extends GetxController {
       ..removeListener(listener)
       ..dispose();
     pageController?.dispose();
+    danmakuController = null;
     super.onClose();
   }
 
@@ -442,6 +443,22 @@ class LiveRoomController extends GetxController {
           if (first[13] case Map<String, dynamic> map) {
             uemote = BaseEmote.fromJson(map);
           }
+          final checkInfo = info[9];
+          final liveExtra = LiveDanmaku(
+            id: extra['id_str'],
+            mid: uid,
+            dmType: extra['dm_type'],
+            ts: checkInfo['ts'],
+            ct: checkInfo['ct'],
+          );
+          Owner? reply;
+          final replyMid = extra['reply_mid'];
+          if (replyMid != null && replyMid != 0) {
+            reply = Owner(
+              mid: replyMid,
+              name: extra['reply_uname'],
+            );
+          }
           messages.add(
             DanmakuMsg(
               name: name,
@@ -451,11 +468,12 @@ class LiveRoomController extends GetxController {
                 (k, v) => MapEntry(k, BaseEmote.fromJson(v)),
               ),
               uemote: uemote,
+              extra: liveExtra,
+              reply: reply,
             ),
           );
 
           if (plPlayerController.showDanmaku) {
-            final checkInfo = info[9];
             danmakuController?.addDanmaku(
               DanmakuContentItem(
                 msg,
@@ -465,13 +483,7 @@ class LiveRoomController extends GetxController {
                 type: DmUtils.getPosition(extra['mode']),
                 // extra['send_from_me'] is invalid
                 selfSend: isLogin && uid == mid,
-                extra: LiveDanmaku(
-                  id: extra['id_str'],
-                  mid: uid,
-                  dmType: extra['dm_type'],
-                  ts: checkInfo['ts'],
-                  ct: checkInfo['ct'],
-                ),
+                extra: liveExtra,
               ),
             );
             if (!disableAutoScroll.value) {

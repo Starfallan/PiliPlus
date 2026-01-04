@@ -168,19 +168,19 @@ mixin FavMixin on TripleMixin {
   Future<LoadingState<FavFolderData>> queryVideoInFolder() async {
     favIds = null;
     final (rid, type) = getFavRidType;
-    final result = await FavHttp.videoInFolder(
+    final res = await FavHttp.videoInFolder(
       mid: Accounts.main.mid,
       rid: rid,
       type: type,
     );
-    if (result.isSuccess) {
-      favFolderData.value = result.data;
-      favIds = result.data.list
+    if (res case Success(:final response)) {
+      favFolderData.value = response;
+      favIds = response.list
           ?.where((item) => item.favState == 1)
           .map((item) => item.id)
           .toSet();
     }
-    return result;
+    return res;
   }
 
   int get favFolderId {

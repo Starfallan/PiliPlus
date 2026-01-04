@@ -8,18 +8,20 @@ abstract final class DanmakuOptions {
   static final Set<int> blockTypes = Pref.danmakuBlockType;
   static bool blockColorful = blockTypes.contains(6);
 
+  static int danmakuWeight = Pref.danmakuWeight;
   static double danmakuFontScaleFS = Pref.danmakuFontScaleFS;
   static double danmakuFontScale = Pref.danmakuFontScale;
-  static int danmakuFontWeight = Pref.fontWeight;
+  static int danmakuFontWeight = Pref.danmakuFontWeight;
   static double danmakuShowArea = Pref.danmakuShowArea;
   static double danmakuDuration = Pref.danmakuDuration;
   static double danmakuStaticDuration = Pref.danmakuStaticDuration;
-  static double danmakuStrokeWidth = Pref.strokeWidth;
-  static bool scrollFixedVelocity = Pref.danmakuFixedV;
-  static bool massiveMode = Pref.danmakuMassiveMode;
+  static double danmakuStrokeWidth = Pref.danmakuStrokeWidth;
+  static bool danmakuFixedV = Pref.danmakuFixedV;
+  static bool danmakuStatic2Scroll = Pref.danmakuStatic2Scroll;
+  static bool danmakuMassiveMode = Pref.danmakuMassiveMode;
   static double danmakuLineHeight = Pref.danmakuLineHeight;
 
-  static bool sameFontScale = danmakuFontScale == danmakuFontScaleFS;
+  static bool get sameFontScale => danmakuFontScale == danmakuFontScaleFS;
 
   static DanmakuOption get({
     required bool notFullscreen,
@@ -36,15 +38,15 @@ abstract final class DanmakuOptions {
       hideTop: blockTypes.contains(5),
       hideSpecial: blockTypes.contains(7),
       strokeWidth: danmakuStrokeWidth,
-      scrollFixedVelocity: scrollFixedVelocity,
-      massiveMode: massiveMode,
-      static2Scroll: true,
+      scrollFixedVelocity: danmakuFixedV,
+      massiveMode: danmakuMassiveMode,
+      static2Scroll: danmakuStatic2Scroll,
       safeArea: true,
       lineHeight: danmakuLineHeight,
     );
   }
 
-  static Future<void>? save() {
+  static Future<void>? save(double danmakuOpacity) {
     return GStorage.setting.putAllNE({
       SettingBoxKey.danmakuBlockType: blockTypes.toList(),
       SettingBoxKey.danmakuShowArea: danmakuShowArea,
@@ -52,9 +54,14 @@ abstract final class DanmakuOptions {
       SettingBoxKey.danmakuFontScaleFS: danmakuFontScaleFS,
       SettingBoxKey.danmakuDuration: danmakuDuration,
       SettingBoxKey.danmakuStaticDuration: danmakuStaticDuration,
-      SettingBoxKey.strokeWidth: danmakuStrokeWidth,
-      SettingBoxKey.fontWeight: danmakuFontWeight,
+      SettingBoxKey.danmakuStrokeWidth: danmakuStrokeWidth,
+      SettingBoxKey.danmakuFontWeight: danmakuFontWeight,
       SettingBoxKey.danmakuLineHeight: danmakuLineHeight,
+      SettingBoxKey.danmakuMassiveMode: danmakuMassiveMode,
+      SettingBoxKey.danmakuStatic2Scroll: danmakuStatic2Scroll,
+      SettingBoxKey.danmakuFixedV: danmakuFixedV,
+      SettingBoxKey.danmakuWeight: danmakuWeight,
+      SettingBoxKey.danmakuOpacity: danmakuOpacity,
     });
   }
 }

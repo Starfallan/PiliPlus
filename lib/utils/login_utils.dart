@@ -1,9 +1,9 @@
 import 'dart:async' show FutureOr;
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/main.dart';
-import 'package:PiliPlus/models/user/info.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
@@ -46,14 +46,13 @@ abstract final class LoginUtils {
 
   static Future<void> onLoginMain() async {
     final account = Accounts.main;
-    final result = await UserHttp.userInfo();
-    if (result.isSuccess) {
+    final res = await UserHttp.userInfo();
+    if (res case Success(:final response)) {
       setWebCookie(account);
       RequestUtils.syncHistoryStatus();
-      final UserInfoData data = result.data;
-      if (data.isLogin == true) {
+      if (response.isLogin == true) {
         final accountService = Get.find<AccountService>()
-          ..face.value = data.face!;
+          ..face.value = response.face!;
 
         if (accountService.isLogin.value) {
           accountService.isLogin.refresh();
@@ -62,15 +61,15 @@ abstract final class LoginUtils {
         }
 
         SmartDialog.showToast('main登录成功');
-        if (data != Pref.userInfoCache) {
-          await GStorage.userInfo.put('userInfoCache', data);
+        if (response != Pref.userInfoCache) {
+          await GStorage.userInfo.put('userInfoCache', response);
         }
       }
     } else {
       // 获取用户信息失败
       await Accounts.deleteAll({account});
       SmartDialog.showNotify(
-        msg: '登录失败，请检查cookie是否正确，${result.toString()}',
+        msg: '登录失败，请检查cookie是否正确，${res.toString()}',
         notifyType: NotifyType.warning,
       );
     }

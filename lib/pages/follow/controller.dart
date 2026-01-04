@@ -41,10 +41,10 @@ class FollowController extends GetxController with GetTickerProviderStateMixin {
 
   Future<void> queryFollowUpTags() async {
     final res = await MemberHttp.followUpTags();
-    if (res.isSuccess) {
+    if (res case Success(:final response)) {
       tabs
         ..assign(MemberTagItemModel(name: '全部关注'))
-        ..addAll(res.data);
+        ..addAll(response);
       int initialIndex = 0;
       if (tabController != null) {
         initialIndex = tabController!.index.clamp(0, tabs.length - 1);

@@ -71,29 +71,29 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
       padding: const EdgeInsets.only(right: 12),
       child: Obx(
         () {
-          final info = controller.infoState.value;
-          late final showTitle = controller.showTitle.value;
-          return info.isSuccess
-              ? AnimatedOpacity(
-                  opacity: showTitle ? 1 : 0,
-                  duration: const Duration(milliseconds: 300),
-                  child: IgnorePointer(
-                    ignoring: !showTitle,
-                    child: Row(
-                      spacing: 8,
-                      children: [
-                        NetworkImgLayer(
-                          src: info.data.mvCover,
-                          width: 36,
-                          height: 36,
-                          type: ImageType.avatar,
-                        ),
-                        Text(info.data.musicTitle!),
-                      ],
+          if (controller.infoState.value case Success(:final response)) {
+            final showTitle = controller.showTitle.value;
+            return AnimatedOpacity(
+              opacity: showTitle ? 1 : 0,
+              duration: const Duration(milliseconds: 300),
+              child: IgnorePointer(
+                ignoring: !showTitle,
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    NetworkImgLayer(
+                      src: response.mvCover,
+                      width: 36,
+                      height: 36,
+                      type: ImageType.avatar,
                     ),
-                  ),
-                )
-              : const SizedBox(height: 40);
+                    Text(response.musicTitle!),
+                  ],
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
         },
       ),
     ),

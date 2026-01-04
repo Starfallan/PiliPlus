@@ -322,6 +322,9 @@ abstract final class Pref {
   static bool get danmakuFixedV =>
       _setting.get(SettingBoxKey.danmakuFixedV, defaultValue: false);
 
+  static bool get danmakuStatic2Scroll =>
+      _setting.get(SettingBoxKey.danmakuStatic2Scroll, defaultValue: false);
+
   static double get subtitleFontScale =>
       _setting.get(SettingBoxKey.subtitleFontScale, defaultValue: 1.0);
 
@@ -736,11 +739,11 @@ abstract final class Pref {
   static double get danmakuStaticDuration =>
       _setting.get(SettingBoxKey.danmakuStaticDuration, defaultValue: 4.0);
 
-  static double get strokeWidth =>
-      _setting.get(SettingBoxKey.strokeWidth, defaultValue: 1.5);
+  static double get danmakuStrokeWidth =>
+      _setting.get(SettingBoxKey.danmakuStrokeWidth, defaultValue: 1.5);
 
-  static int get fontWeight =>
-      _setting.get(SettingBoxKey.fontWeight, defaultValue: 5);
+  static int get danmakuFontWeight =>
+      _setting.get(SettingBoxKey.danmakuFontWeight, defaultValue: 5);
 
   static bool get enableLongShowControl =>
       _setting.get(SettingBoxKey.enableLongShowControl, defaultValue: false);

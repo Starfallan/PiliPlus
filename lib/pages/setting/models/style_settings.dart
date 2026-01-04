@@ -225,12 +225,14 @@ List<SettingsModel> get styleSettings => [
     leading: Icon(Icons.people_alt_outlined),
     setKey: SettingBoxKey.dynamicsShowAllFollowedUp,
     defaultVal: false,
+    needReboot: true,
   ),
   const SwitchModel(
     title: '动态页展开正在直播UP列表',
     leading: Icon(Icons.live_tv),
     setKey: SettingBoxKey.expandDynLivePanel,
     defaultVal: false,
+    needReboot: true,
   ),
   NormalModel(
     onTap: (context, setState) async {

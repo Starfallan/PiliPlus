@@ -77,14 +77,14 @@ class FavPgcController
     if (res case Success(:final response)) {
       try {
         final ctr = Get.find<FavPgcController>(tag: '$type$followStatus');
-        if (ctr.loadingState.value.isSuccess) {
-          ctr.loadingState
-            ..value.data!.insertAll(
-              0,
-              removeList.map((item) => item..checked = false),
-            )
-            ..refresh();
-          ctr.allSelected.value = false;
+        if (ctr.loadingState.value case Success(:final response)) {
+          response?.insertAll(
+            0,
+            removeList.map((item) => item..checked = false),
+          );
+          ctr
+            ..loadingState.refresh()
+            ..allSelected.value = false;
         }
       } catch (e) {
         if (kDebugMode) debugPrint('fav pgc onUpdate: $e');
@@ -97,28 +97,28 @@ class FavPgcController
   }
 
   Future<void> onUpdate(int index, int followStatus, int? seasonId) async {
-    final result = await VideoHttp.pgcUpdate(
+    final res = await VideoHttp.pgcUpdate(
       seasonId: seasonId.toString(),
       status: followStatus,
     );
-    if (result case Success(:final response)) {
+    if (res case Success(:final response)) {
       List<FavPgcItemModel> list = loadingState.value.data!;
       final item = list.removeAt(index);
       loadingState.refresh();
       try {
         final ctr = Get.find<FavPgcController>(tag: '$type$followStatus');
-        if (ctr.loadingState.value.isSuccess) {
-          ctr.loadingState
-            ..value.data?.insert(0, item)
-            ..refresh();
-          ctr.allSelected.value = false;
+        if (ctr.loadingState.value case Success(:final response)) {
+          response?.insert(0, item);
+          ctr
+            ..loadingState.refresh()
+            ..allSelected.value = false;
         }
       } catch (e) {
         if (kDebugMode) debugPrint('fav pgc pgcUpdate: $e');
       }
       SmartDialog.showToast(response);
     } else {
-      result.toast();
+      res.toast();
     }
   }
 }

@@ -55,8 +55,8 @@ class WhisperLinkSettingController extends GetxController {
 
   Future<void> getIsPinned() async {
     final res = await ImGrpc.sessionUpdate(sessionId: sessionId);
-    if (res.isSuccess) {
-      isPinned.value = res.data.session.isPinned;
+    if (res case Success(:final response)) {
+      isPinned.value = response.session.isPinned;
     }
   }
 

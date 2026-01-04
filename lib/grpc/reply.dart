@@ -62,15 +62,14 @@ abstract final class ReplyGrpc {
       ),
       MainListReply.fromBuffer,
     );
-    if (res.isSuccess) {
-      final mainListReply = res.data;
+    if (res case Success(:final response)) {
       // keyword filter
-      if (mainListReply.hasUpTop() && needRemoveGrpc(mainListReply.upTop)) {
-        mainListReply.clearUpTop();
+      if (response.hasUpTop() && needRemoveGrpc(response.upTop)) {
+        response.clearUpTop();
       }
 
-      if (mainListReply.replies.isNotEmpty) {
-        mainListReply.replies.removeWhere((item) {
+      if (response.replies.isNotEmpty) {
+        response.replies.removeWhere((item) {
           final hasMatch = needRemoveGrpc(item);
           if (!hasMatch && item.replies.isNotEmpty) {
             item.replies.removeWhere(needRemoveGrpc);

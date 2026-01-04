@@ -74,7 +74,7 @@ class LoginPageController extends GetxController
 
   Future<void> refreshQRCode() async {
     final res = await LoginHttp.getHDcode();
-    if (res.isSuccess) {
+    if (res case Success(:final response)) {
       qrCodeTimer?.cancel();
       codeInfo.value = res;
       qrCodeTimer = Timer.periodic(const Duration(milliseconds: 1000), (t) {
@@ -89,7 +89,7 @@ class LoginPageController extends GetxController
         if (_isReq || tabController.index != 2) return;
 
         _isReq = true;
-        LoginHttp.codePoll(res.data.authCode).then((value) async {
+        LoginHttp.codePoll(response.authCode).then((value) async {
           _isReq = false;
           if (value['status']) {
             t.cancel();

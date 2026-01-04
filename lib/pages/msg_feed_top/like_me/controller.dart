@@ -43,10 +43,11 @@ class LikeMeController
     cursorTime = data.total?.cursor?.time;
     List<MsgLikeItem> latest = data.latest?.items ?? <MsgLikeItem>[];
     List<MsgLikeItem> total = data.total?.items ?? <MsgLikeItem>[];
-    if (!isRefresh && loadingState.value.isSuccess) {
-      Pair<List<MsgLikeItem>, List<MsgLikeItem>> pair = loadingState.value.data;
-      latest.insertAll(0, pair.first);
-      total.insertAll(0, pair.second);
+    if (!isRefresh) {
+      if (loadingState.value case Success(:final response)) {
+        latest.insertAll(0, response.first);
+        total.insertAll(0, response.second);
+      }
     }
     loadingState.value = Success(Pair(first: latest, second: total));
     return true;

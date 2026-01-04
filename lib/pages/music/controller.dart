@@ -32,8 +32,8 @@ class MusicDetailController extends CommonDynController {
 
   Future<void> getMusicDetail() async {
     final res = await MusicHttp.bgmDetail(musicId);
-    if (res.isSuccess) {
-      final comment = res.data.musicComment!;
+    if (res case Success(:final response)) {
+      final comment = response.musicComment!;
       oid = comment.oid!;
       replyType = comment.pageType ?? 47;
       count.value = comment.nums ?? -1;

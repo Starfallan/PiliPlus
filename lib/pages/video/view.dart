@@ -1370,6 +1370,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                       playerController: plPlayerController!,
                       isFullScreen: plPlayerController!.isFullScreen.value,
                       isFileSource: videoDetailController.isFileSource,
+                      size: Size(width, height),
                     ),
                   ),
             showEpisodes: showEpisodes,

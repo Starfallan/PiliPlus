@@ -96,12 +96,14 @@ class MemberVideoCtr
     count.value = type == ContributeType.season
         ? (data.item?.length ?? -1)
         : (data.count ?? -1);
-    if (page != 0 && loadingState.value.isSuccess) {
-      data.item ??= <SpaceArchiveItem>[];
-      if (isLoadPrevious) {
-        data.item!.addAll(loadingState.value.data!);
-      } else {
-        data.item!.insertAll(0, loadingState.value.data!);
+    if (page != 0) {
+      if (loadingState.value case Success(:final response)) {
+        data.item ??= <SpaceArchiveItem>[];
+        if (isLoadPrevious) {
+          data.item!.addAll(response!);
+        } else {
+          data.item!.insertAll(0, response!);
+        }
       }
     }
     firstAid = data.item?.firstOrNull?.param;

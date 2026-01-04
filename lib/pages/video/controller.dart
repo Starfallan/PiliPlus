@@ -1160,11 +1160,11 @@ class VideoDetailController extends GetxController
       seasonId: isUgc ? null : seasonId,
       pgcType: isUgc ? null : pgcType,
       videoType: videoType,
-      onInit: () async {
+      onInit: () {
         if (videoState.value is! Success) {
           videoState.value = const Success(null);
         }
-        await setSubtitle(vttSubtitlesIndex.value);
+        setSubtitle(vttSubtitlesIndex.value);
       },
       width: firstVideo.width,
       height: firstVideo.height,
@@ -1243,8 +1243,8 @@ class VideoDetailController extends GetxController
       language: currLang.value,
     );
 
-    if (result.isSuccess) {
-      data = result.data;
+    if (result case Success(:final response)) {
+      data = response;
 
       languages.value = data.language?.items;
       currLang.value = data.curLanguage;
@@ -1979,9 +1979,8 @@ class VideoDetailController extends GetxController
       qn: currentVideoQa.value?.code,
     );
     SmartDialog.dismiss();
-    if (res.isSuccess) {
-      final data = res.data;
-      final first = data.durl?.firstOrNull;
+    if (res case Success(:final response)) {
+      final first = response.durl?.firstOrNull;
       if (first == null || first.playUrls.isEmpty) {
         SmartDialog.showToast('不支持投屏');
         return;

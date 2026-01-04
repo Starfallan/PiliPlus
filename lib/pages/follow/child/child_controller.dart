@@ -85,8 +85,8 @@ class FollowChildController
 
   Future<void> _loadSameFollow() async {
     final res = await UserHttp.sameFollowing(mid: mid);
-    if (res.isSuccess) {
-      sameState.value = Success(res.data.list);
+    if (res case Success(:final response)) {
+      sameState.value = Success(response.list);
     }
   }
 }

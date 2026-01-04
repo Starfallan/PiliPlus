@@ -305,21 +305,21 @@ abstract final class ImageUtils {
     required String fileName,
     String ext = 'png',
   }) async {
-    SaveResult? result;
+    SaveResult? res;
     fileName += '.$ext';
     if (PlatformUtils.isMobile) {
       SmartDialog.showLoading(msg: '正在保存');
-      result = await SaverGallery.saveImage(
+      res = await SaverGallery.saveImage(
         bytes,
         fileName: fileName,
         androidRelativePath: _androidRelativePath,
         skipIfExists: false,
       );
       SmartDialog.dismiss();
-      if (result.isSuccess) {
+      if (res.isSuccess) {
         SmartDialog.showToast(' 已保存 ');
       } else {
-        SmartDialog.showToast('保存失败，${result.errorMessage}');
+        SmartDialog.showToast('保存失败，${res.errorMessage}');
       }
     } else {
       SmartDialog.dismiss();
@@ -333,9 +333,9 @@ abstract final class ImageUtils {
       }
       await File(savePath).writeAsBytes(bytes);
       SmartDialog.showToast(' 已保存 ');
-      result = SaveResult(true, null);
+      res = SaveResult(true, null);
     }
-    return result;
+    return res;
   }
 
   static Future<void> saveFileImg({
@@ -350,9 +350,9 @@ abstract final class ImageUtils {
       SmartDialog.showToast("文件不存在");
       return;
     }
-    SaveResult? result;
+    SaveResult? res;
     if (PlatformUtils.isMobile) {
-      result = await SaverGallery.saveFile(
+      res = await SaverGallery.saveFile(
         filePath: filePath,
         fileName: fileName,
         androidRelativePath: _androidRelativePath,
@@ -370,13 +370,13 @@ abstract final class ImageUtils {
       }
       await file.copy(savePath);
       if (del) file.tryDel();
-      result = SaveResult(true, null);
+      res = SaveResult(true, null);
     }
     if (needToast) {
-      if (result.isSuccess) {
+      if (res.isSuccess) {
         SmartDialog.showToast(' 已保存 ');
       } else {
-        SmartDialog.showToast('保存失败，${result.errorMessage}');
+        SmartDialog.showToast('保存失败，${res.errorMessage}');
       }
     }
   }

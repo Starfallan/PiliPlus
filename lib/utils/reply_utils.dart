@@ -6,7 +6,6 @@ import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/reply.dart';
 import 'package:PiliPlus/models/common/reply/reply_sort_type.dart';
-import 'package:PiliPlus/models_new/reply/data.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
@@ -155,13 +154,12 @@ abstract final class ReplyUtils {
         page: 1,
       );
 
-      if (res is Error) {
-        SmartDialog.showToast('获取评论主列表时发生错误：${res.errMsg}');
+      if (res case Error(:final errMsg)) {
+        SmartDialog.showToast('获取评论主列表时发生错误：$errMsg');
         return;
-      } else if (res.isSuccess) {
-        ReplyData replies = res.data;
-        int index =
-            replies.replies?.indexWhere((item) => item.rpid == id) ?? -1;
+      } else if (res case Success(:final response)) {
+        final index =
+            response.replies?.indexWhere((item) => item.rpid == id) ?? -1;
         if (index != -1) {
           // found
           showReplyCheckResult('无账号状态下找到了你的评论，评论正常！\n\n你的评论：$message');

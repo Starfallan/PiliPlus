@@ -37,10 +37,15 @@ abstract final class LiveHttp {
     required Object msg,
     Object? dmType,
     Object? emoticonOptions,
+    int replyMid = 0,
+    String replayDmid = '',
   }) async {
     String csrf = Accounts.main.csrf;
     final res = await Request().post(
       Api.sendLiveMsg,
+      queryParameters: await WbiSign.makSign({
+        'web_location': 444.8,
+      }),
       data: FormData.fromMap({
         'bubble': 0,
         'msg': msg,
@@ -52,10 +57,10 @@ abstract final class LiveHttp {
         else ...{
           'room_type': 0,
           'jumpfrom': 0,
-          'reply_mid': 0,
+          'reply_mid': replyMid,
           'reply_attr': 0,
-          'replay_dmid': '',
-          'statistics': Constants.statistics,
+          'replay_dmid': replayDmid,
+          'statistics': '{"appId":100,"platform":5}',
           'reply_type': 0,
           'reply_uname': '',
         },

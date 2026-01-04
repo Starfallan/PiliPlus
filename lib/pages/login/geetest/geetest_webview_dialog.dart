@@ -109,10 +109,10 @@ class GeetestWebviewDialog extends StatelessWidget {
           },
           onLoadStop: (ctr, _) async {
             final config = await future;
-            if (config.isSuccess) {
+            if (config case Success(:final response)) {
               ctr.evaluateJavascript(
                 source:
-                    'let t=Geetest(${config.data}).onSuccess(()=>R("success",t.getValidate())).onError((o)=>R("error",o));t.onReady(()=>t.verify());',
+                    'let t=Geetest($response).onSuccess(()=>R("success",t.getValidate())).onError((o)=>R("error",o));t.onReady(()=>t.verify());',
               );
             } else {
               config.toast();

@@ -39,8 +39,8 @@ class DynTopicController
 
   Future<void> queryTop() async {
     topState.value = await DynamicsHttp.topicTop(topicId: topicId);
-    if (topState.value.isSuccess) {
-      final topicItem = topState.value.data!.topicItem!;
+    if (topState.value case Success(:final response)) {
+      final topicItem = response!.topicItem!;
       topicName = topicItem.name;
       isFav.value = topicItem.isFav;
       isLike.value = topicItem.isLike;

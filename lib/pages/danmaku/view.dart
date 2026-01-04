@@ -18,6 +18,7 @@ class PlDanmaku extends StatefulWidget {
   final bool isPipMode;
   final bool isFullScreen;
   final bool isFileSource;
+  final Size size;
 
   const PlDanmaku({
     super.key,
@@ -26,6 +27,7 @@ class PlDanmaku extends StatefulWidget {
     this.isPipMode = false,
     required this.isFullScreen,
     required this.isFileSource,
+    required this.size,
   });
 
   @override
@@ -169,6 +171,7 @@ class _PlDanmakuState extends State<PlDanmaku> {
       ..removePositionListener(videoPositionListen)
       ..removeStatusLister(playerListener);
     _plDanmakuController.dispose();
+    _controller = null;
     super.dispose();
   }
 
@@ -188,6 +191,7 @@ class _PlDanmakuState extends State<PlDanmaku> {
             notFullscreen: widget.notFullscreen,
             speed: playerController.playbackSpeed,
           ),
+          size: widget.size,
         ),
       ),
     );

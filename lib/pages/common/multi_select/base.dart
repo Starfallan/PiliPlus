@@ -91,14 +91,13 @@ mixin CommonMultiSelectMixin<T extends MultiSelectData>
 
   @override
   void handleSelect({bool checked = false, bool disableSelect = true}) {
-    if (loadingState.value.isSuccess) {
-      final list = loadingState.value.data;
-      if (list != null && list.isNotEmpty) {
-        for (final item in list) {
+    if (loadingState.value case Success(:final response)) {
+      if (response != null && response.isNotEmpty) {
+        for (final item in response) {
           item.checked = checked;
         }
         loadingState.refresh();
-        rxCount.value = checked ? list.length : 0;
+        rxCount.value = checked ? response.length : 0;
       }
     }
     if (disableSelect && !checked) {

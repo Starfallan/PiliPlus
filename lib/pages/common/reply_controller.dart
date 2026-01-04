@@ -177,13 +177,12 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
             if (res != null) {
               savedReplies.remove(key);
               ReplyInfo replyInfo = RequestUtils.replyCast(res);
-              if (loadingState.value.isSuccess) {
-                List<ReplyInfo>? list = loadingState.value.data;
-                if (list == null) {
+              if (loadingState.value case Success(:final response)) {
+                if (response == null) {
                   loadingState.value = Success([replyInfo]);
                 } else {
                   if (oid != null) {
-                    list.insert(hasUpTop ? 1 : 0, replyInfo);
+                    response.insert(hasUpTop ? 1 : 0, replyInfo);
                   } else {
                     replyItem!
                       ..count += 1
@@ -206,9 +205,8 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
   }
 
   void onRemove(int index, ReplyInfo item, int? subIndex) {
-    List<ReplyInfo> list = loadingState.value.data!;
     if (subIndex == null) {
-      list.removeAt(index);
+      loadingState.value.data!.removeAt(index);
     } else {
       item
         ..count -= 1
@@ -241,12 +239,12 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
       isUpTop: isUpTop,
     );
     if (res.isSuccess) {
-      List<ReplyInfo> list = loadingState.value.data!;
       item.replyControl.isUpTop = !isUpTop;
       if (!isUpTop && index != 0) {
-        list[0].replyControl.isUpTop = false;
-        final item = list.removeAt(index);
-        list.insert(0, item);
+        final list = loadingState.value.data!;
+        list
+          ..first.replyControl.isUpTop = false
+          ..insert(0, list.removeAt(index));
       }
       loadingState.refresh();
       SmartDialog.showToast('${isUpTop ? '取消' : ''}置顶成功');

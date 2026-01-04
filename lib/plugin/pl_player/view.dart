@@ -2476,7 +2476,6 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         .roomId,
                     msg: item.content.text,
                     extra: extra,
-                    ctr: plPlayerController,
                   ),
                 ),
               ],

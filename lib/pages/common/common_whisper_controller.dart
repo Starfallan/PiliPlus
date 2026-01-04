@@ -65,10 +65,9 @@ abstract class CommonWhisperController<R>
   Future<void> onClearUnread() async {
     final res = await ImGrpc.clearUnread(pageType: sessionPageType);
     if (res.isSuccess) {
-      if (loadingState.value.isSuccess) {
-        List<Session>? list = loadingState.value.data;
-        if (list != null && list.isNotEmpty) {
-          for (final item in list) {
+      if (loadingState.value case Success(:final response)) {
+        if (response != null && response.isNotEmpty) {
+          for (final item in response) {
             if (item.hasUnread()) {
               item.clearUnread();
             }

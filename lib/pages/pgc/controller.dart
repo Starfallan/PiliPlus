@@ -2,7 +2,6 @@ import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/pgc.dart';
 import 'package:PiliPlus/models/common/home_tab_type.dart';
-import 'package:PiliPlus/models_new/fav/fav_pgc/data.dart';
 import 'package:PiliPlus/models_new/fav/fav_pgc/list.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_index_result/list.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_timeline/result.dart';
@@ -100,10 +99,9 @@ class PgcController
       pn: followPage,
     );
 
-    if (res.isSuccess) {
-      FavPgcData data = res.data;
-      List<FavPgcItemModel>? list = data.list;
-      followCount.value = data.total ?? -1;
+    if (res case Success(:final response)) {
+      final list = response.list;
+      followCount.value = response.total ?? -1;
 
       if (list == null || list.isEmpty) {
         followEnd = true;
@@ -120,8 +118,8 @@ class PgcController
         }
         followState.value = Success(list);
         followController?.animToTop();
-      } else if (followState.value.isSuccess) {
-        final currentList = followState.value.data!..addAll(list);
+      } else if (followState.value case Success(:final response)) {
+        final currentList = response!..addAll(list);
         if (currentList.length >= followCount.value) {
           followEnd = true;
         }

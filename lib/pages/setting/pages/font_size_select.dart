@@ -22,7 +22,7 @@ class _FontSizeSelectPageState extends State<FontSizeSelectPage> {
     GStorage.setting.put(SettingBoxKey.defaultTextScale, currentSize);
     Get
       ..back(result: currentSize)
-      ..forceAppUpdate();
+      ..appUpdate();
   }
 
   @override

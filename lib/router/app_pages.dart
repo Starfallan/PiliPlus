@@ -75,169 +75,120 @@ import 'package:get/get.dart';
 
 class Routes {
   static final List<GetPage<dynamic>> getPages = [
-    CustomGetPage(name: '/', page: () => const MainApp()),
+    GetPage(name: '/', page: () => const MainApp()),
     // 首页(推荐)
-    CustomGetPage(name: '/home', page: () => const HomePage()),
+    GetPage(name: '/home', page: () => const HomePage()),
     // 热门
-    CustomGetPage(name: '/hot', page: () => const HotPage()),
+    GetPage(name: '/hot', page: () => const HotPage()),
     // 视频详情
-    CustomGetPage(name: '/videoV', page: () => const VideoDetailPageV()),
+    GetPage(name: '/videoV', page: () => const VideoDetailPageV()),
     //
-    CustomGetPage(name: '/webview', page: () => const WebviewPage()),
+    GetPage(name: '/webview', page: () => const WebviewPage()),
     // 设置
-    CustomGetPage(name: '/setting', page: () => const SettingPage()),
+    GetPage(name: '/setting', page: () => const SettingPage()),
     //
-    CustomGetPage(name: '/fav', page: () => const FavPage()),
+    GetPage(name: '/fav', page: () => const FavPage()),
     //
-    CustomGetPage(name: '/favDetail', page: () => const FavDetailPage()),
+    GetPage(name: '/favDetail', page: () => const FavDetailPage()),
     // 稍后再看
-    CustomGetPage(name: '/later', page: () => const LaterPage()),
+    GetPage(name: '/later', page: () => const LaterPage()),
     // 历史记录
-    CustomGetPage(name: '/history', page: () => const HistoryPage()),
+    GetPage(name: '/history', page: () => const HistoryPage()),
     // 搜索页面
-    CustomGetPage(name: '/search', page: () => const SearchPage()),
+    GetPage(name: '/search', page: () => const SearchPage()),
     // 搜索结果
-    CustomGetPage(name: '/searchResult', page: () => const SearchResultPage()),
+    GetPage(name: '/searchResult', page: () => const SearchResultPage()),
     // 动态
-    CustomGetPage(name: '/dynamics', page: () => const DynamicsPage()),
+    GetPage(name: '/dynamics', page: () => const DynamicsPage()),
     // 动态详情
-    CustomGetPage(
-      name: '/dynamicDetail',
-      page: () => const DynamicDetailPage(),
-    ),
+    GetPage(name: '/dynamicDetail', page: () => const DynamicDetailPage()),
     // 关注
-    CustomGetPage(name: '/follow', page: () => const FollowPage()),
+    GetPage(name: '/follow', page: () => const FollowPage()),
     // 粉丝
-    CustomGetPage(name: '/fan', page: () => const FansPage()),
+    GetPage(name: '/fan', page: () => const FansPage()),
     // 直播详情
-    CustomGetPage(name: '/liveRoom', page: () => const LiveRoomPage()),
+    GetPage(name: '/liveRoom', page: () => const LiveRoomPage()),
     // 用户中心
-    CustomGetPage(name: '/member', page: () => const MemberPage()),
-    CustomGetPage(name: '/memberSearch', page: () => const MemberSearchPage()),
+    GetPage(name: '/member', page: () => const MemberPage()),
+    GetPage(name: '/memberSearch', page: () => const MemberSearchPage()),
     // 推荐流设置
-    CustomGetPage(
-      name: '/recommendSetting',
-      page: () => const RecommendSetting(),
-    ),
+    GetPage(name: '/recommendSetting', page: () => const RecommendSetting()),
     // 音视频设置
-    CustomGetPage(name: '/videoSetting', page: () => const VideoSetting()),
+    GetPage(name: '/videoSetting', page: () => const VideoSetting()),
     // 播放器设置
-    CustomGetPage(name: '/playSetting', page: () => const PlaySetting()),
+    GetPage(name: '/playSetting', page: () => const PlaySetting()),
     // 外观设置
-    CustomGetPage(name: '/styleSetting', page: () => const StyleSetting()),
+    GetPage(name: '/styleSetting', page: () => const StyleSetting()),
     // 隐私设置
-    CustomGetPage(name: '/privacySetting', page: () => const PrivacySetting()),
+    GetPage(name: '/privacySetting', page: () => const PrivacySetting()),
     // 其它设置
-    CustomGetPage(name: '/extraSetting', page: () => const ExtraSetting()),
+    GetPage(name: '/extraSetting', page: () => const ExtraSetting()),
     //
-    CustomGetPage(name: '/blackListPage', page: () => const BlackListPage()),
-    CustomGetPage(name: '/colorSetting', page: () => const ColorSelectPage()),
-    CustomGetPage(
-      name: '/fontSizeSetting',
-      page: () => const FontSizeSelectPage(),
-    ),
+    GetPage(name: '/blackListPage', page: () => const BlackListPage()),
+    GetPage(name: '/colorSetting', page: () => const ColorSelectPage()),
+    GetPage(name: '/fontSizeSetting', page: () => const FontSizeSelectPage()),
     // 屏幕帧率
-    CustomGetPage(
-      name: '/displayModeSetting',
-      page: () => const SetDisplayMode(),
-    ),
+    GetPage(name: '/displayModeSetting', page: () => const SetDisplayMode()),
     // 关于
-    CustomGetPage(name: '/about', page: () => const AboutPage()),
+    GetPage(name: '/about', page: () => const AboutPage()),
     //
-    CustomGetPage(name: '/articlePage', page: () => const ArticlePage()),
+    GetPage(name: '/articlePage', page: () => const ArticlePage()),
 
     // 历史记录搜索
-    CustomGetPage(name: '/playSpeedSet', page: () => const PlaySpeedPage()),
+    GetPage(name: '/playSpeedSet', page: () => const PlaySpeedPage()),
     // 收藏搜索
-    CustomGetPage(name: '/favSearch', page: () => const FavSearchPage()),
-    CustomGetPage(
-      name: '/historySearch',
-      page: () => const HistorySearchPage(),
-    ),
-    CustomGetPage(name: '/laterSearch', page: () => const LaterSearchPage()),
-    CustomGetPage(name: '/followSearch', page: () => const FollowSearchPage()),
+    GetPage(name: '/favSearch', page: () => const FavSearchPage()),
+    GetPage(name: '/historySearch', page: () => const HistorySearchPage()),
+    GetPage(name: '/laterSearch', page: () => const LaterSearchPage()),
+    GetPage(name: '/followSearch', page: () => const FollowSearchPage()),
     // 消息页面
-    CustomGetPage(name: '/whisper', page: () => const WhisperPage()),
+    GetPage(name: '/whisper', page: () => const WhisperPage()),
     // 私信详情
-    CustomGetPage(
-      name: '/whisperDetail',
-      page: () => const WhisperDetailPage(),
-    ),
+    GetPage(name: '/whisperDetail', page: () => const WhisperDetailPage()),
     // 回复我的
-    CustomGetPage(name: '/replyMe', page: () => const ReplyMePage()),
+    GetPage(name: '/replyMe', page: () => const ReplyMePage()),
     // @我的
-    CustomGetPage(name: '/atMe', page: () => const AtMePage()),
+    GetPage(name: '/atMe', page: () => const AtMePage()),
     // 收到的赞
-    CustomGetPage(name: '/likeMe', page: () => const LikeMePage()),
+    GetPage(name: '/likeMe', page: () => const LikeMePage()),
     // 系统消息
-    CustomGetPage(name: '/sysMsg', page: () => const SysMsgPage()),
+    GetPage(name: '/sysMsg', page: () => const SysMsgPage()),
     // 登录页面
-    CustomGetPage(name: '/loginPage', page: () => const LoginPage()),
+    GetPage(name: '/loginPage', page: () => const LoginPage()),
     // 用户动态
-    CustomGetPage(
-      name: '/memberDynamics',
-      page: () => const MemberDynamicsPage(),
-    ),
+    GetPage(name: '/memberDynamics', page: () => const MemberDynamicsPage()),
     // 日志
-    CustomGetPage(name: '/logs', page: () => const LogsPage()),
+    GetPage(name: '/logs', page: () => const LogsPage()),
     // 订阅
-    CustomGetPage(name: '/subscription', page: () => const SubPage()),
+    GetPage(name: '/subscription', page: () => const SubPage()),
     // 订阅详情
-    CustomGetPage(name: '/subDetail', page: () => const SubDetailPage()),
+    GetPage(name: '/subDetail', page: () => const SubDetailPage()),
     // 弹幕屏蔽管理
-    CustomGetPage(name: '/danmakuBlock', page: () => const DanmakuBlockPage()),
-    CustomGetPage(name: '/sponsorBlock', page: () => const SponsorBlockPage()),
-    CustomGetPage(name: '/createFav', page: () => const CreateFavPage()),
-    CustomGetPage(name: '/editProfile', page: () => const EditProfilePage()),
-    CustomGetPage(
-      name: '/settingsSearch',
-      page: () => const SettingsSearchPage(),
-    ),
-    CustomGetPage(
-      name: '/webdavSetting',
-      page: () => const WebDavSettingPage(),
-    ),
-    CustomGetPage(
-      name: '/searchTrending',
-      page: () => const SearchTrendingPage(),
-    ),
-    CustomGetPage(name: '/dynTopic', page: () => const DynTopicPage()),
-    CustomGetPage(name: '/articleList', page: () => const ArticleListPage()),
-    CustomGetPage(name: '/barSetting', page: () => const BarSetPage()),
-    CustomGetPage(name: '/upowerRank', page: () => const UpowerRankPage()),
-    CustomGetPage(name: '/spaceSetting', page: () => const SpaceSettingPage()),
-    CustomGetPage(name: '/dynTopicRcmd', page: () => const DynTopicRcmdPage()),
-    CustomGetPage(name: '/matchInfo', page: () => const MatchInfoPage()),
-    CustomGetPage(name: '/msgLikeDetail', page: () => const LikeDetailPage()),
-    CustomGetPage(
-      name: '/liveDmBlockPage',
-      page: () => const LiveDmBlockPage(),
-    ),
-    CustomGetPage(name: '/createVote', page: () => const CreateVotePage()),
-    CustomGetPage(name: '/musicDetail', page: () => const MusicDetailPage()),
-    CustomGetPage(
-      name: '/popularSeries',
-      page: () => const PopularSeriesPage(),
-    ),
-    CustomGetPage(
-      name: '/popularPrecious',
-      page: () => const PopularPreciousPage(),
-    ),
-    CustomGetPage(name: '/audio', page: () => const AudioPage()),
-    CustomGetPage(name: '/mainReply', page: () => const MainReplyPage()),
-    CustomGetPage(name: '/followed', page: () => const FollowedPage()),
-    CustomGetPage(name: '/sameFollowing', page: () => const FollowSamePage()),
-    CustomGetPage(name: '/download', page: () => const DownloadPage()),
-    CustomGetPage(name: '/dlna', page: () => const DLNAPage()),
+    GetPage(name: '/danmakuBlock', page: () => const DanmakuBlockPage()),
+    GetPage(name: '/sponsorBlock', page: () => const SponsorBlockPage()),
+    GetPage(name: '/createFav', page: () => const CreateFavPage()),
+    GetPage(name: '/editProfile', page: () => const EditProfilePage()),
+    GetPage(name: '/settingsSearch', page: () => const SettingsSearchPage()),
+    GetPage(name: '/webdavSetting', page: () => const WebDavSettingPage()),
+    GetPage(name: '/searchTrending', page: () => const SearchTrendingPage()),
+    GetPage(name: '/dynTopic', page: () => const DynTopicPage()),
+    GetPage(name: '/articleList', page: () => const ArticleListPage()),
+    GetPage(name: '/barSetting', page: () => const BarSetPage()),
+    GetPage(name: '/upowerRank', page: () => const UpowerRankPage()),
+    GetPage(name: '/spaceSetting', page: () => const SpaceSettingPage()),
+    GetPage(name: '/dynTopicRcmd', page: () => const DynTopicRcmdPage()),
+    GetPage(name: '/matchInfo', page: () => const MatchInfoPage()),
+    GetPage(name: '/msgLikeDetail', page: () => const LikeDetailPage()),
+    GetPage(name: '/liveDmBlockPage', page: () => const LiveDmBlockPage()),
+    GetPage(name: '/createVote', page: () => const CreateVotePage()),
+    GetPage(name: '/musicDetail', page: () => const MusicDetailPage()),
+    GetPage(name: '/popularSeries', page: () => const PopularSeriesPage()),
+    GetPage(name: '/popularPrecious', page: () => const PopularPreciousPage()),
+    GetPage(name: '/audio', page: () => const AudioPage()),
+    GetPage(name: '/mainReply', page: () => const MainReplyPage()),
+    GetPage(name: '/followed', page: () => const FollowedPage()),
+    GetPage(name: '/sameFollowing', page: () => const FollowSamePage()),
+    GetPage(name: '/download', page: () => const DownloadPage()),
+    GetPage(name: '/dlna', page: () => const DLNAPage()),
   ];
-}
-
-class CustomGetPage<T> extends GetPage<T> {
-  CustomGetPage({
-    required super.name,
-    required super.page,
-    super.popGesture = false,
-    super.fullscreenDialog = false,
-    super.showCupertinoParallax = false,
-  });
 }

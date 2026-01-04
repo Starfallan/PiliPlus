@@ -8,6 +8,7 @@ import 'package:PiliPlus/common/widgets/image/custom_grid_view.dart'
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/http/fav.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/audio_normalization.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/models/common/member/tab_type.dart';
@@ -806,8 +807,8 @@ List<SettingsModel> get extraSettings => [
     onTap: (context) async {
       if (Accounts.main.isLogin) {
         final res = await FavHttp.allFavFolders(Accounts.main.mid);
-        if (res.isSuccess) {
-          final list = res.data.list;
+        if (res case Success(:final response)) {
+          final list = response.list;
           if (list == null || list.isEmpty) {
             return;
           }

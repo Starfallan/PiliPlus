@@ -1,12 +1,17 @@
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/models_new/live/live_danmaku/danmaku_msg.dart';
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
+import 'package:PiliPlus/pages/video/widgets/header_control.dart';
+import 'package:PiliPlus/utils/accounts.dart';
+import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class LiveRoomChatPanel extends StatelessWidget {
@@ -14,12 +19,15 @@ class LiveRoomChatPanel extends StatelessWidget {
     super.key,
     required this.roomId,
     required this.liveRoomController,
-    this.isPP = false,
+    required this.isPP,
+    required this.onAtUser,
   });
 
   final int roomId;
   final LiveRoomController liveRoomController;
   final bool isPP;
+  final ValueChanged<DanmakuMsg> onAtUser;
+
   bool get disableAutoScroll => liveRoomController.disableAutoScroll.value;
 
   @override
@@ -31,6 +39,10 @@ class LiveRoomChatPanel extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.9)
         : Colors.white.withValues(alpha: 0.6);
     late final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+    late final colorScheme = ColorScheme.of(context);
+    late final primary = colorScheme.isDark
+        ? colorScheme.primary
+        : colorScheme.inversePrimary;
     return Stack(
       children: [
         Obx(
@@ -67,8 +79,16 @@ class LiveRoomChatPanel extends StatelessWidget {
                               ? null
                               : (TapGestureRecognizer()
                                   ..onTap = () =>
-                                      Get.toNamed('/member?mid=${item.uid}')),
+                                      _showMsgDialog(context, item)),
                         ),
+                        if (item.reply case final reply?)
+                          TextSpan(
+                            text: '@${reply.name} ',
+                            style: TextStyle(color: primary, fontSize: 14),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () =>
+                                  Get.toNamed('/member?mid=${reply.mid}'),
+                          ),
                         _buildMsg(devicePixelRatio, item),
                       ],
                     ),
@@ -251,5 +271,84 @@ class LiveRoomChatPanel extends StatelessWidget {
         ),
       );
     }
+  }
+
+  void _showMsgDialog(BuildContext context, DanmakuMsg item) {
+    showDialog(
+      context: context,
+      builder: (context) => SimpleDialog(
+        clipBehavior: .hardEdge,
+        contentPadding: const .symmetric(vertical: 12),
+        constraints: const BoxConstraints(minWidth: 280, maxWidth: 320),
+        title: Column(
+          spacing: 4,
+          mainAxisSize: .min,
+          crossAxisAlignment: .start,
+          children: [
+            Text(
+              item.name,
+              style: const TextStyle(fontSize: 15),
+            ),
+            Text(
+              item.text,
+              style: TextStyle(
+                fontSize: 13,
+                color: ColorScheme.of(context).outline,
+              ),
+            ),
+          ],
+        ),
+        children: [
+          ListTile(
+            dense: true,
+            onTap: () {
+              Get
+                ..back()
+                ..toNamed('/member?mid=${item.uid}');
+            },
+            title: const Text('去TA的个人空间', style: TextStyle(fontSize: 14)),
+          ),
+          ListTile(
+            dense: true,
+            onTap: () {
+              Get.back();
+              onAtUser(item);
+            },
+            title: const Text('@TA', style: TextStyle(fontSize: 14)),
+          ),
+          ListTile(
+            dense: true,
+            title: const Text('屏蔽发送者', style: TextStyle(fontSize: 14)),
+            onTap: () async {
+              Get.back();
+              if (!Accounts.main.isLogin) return;
+              final res = await LiveHttp.liveShieldUser(
+                uid: item.uid,
+                roomid: roomId,
+                type: 1,
+              );
+              if (res.isSuccess) {
+                SmartDialog.showToast('屏蔽成功');
+              } else {
+                res.toast();
+              }
+            },
+          ),
+          ListTile(
+            dense: true,
+            title: const Text('举报选中弹幕', style: TextStyle(fontSize: 14)),
+            onTap: () {
+              Get.back();
+              HeaderControl.reportLiveDanmaku(
+                context,
+                roomId: roomId,
+                msg: item.text,
+                extra: item.extra,
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

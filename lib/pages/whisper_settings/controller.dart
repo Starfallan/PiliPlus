@@ -40,7 +40,8 @@ class WhisperSettingsController
     final res = await ImGrpc.setImSettings(settings: settings);
     if (!res.isSuccess) {
       res.toast();
+      return false;
     }
-    return res.isSuccess;
+    return true;
   }
 }

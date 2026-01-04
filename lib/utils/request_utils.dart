@@ -279,17 +279,16 @@ abstract final class RequestUtils {
       if (id != null) {
         await Future.delayed(const Duration(milliseconds: 450));
         final res = await DynamicsHttp.dynamicDetail(id: id);
-        if (res.isSuccess) {
+        if (res case final Success<DynamicItemModel> e) {
           final ctr = Get.find<DynamicsTabController>(tag: 'all');
-          if (ctr.loadingState.value.isSuccess) {
-            List<DynamicItemModel>? list = ctr.loadingState.value.data;
-            if (list != null) {
-              list.insert(0, res.data);
+          if (ctr.loadingState.value case Success(:final response)) {
+            if (response != null) {
+              response.insert(0, e.response);
               ctr.loadingState.refresh();
               return;
             }
           }
-          ctr.loadingState.value = Success([res.data]);
+          ctr.loadingState.value = Success([e.response]);
         }
       }
     } catch (e) {
@@ -393,8 +392,10 @@ abstract final class RequestUtils {
     required dynamic mid,
   }) {
     FavHttp.allFavFolders(mid).then((res) {
-      if (context.mounted && res.dataOrNull?.list?.isNotEmpty == true) {
-        final list = res.data.list!;
+      if (!context.mounted) return;
+      if (res case Success(:final response)) {
+        final list = response.list;
+        if (list == null || list.isEmpty) return;
         int? checkedId;
         showDialog(
           context: context,
@@ -653,16 +654,15 @@ abstract final class RequestUtils {
 
   static Future<void> showUserRealName(String mid) async {
     final res = await UserHttp.getUserRealName(mid);
-    if (res.isSuccess) {
-      final data = res.data;
-      final show = !data.name.isNullOrEmpty;
+    if (res case Success(:final response)) {
+      final show = !response.name.isNullOrEmpty;
       showDialog(
         context: Get.context!,
         builder: (context) => AlertDialog(
           title: SelectableText(
-            show ? data.name! : data.rejectPage?.title ?? '',
+            show ? response.name! : response.rejectPage?.title ?? '',
           ),
-          content: show ? null : Text(data.rejectPage?.text ?? ''),
+          content: show ? null : Text(response.rejectPage?.text ?? ''),
           actions: [
             TextButton(
               onPressed: Get.back,

@@ -94,14 +94,13 @@ class LiveController extends CommonListController with AccountMixin {
 
   Future<void> queryTop() async {
     final res = await LiveHttp.liveFeedIndex(pn: page, moduleSelect: true);
-    if (res.isSuccess) {
-      final data = res.data;
+    if (res case Success(:final response)) {
       topState.value = Pair(
-        first: data.followItem,
-        second: data.areaItem,
+        first: response.followItem,
+        second: response.areaItem,
       );
       areaIndex.value =
-          (data.areaItem?.cardData?.areaEntranceV3?.list?.indexWhere(
+          (response.areaItem?.cardData?.areaEntranceV3?.list?.indexWhere(
                 (e) => e.areaV2Id == areaId && e.areaV2ParentId == parentAreaId,
               ) ??
               -2) +

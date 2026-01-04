@@ -921,17 +921,17 @@ class ReplyItemGrpc extends StatelessWidget {
                   return;
                 }
                 SmartDialog.showLoading(msg: '删除中...');
-                final result = await VideoHttp.replyDel(
+                final res = await VideoHttp.replyDel(
                   type: item.type.toInt(),
                   oid: item.oid.toInt(),
                   rpid: item.id.toInt(),
                 );
                 SmartDialog.dismiss();
-                if (result.isSuccess) {
+                if (res.isSuccess) {
                   SmartDialog.showToast('删除成功');
                   onDelete();
                 } else {
-                  SmartDialog.showToast('删除失败, $result');
+                  SmartDialog.showToast('删除失败, $res');
                 }
               },
               minLeadingWidth: 0,

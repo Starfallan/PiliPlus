@@ -38,7 +38,8 @@ class _SuperChatPanelState extends DebounceStreamState<SuperChatPanel, bool>
           final index = widget.controller.superChatMsg.indexWhere(
             (i) => i.id == (key as ValueKey<int>).value,
           );
-          return index == -1 ? null : index;
+          // Multiply by 2 to account for separators
+          return index == -1 ? null : index * 2;
         },
         itemBuilder: (context, index) {
           final item = widget.controller.superChatMsg[index];

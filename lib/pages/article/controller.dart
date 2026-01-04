@@ -83,28 +83,27 @@ class ArticleController extends CommonDynController {
 
   Future<bool> queryOpus(String opusId) async {
     final res = await DynamicsHttp.opusDetail(opusId: opusId);
-    if (res.isSuccess) {
-      final opusData = res.data;
+    if (res case Success(:final response)) {
       //fallback
-      if (opusData.fallback?.id != null) {
-        id = opusData.fallback!.id!;
+      if (response.fallback?.id != null) {
+        id = response.fallback!.id!;
         type = 'read';
         init();
         return false;
       }
-      this.opusData = opusData;
-      commentType = opusData.basic!.commentType!;
-      commentId = int.parse(opusData.basic!.commentIdStr!);
+      opusData = response;
+      commentType = response.basic!.commentType!;
+      commentId = int.parse(response.basic!.commentIdStr!);
       if (showDynActionBar) {
-        if (opusData.modules.moduleStat != null) {
-          stats.value = opusData.modules.moduleStat;
+        if (response.modules.moduleStat != null) {
+          stats.value = response.modules.moduleStat;
         } else {
           getArticleInfo();
         }
       }
       summary
-        ..author ??= opusData.modules.moduleAuthor
-        ..title ??= opusData.modules.moduleTag?.text;
+        ..author ??= response.modules.moduleAuthor
+        ..title ??= response.modules.moduleTag?.text;
       return true;
     } else {
       loadingState.value = res as Error;
@@ -114,12 +113,12 @@ class ArticleController extends CommonDynController {
 
   Future<bool> queryRead(int cvid) async {
     final res = await DynamicsHttp.articleView(cvId: cvid);
-    if (res.isSuccess) {
-      articleData = res.data;
+    if (res case Success(:final response)) {
+      articleData = response;
       summary
-        ..author ??= articleData!.author
-        ..title ??= articleData!.title
-        ..cover ??= articleData!.originImageUrls?.firstOrNull;
+        ..author ??= response.author
+        ..title ??= response.title
+        ..cover ??= response.originImageUrls?.firstOrNull;
 
       if (showDynActionBar) {
         getArticleInfo();

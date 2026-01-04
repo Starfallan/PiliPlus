@@ -169,8 +169,7 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
     ThemeData theme,
     LoadingState<List<AreaItem>?> loadingState,
   ) {
-    if (loadingState.isSuccess) {
-      final List<AreaItem>? list = loadingState.data;
+    if (loadingState case Success(:final response)) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Column(
@@ -191,23 +190,23 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
               ),
             ),
             const SizedBox(height: 8),
-            if (list != null && list.isNotEmpty) ...[
+            if (response != null && response.isNotEmpty) ...[
               SortableWrap(
                 onSortStart: (index) {
                   _controller.isEditing.value = true;
                 },
                 onSorted: (int oldIndex, int newIndex) {
-                  list.insert(newIndex, list.removeAt(oldIndex));
+                  response.insert(newIndex, response.removeAt(oldIndex));
                 },
                 spacing: 12,
                 runSpacing: 8,
-                children: list
+                children: response
                     .map(
                       (item) => _favTagItem(
                         theme: theme,
                         item: item,
                         onPressed: () {
-                          list.remove(item);
+                          response.remove(item);
                           _controller
                             ..favInfo[item.id] = false
                             ..favState.refresh();
@@ -276,27 +275,30 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
               top: 0,
               right: 16,
               child: Obx(() {
-                if (_controller.isEditing.value &&
-                    _controller.favState.value.isSuccess) {
-                  bool? isFav = _controller.favInfo[item.id];
-                  if (isFav == null) {
-                    isFav = _controller.favState.value.data.contains(item);
-                    _controller.favInfo[item.id] = isFav;
+                if (_controller.isEditing.value) {
+                  if (_controller.favState.value case Success(
+                    :final response,
+                  )) {
+                    bool? isFav = _controller.favInfo[item.id];
+                    if (isFav == null) {
+                      isFav = response.contains(item);
+                      _controller.favInfo[item.id] = isFav;
+                    }
+                    return iconButton(
+                      size: 17,
+                      iconSize: 13,
+                      icon: isFav
+                          ? const Icon(MdiIcons.check)
+                          : const Icon(MdiIcons.plus),
+                      bgColor: isFav
+                          ? theme.colorScheme.onInverseSurface
+                          : theme.colorScheme.secondaryContainer,
+                      iconColor: isFav
+                          ? theme.colorScheme.outline
+                          : theme.colorScheme.onSecondaryContainer,
+                      onPressed: onPressed,
+                    );
                   }
-                  return iconButton(
-                    size: 17,
-                    iconSize: 13,
-                    icon: isFav
-                        ? const Icon(MdiIcons.check)
-                        : const Icon(MdiIcons.plus),
-                    bgColor: isFav
-                        ? theme.colorScheme.onInverseSurface
-                        : theme.colorScheme.secondaryContainer,
-                    iconColor: isFav
-                        ? theme.colorScheme.outline
-                        : theme.colorScheme.onSecondaryContainer,
-                    onPressed: onPressed,
-                  );
                 }
                 return const SizedBox.shrink();
               }),

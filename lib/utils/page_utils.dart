@@ -4,13 +4,13 @@ import 'package:PiliPlus/common/widgets/interactiveviewer_gallery/hero_dialog_ro
 import 'package:PiliPlus/common/widgets/interactiveviewer_gallery/interactiveviewer_gallery.dart';
 import 'package:PiliPlus/grpc/im.dart';
 import 'package:PiliPlus/http/dynamics.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/episode.dart';
-import 'package:PiliPlus/models_new/pgc/pgc_info_model/result.dart';
 import 'package:PiliPlus/pages/common/common_intro_controller.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/contact/view.dart';
@@ -66,18 +66,22 @@ abstract final class PageUtils {
 
     List<UserModel> userList = <UserModel>[];
 
-    final shareListRes = await ImGrpc.shareList(size: 3);
-    if (shareListRes.isSuccess && shareListRes.data.sessionList.isNotEmpty) {
-      userList.addAll(
-        shareListRes.data.sessionList.map<UserModel>(
-          (item) => UserModel(
-            mid: item.talkerId.toInt(),
-            name: item.talkerUname,
-            avatar: item.talkerIcon,
+    final res = await ImGrpc.shareList(size: 5);
+    if (res case Success(:final response)) {
+      if (response.sessionList.isNotEmpty) {
+        userList.addAll(
+          response.sessionList.map<UserModel>(
+            (item) => UserModel(
+              mid: item.talkerId.toInt(),
+              name: item.talkerUname,
+              avatar: item.talkerIcon,
+            ),
           ),
-        ),
-      );
-    } else if (context.mounted) {
+        );
+      }
+    }
+
+    if (userList.isEmpty && context.mounted) {
       final UserModel? userModel = await Navigator.of(context).push(
         GetPageRoute(page: () => const ContactPage()),
       );
@@ -291,9 +295,8 @@ abstract final class PageUtils {
       type: rid != null ? 2 : null,
     );
     SmartDialog.dismiss();
-    if (res.isSuccess) {
-      final data = res.data;
-      if (data.basic?.commentType == 12) {
+    if (res case Success(:final response)) {
+      if (response.basic?.commentType == 12) {
         toDupNamed(
           '/articlePage',
           parameters: {
@@ -306,7 +309,7 @@ abstract final class PageUtils {
         toDupNamed(
           '/dynamicDetail',
           arguments: {
-            'item': data,
+            'item': response,
           },
           off: off,
         );
@@ -808,11 +811,10 @@ abstract final class PageUtils {
   }) async {
     try {
       SmartDialog.showLoading(msg: '资源获取中');
-      final result = await SearchHttp.pgcInfo(seasonId: seasonId, epId: epId);
+      final res = await SearchHttp.pgcInfo(seasonId: seasonId, epId: epId);
       SmartDialog.dismiss();
-      if (result.isSuccess) {
-        PgcInfoModel data = result.data;
-        final episodes = data.episodes;
+      if (res case Success(:final response)) {
+        final episodes = response.episodes;
         final hasEpisode = episodes != null && episodes.isNotEmpty;
 
         EpisodeItem? episode;
@@ -822,13 +824,13 @@ abstract final class PageUtils {
             videoType: VideoType.ugc,
             bvid: episode.bvid!,
             cid: episode.cid!,
-            seasonId: data.seasonId,
+            seasonId: response.seasonId,
             epId: episode.epId,
             cover: episode.cover,
             progress: progress == null ? null : int.tryParse(progress),
             extraArguments: {
               'pgcApi': true,
-              'pgcItem': data,
+              'pgcItem': response,
             },
           );
         }
@@ -843,7 +845,7 @@ abstract final class PageUtils {
 
           // find section
           if (episode == null) {
-            final sections = data.section;
+            final sections = response.section;
             if (sections != null && sections.isNotEmpty) {
               for (final section in sections) {
                 final episodes = section.episodes;
@@ -864,24 +866,24 @@ abstract final class PageUtils {
         if (hasEpisode) {
           episode ??= findEpisode(
             episodes,
-            epId: data.userStatus?.progress?.lastEpId,
+            epId: response.userStatus?.progress?.lastEpId,
           );
           toVideoPage(
             videoType: VideoType.pgc,
             bvid: episode.bvid!,
             cid: episode.cid!,
-            seasonId: data.seasonId,
+            seasonId: response.seasonId,
             epId: episode.epId,
-            pgcType: data.type,
+            pgcType: response.type,
             cover: episode.cover,
             progress: progress == null ? null : int.tryParse(progress),
             extraArguments: {
-              'pgcItem': data,
+              'pgcItem': response,
             },
           );
           return;
         } else {
-          episode ??= data.section?.firstOrNull?.episodes?.firstOrNull;
+          episode ??= response.section?.firstOrNull?.episodes?.firstOrNull;
           if (episode != null) {
             viewSection(episode);
             return;
@@ -890,7 +892,7 @@ abstract final class PageUtils {
 
         SmartDialog.showToast('资源加载失败');
       } else {
-        result.toast();
+        res.toast();
       }
     } catch (e) {
       SmartDialog.dismiss();
@@ -908,9 +910,8 @@ abstract final class PageUtils {
       SmartDialog.showLoading(msg: '资源获取中');
       final res = await SearchHttp.pugvInfo(seasonId: seasonId, epId: epId);
       SmartDialog.dismiss();
-      if (res.isSuccess) {
-        PgcInfoModel data = res.data;
-        final episodes = data.episodes;
+      if (res case Success(:final response)) {
+        final episodes = response.episodes;
         if (episodes != null && episodes.isNotEmpty) {
           EpisodeItem? episode;
           if (aid != null) {
@@ -918,18 +919,18 @@ abstract final class PageUtils {
           }
           episode ??= findEpisode(
             episodes,
-            epId: epId ?? data.userStatus?.progress?.lastEpId,
+            epId: epId ?? response.userStatus?.progress?.lastEpId,
             isPgc: false,
           );
           toVideoPage(
             videoType: VideoType.pugv,
             aid: episode.aid!,
             cid: episode.cid!,
-            seasonId: data.seasonId,
+            seasonId: response.seasonId,
             epId: episode.id,
             cover: episode.cover,
             extraArguments: {
-              'pgcItem': data,
+              'pgcItem': response,
             },
           );
         } else {

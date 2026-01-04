@@ -69,28 +69,26 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                     ),
                   ),
                   Expanded(
-                    child: Padding(
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.all(12),
-                      child: SingleChildScrollView(
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: response
-                              .map(
-                                (e) => SearchText(
-                                  text: e.keyword,
-                                  onTap: (keyword) {
-                                    showConfirmDialog(
-                                      context: context,
-                                      title: '删除屏蔽词？',
-                                      content: '该屏蔽词将不再生效',
-                                      onConfirm: () => _controller.onRemove(e),
-                                    );
-                                  },
-                                ),
-                              )
-                              .toList(),
-                        ),
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: response
+                            .map(
+                              (e) => SearchText(
+                                text: e.keyword,
+                                onTap: (keyword) {
+                                  showConfirmDialog(
+                                    context: context,
+                                    title: '删除屏蔽词？',
+                                    content: '该屏蔽词将不再生效',
+                                    onConfirm: () => _controller.onRemove(e),
+                                  );
+                                },
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
                   ),

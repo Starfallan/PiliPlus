@@ -61,11 +61,12 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
             ),
           ),
           Obx(
-            () => _controller.sessionSs.value.isSuccess
-                ? _buildBlockItem(
-                    _controller.sessionSs.value.data.followStatus == 128,
-                  )
-                : const SizedBox.shrink(),
+            () {
+              if (_controller.sessionSs.value case Success(:final response)) {
+                return _buildBlockItem(response.followStatus == 128);
+              }
+              return const SizedBox.shrink();
+            },
           ),
           divider2,
           ListTile(

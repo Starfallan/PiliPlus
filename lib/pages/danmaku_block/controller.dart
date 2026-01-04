@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:PiliPlus/http/danmaku_block.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/dm_block_type.dart';
 import 'package:PiliPlus/models/user/danmaku_block.dart';
 import 'package:archive/archive.dart' show getCrc32;
@@ -34,13 +35,12 @@ class DanmakuBlockController extends GetxController
     SmartDialog.showLoading(msg: '正在同步弹幕屏蔽规则……');
     final result = await DanmakuFilterHttp.danmakuFilter();
     SmartDialog.dismiss();
-    if (result.isSuccess) {
-      final data = result.data;
-      rules[0].addAll(data.rule);
-      rules[1].addAll(data.rule1);
-      rules[2].addAll(data.rule2);
-      if (data.toast != null) {
-        SmartDialog.showToast(data.toast!);
+    if (result case Success(:final response)) {
+      rules[0].addAll(response.rule);
+      rules[1].addAll(response.rule1);
+      rules[2].addAll(response.rule2);
+      if (response.toast case final toast?) {
+        SmartDialog.showToast(toast);
       }
     } else {
       result.toast();
@@ -49,13 +49,13 @@ class DanmakuBlockController extends GetxController
 
   Future<void> danmakuFilterDel(int tabIndex, int itemIndex, int id) async {
     SmartDialog.showLoading(msg: '正在删除弹幕屏蔽规则……');
-    final result = await DanmakuFilterHttp.danmakuFilterDel(ids: id);
+    final res = await DanmakuFilterHttp.danmakuFilterDel(ids: id);
     SmartDialog.dismiss();
-    if (result.isSuccess) {
+    if (res.isSuccess) {
       rules[tabIndex].removeAt(itemIndex);
       SmartDialog.showToast('删除成功');
     } else {
-      result.toast();
+      res.toast();
     }
   }
 
@@ -67,16 +67,16 @@ class DanmakuBlockController extends GetxController
       filter = getCrc32(ascii.encode(filter), 0).toRadixString(16);
     }
     SmartDialog.showLoading(msg: '正在添加弹幕屏蔽规则……');
-    final result = await DanmakuFilterHttp.danmakuFilterAdd(
+    final res = await DanmakuFilterHttp.danmakuFilterAdd(
       filter: filter,
       type: type,
     );
     SmartDialog.dismiss();
-    if (result.isSuccess) {
-      rules[type].add(result.data);
+    if (res case Success(:final response)) {
+      rules[type].add(response);
       SmartDialog.showToast('添加成功');
     } else {
-      result.toast();
+      res.toast();
     }
   }
 }

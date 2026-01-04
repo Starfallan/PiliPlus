@@ -33,19 +33,18 @@ class LiveDmBlockController extends GetxController
 
   Future<void> queryData() async {
     final res = await LiveHttp.getLiveInfoByUser(roomId);
-    if (res.isSuccess) {
-      final data = res.data;
-      final shieldRules = data?.shieldRules;
+    if (res case Success(:final response)) {
+      final shieldRules = response?.shieldRules;
       level.value = shieldRules?.level ?? 0;
       rank.value = shieldRules?.rank ?? 0;
       verify.value = shieldRules?.verify ?? 0;
       updateValue();
 
-      if (data?.keywordList != null) {
-        keywordList.addAll(data!.keywordList!);
+      if (response?.keywordList case final keywordList?) {
+        this.keywordList.addAll(keywordList);
       }
-      if (data?.shieldUserList != null) {
-        shieldUserList.addAll(data!.shieldUserList!);
+      if (response?.shieldUserList case final shieldUserList?) {
+        this.shieldUserList.addAll(shieldUserList);
       }
     } else {
       res.toast();

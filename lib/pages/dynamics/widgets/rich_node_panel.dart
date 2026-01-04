@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:PiliPlus/common/widgets/image/custom_grid_view.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/http/dynamics.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart'
     show SourceModel;
@@ -288,15 +289,14 @@ TextSpan? richNode(
                       }
 
                       DynamicsHttp.dynPic(i.rid).then((res) {
-                        if (res.isSuccess) {
-                          final list = res.data;
+                        if (res case Success(:final response)) {
                           if (Platform.isAndroid) {
-                            i.pics = list;
+                            i.pics = response;
                           } else {
-                            i.dynPic = list;
+                            i.dynPic = response;
                           }
-                          if (list != null && list.isNotEmpty) {
-                            onView(list);
+                          if (response != null && response.isNotEmpty) {
+                            onView(response);
                           }
                         } else {
                           res.toast();

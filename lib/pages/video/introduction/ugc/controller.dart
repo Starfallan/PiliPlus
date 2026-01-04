@@ -13,7 +13,6 @@ import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/video/source_type.dart';
 import 'package:PiliPlus/models_new/member_card_info/data.dart';
 import 'package:PiliPlus/models_new/video/video_ai_conclusion/model_result.dart';
-import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart';
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_detail/section.dart';
@@ -29,7 +28,6 @@ import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
-import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/global_data.dart';
@@ -90,30 +88,33 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
   Future<void> queryVideoIntro() async {
     queryVideoTags();
     final res = await VideoHttp.videoIntro(bvid: bvid);
-    if (res.isSuccess) {
-      VideoDetailData data = res.data;
-      videoPlayerServiceHandler?.onVideoDetailChange(data, cid.value, heroTag);
-      if (videoDetail.value.ugcSeason?.id == data.ugcSeason?.id) {
+    if (res case Success(:final response)) {
+      videoPlayerServiceHandler?.onVideoDetailChange(
+        response,
+        cid.value,
+        heroTag,
+      );
+      if (videoDetail.value.ugcSeason?.id == response.ugcSeason?.id) {
         // keep reversed season
-        data.ugcSeason = videoDetail.value.ugcSeason;
+        response.ugcSeason = videoDetail.value.ugcSeason;
       }
-      if (videoDetail.value.cid == data.cid) {
+      if (videoDetail.value.cid == response.cid) {
         // keep reversed pages
-        data
+        response
           ..pages = videoDetail.value.pages
           ..isPageReversed = videoDetail.value.isPageReversed;
       }
-      videoDetail.value = data;
+      videoDetail.value = response;
       try {
         if (videoDetailCtr.cover.value.isEmpty ||
             (videoDetailCtr.videoUrl.isNullOrEmpty &&
                 !videoDetailCtr.isQuerying)) {
-          videoDetailCtr.cover.value = data.pic ?? '';
+          videoDetailCtr.cover.value = response.pic ?? '';
         }
         if (videoDetailCtr.showReply) {
           try {
             Get.find<VideoReplyController>(tag: heroTag).count.value =
-                data.stat?.reply ?? 0;
+                response.stat?.reply ?? 0;
           } catch (_) {}
         }
       } catch (_) {}
@@ -121,7 +122,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
       if (pages != null && pages.isNotEmpty && cid.value == 0) {
         cid.value = pages.first.cid!;
       }
-      queryUserStat(data.staff);
+      queryUserStat(response.staff);
     } else {
       res.toast();
       status.value = false;
@@ -136,27 +137,21 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
   // 获取up主粉丝数
   Future<void> queryUserStat(List<Staff>? staff) async {
     if (staff != null && staff.isNotEmpty) {
-      Request()
-          .get(
-            Api.relations,
-            queryParameters: {'fids': staff.map((item) => item.mid).join(',')},
-          )
-          .then((res) {
-            if (res.data['code'] == 0) {
-              staffRelations.addAll({
-                'status': true,
-                if (res.data['data'] != null) ...res.data['data'],
-              });
-            }
-          });
+      final res = await Request().get(
+        Api.relations,
+        queryParameters: {'fids': staff.map((item) => item.mid).join(',')},
+      );
+      if (res.data['code'] == 0) {
+        staffRelations.addAll({'status': true, ...?res.data['data']});
+      }
     } else {
       final mid = videoDetail.value.owner?.mid;
       if (mid == null) {
         return;
       }
-      final result = await MemberHttp.memberCardInfo(mid: mid);
-      if (result.isSuccess) {
-        userStat.value = result.data;
+      final res = await MemberHttp.memberCardInfo(mid: mid);
+      if (res case Success(:final response)) {
+        userStat.value = response;
       }
     }
   }
@@ -247,11 +242,11 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
       SmartDialog.showToast('账号未登录');
       return;
     }
-    final result = await VideoHttp.dislikeVideo(
+    final res = await VideoHttp.dislikeVideo(
       bvid: bvid,
       type: !hasDislike.value,
     );
-    if (result.isSuccess) {
+    if (res.isSuccess) {
       if (!hasDislike.value) {
         SmartDialog.showToast('点踩成功');
         hasDislike.value = true;
@@ -264,7 +259,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         hasDislike.value = false;
       }
     } else {
-      result.toast();
+      res.toast();
     }
   }
 
@@ -727,25 +722,24 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
       return false;
     }
 
-    if (relatedCtr.loadingState.value is! Success) {
-      return false;
+    if (relatedCtr.loadingState.value case Success(:final response)) {
+      final firstItem = response?.firstOrNull;
+      if (firstItem == null) {
+        SmartDialog.showToast('暂无相关视频，停止连播');
+        return false;
+      }
+      onChangeEpisode(
+        BaseEpisodeItem(
+          aid: firstItem.aid,
+          bvid: firstItem.bvid,
+          cid: firstItem.cid,
+          cover: firstItem.cover,
+        ),
+      );
+      return true;
     }
 
-    if (relatedCtr.loadingState.value.data.isNullOrEmpty) {
-      SmartDialog.showToast('暂无相关视频，停止连播');
-      return false;
-    }
-
-    final firstItem = relatedCtr.loadingState.value.data!.first;
-    onChangeEpisode(
-      BaseEpisodeItem(
-        aid: firstItem.aid,
-        bvid: firstItem.bvid,
-        cid: firstItem.cid,
-        cover: firstItem.cover,
-      ),
-    );
-    return true;
+    return false;
   }
 
   // ai总结

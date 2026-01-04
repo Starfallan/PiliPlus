@@ -1,4 +1,5 @@
 import 'package:PiliPlus/http/dynamics.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/common/dyn/common_dyn_controller.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -30,9 +31,8 @@ class DynamicDetailController extends CommonDynController {
       _init(commentIdStr, commentType);
     } else {
       DynamicsHttp.dynamicDetail(id: dynItem.idStr).then((res) {
-        if (res.isSuccess) {
-          final data = res.data;
-          _init(data.basic!.commentIdStr!, data.basic!.commentType!);
+        if (res case Success(:final response)) {
+          _init(response.basic!.commentIdStr!, response.basic!.commentType!);
         } else {
           res.toast();
         }

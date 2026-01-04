@@ -53,8 +53,9 @@ class _VotePanelState extends State<VotePanel> {
     _voteInfo = widget.voteInfo;
     if (isLogin) {
       DynamicsHttp.followeeVotes(voteId: _voteInfo.voteId).then((res) {
-        if (mounted && res.isSuccess) {
-          followeeVote.value = res.data;
+        if (!mounted) return;
+        if (res case Success(:final response)) {
+          followeeVote.value = response;
         }
       });
     }
@@ -118,15 +119,13 @@ class _VotePanelState extends State<VotePanel> {
                         groupValue.toSet(),
                         anonymous,
                       );
-                      if (res.isSuccess) {
-                        if (mounted) {
-                          setState(() {
-                            _enabled = false;
-                            _showPercentage = true;
-                            _voteInfo = res.data;
-                            _percentage = _cnt2Percentage(_voteInfo.options);
-                          });
-                        }
+                      if (!mounted) return;
+                      if (res case Success(:final response)) {
+                        _enabled = false;
+                        _showPercentage = true;
+                        _voteInfo = response;
+                        _percentage = _cnt2Percentage(_voteInfo.options);
+                        setState(() {});
                       } else {
                         res.toast();
                       }
