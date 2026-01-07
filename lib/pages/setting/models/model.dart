@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/pages/setting/widgets/list_editor_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/normal_item.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/switch_item.dart';
@@ -254,6 +255,105 @@ SettingsModel getVideoFilterSelectModel({
           onChanged?.call(result!);
           GStorage.setting.put(key, result);
         }
+      }
+    },
+  );
+}
+
+/// Creates a list-based keyword filter model using ListEditorDialog
+/// Items are stored as a pipe-separated string but edited as a list
+SettingsModel getListBanWordModel({
+  required String title,
+  required String key,
+  required ValueChanged<RegExp> onChanged,
+}) {
+  String banWord = GStorage.setting.get(key, defaultValue: '');
+  return NormalModel(
+    leading: const Icon(Icons.filter_alt_outlined),
+    title: title,
+    getSubtitle: () {
+      if (banWord.isEmpty) return "点击添加";
+      final items = banWord.split('|').where((e) => e.isNotEmpty).toList();
+      return items.isEmpty ? "点击添加" : '${items.length} 个关键词';
+    },
+    onTap: (context, setState) async {
+      final items = banWord.isEmpty
+          ? <String>[]
+          : banWord.split('|').where((e) => e.isNotEmpty).toList();
+      
+      final result = await showDialog<List<String>>(
+        context: context,
+        builder: (context) {
+          return ListEditorDialog(
+            title: title,
+            initialItems: items,
+            hintText: '输入关键词',
+            itemLabel: '关键词',
+          );
+        },
+      );
+
+      if (result != null) {
+        banWord = result.join('|');
+        setState();
+        onChanged(RegExp(banWord, caseSensitive: false));
+        SmartDialog.showToast('已保存');
+        GStorage.setting.put(key, banWord);
+      }
+    },
+  );
+}
+
+/// Creates a list-based UID filter model using ListEditorDialog
+SettingsModel getListUidModel({
+  required String title,
+  required Set<int> Function() getUids,
+  required void Function(Set<int>) setUids,
+  required void Function() onUpdate,
+}) {
+  return NormalModel(
+    leading: const Icon(Icons.person_off_outlined),
+    title: title,
+    getSubtitle: () {
+      final uids = getUids();
+      if (uids.isEmpty) return '点击添加';
+      return '已屏蔽 ${uids.length} 个用户';
+    },
+    onTap: (context, setState) async {
+      final uids = getUids();
+      final items = uids.map((e) => e.toString()).toList();
+
+      final result = await showDialog<List<String>>(
+        context: context,
+        builder: (context) {
+          return ListEditorDialog(
+            title: title,
+            initialItems: items,
+            hintText: '输入用户UID',
+            itemLabel: 'UID',
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            validator: (value) {
+              if (value.isEmpty) return '请输入UID';
+              final uid = int.tryParse(value);
+              if (uid == null) return 'UID必须是数字';
+              if (uid <= 0) return 'UID必须大于0';
+              return null;
+            },
+          );
+        },
+      );
+
+      if (result != null) {
+        final newUids = result
+            .map((e) => int.tryParse(e))
+            .where((e) => e != null)
+            .cast<int>()
+            .toSet();
+        setUids(newUids);
+        onUpdate();
+        setState();
+        SmartDialog.showToast('已保存');
       }
     },
   );

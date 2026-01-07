@@ -8,7 +8,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 List<SettingsModel> get dynamicsSettings => [
-  getBanWordModel(
+  getListBanWordModel(
     title: '关键词过滤',
     key: SettingBoxKey.banWordForDyn,
     onChanged: (value) {
@@ -16,82 +16,16 @@ List<SettingsModel> get dynamicsSettings => [
       DynamicsDataModel.enableFilter = value.pattern.isNotEmpty;
     },
   ),
-  NormalModel(
-    leading: const Icon(Icons.person_off_outlined),
+  getListUidModel(
     title: '屏蔽用户',
-    getSubtitle: () {
-      final blockedMids = Pref.dynamicsBlockedMids;
-      if (blockedMids.isEmpty) {
-        return '点击添加';
-      }
-      return '已屏蔽 ${blockedMids.length} 个用户';
+    getUids: () => Pref.dynamicsBlockedMids,
+    setUids: (uids) {
+      Pref.dynamicsBlockedMids = uids;
+      GlobalData().dynamicsBlockedMids = uids;
+      DynamicsDataModel.dynamicsBlockedMids = uids;
     },
-    onTap: (context, setState) {
-      Set<int> blockedMids = Set<int>.from(Pref.dynamicsBlockedMids);
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('屏蔽用户'),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('输入用户UID（一行一个）'),
-                  const SizedBox(height: 8),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: TextFormField(
-                        autofocus: true,
-                        initialValue: blockedMids.join('\n'),
-                        textInputAction: TextInputAction.newline,
-                        keyboardType: TextInputType.number,
-                        minLines: 3,
-                        maxLines: 10,
-                        decoration: const InputDecoration(
-                          hintText: '例如：\n12345678\n87654321',
-                        ),
-                        onChanged: (value) {
-                          // Parse user input into a set of integers
-                          blockedMids = value
-                              .split('\n')
-                              .map((e) => int.tryParse(e.trim()))
-                              .where((e) => e != null)
-                              .cast<int>()
-                              .toSet();
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: Get.back,
-                child: Text(
-                  '取消',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                ),
-              ),
-              TextButton(
-                child: const Text('保存'),
-                onPressed: () {
-                  Get.back();
-                  Pref.dynamicsBlockedMids = blockedMids;
-                  GlobalData().dynamicsBlockedMids = blockedMids;
-                  setState();
-                  SmartDialog.showToast('已保存');
-                },
-              ),
-            ],
-          );
-        },
-      );
+    onUpdate: () {
+      // Changes are immediately reflected
     },
   ),
   SwitchModel(
