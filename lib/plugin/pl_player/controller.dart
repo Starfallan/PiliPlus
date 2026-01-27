@@ -1,6 +1,6 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+import 'dart:async' show StreamSubscription, Timer;
+import 'dart:convert' show ascii;
+import 'dart:io' show Platform, File, Directory;
 import 'dart:math' show max, min;
 import 'dart:ui' as ui;
 
@@ -36,7 +36,7 @@ import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
-import 'package:PiliPlus/utils/page_utils.dart' show PageUtils;
+import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -50,7 +50,8 @@ import 'package:easy_debounce/easy_throttle.dart';
 import 'package:floating/floating.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart'
+    show rootBundle, HapticFeedback, Uint8List;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
@@ -235,8 +236,6 @@ class PlPlayerController {
     return windowManager.setAlwaysOnTop(value);
   }
 
-  Offset initialFocalPoint = Offset.zero;
-
   Future<void> exitDesktopPip() {
     isDesktopPip = false;
     return Future.wait([
@@ -307,13 +306,13 @@ class PlPlayerController {
     }
   }
 
-  void disableAutoEnterPipIfNeeded() {
+  void _disableAutoEnterPipIfNeeded() {
     if (!_isPreviousVideoPage) {
-      disableAutoEnterPip();
+      _disableAutoEnterPip();
     }
   }
 
-  void disableAutoEnterPip() {
+  void _disableAutoEnterPip() {
     if (_shouldSetPip) {
       Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
         'autoEnable': false,
@@ -497,15 +496,15 @@ class PlPlayerController {
     return _instance != null;
   }
 
-  static void setPlayCallBack(VoidCallback? playCallBack) {
+  static void setPlayCallBack(Future<void>? Function()? playCallBack) {
     _playCallBack = playCallBack;
   }
 
-  static VoidCallback? _playCallBack;
+  static Future<void>? Function()? _playCallBack;
 
-  static void playIfExists() {
+  static Future<void>? playIfExists() {
     // await _instance?.play(repeat: repeat, hideControls: hideControls);
-    _playCallBack?.call();
+    return _playCallBack?.call();
   }
 
   // try to get PlayerStatus
@@ -797,10 +796,7 @@ class PlPlayerController {
       await pp.setProperty("af", "scaletempo2=max-speed=8");
       if (Platform.isAndroid) {
         await pp.setProperty("volume-max", "100");
-        String ao = Pref.useOpenSLES
-            ? "opensles,audiotrack"
-            : "audiotrack,opensles";
-        await pp.setProperty("ao", ao);
+        await pp.setProperty("ao", Pref.audioOutput);
       }
       // video-sync=display-resample
       await pp.setProperty("video-sync", Pref.videoSync);
@@ -822,7 +818,7 @@ class PlPlayerController {
     }
 
     // 音轨
-    late final String audioUri;
+    final String audioUri;
     if (isFileSource) {
       audioUri = onlyPlayAudio.value || mediaType == 1
           ? ''
@@ -972,9 +968,9 @@ class PlPlayerController {
   }
 
   late final bool enableAutoEnter = Pref.enableAutoEnter;
-  Future<void> autoEnterFullscreen() async {
+  Future<void>? autoEnterFullscreen() {
     if (enableAutoEnter) {
-      Future.delayed(const Duration(milliseconds: 500), () {
+      return Future.delayed(const Duration(milliseconds: 500), () {
         if (dataStatus.status.value != DataStatus.loaded) {
           _stopListenerForEnterFullScreen();
           _dataListenerForEnterFullScreen = dataStatus.status.listen((status) {
@@ -984,10 +980,11 @@ class PlPlayerController {
             }
           });
         } else {
-          triggerFullScreen(status: true);
+          return triggerFullScreen(status: true);
         }
       });
     }
+    return null;
   }
 
   Set<StreamSubscription> subscriptions = {};
@@ -1005,12 +1002,12 @@ class PlPlayerController {
             if (_isCurrVideoPage) {
               enterPip(isAuto: true);
             } else {
-              disableAutoEnterPip();
+              _disableAutoEnterPip();
             }
           }
           playerStatus.value = PlayerStatus.playing;
         } else {
-          disableAutoEnterPip();
+          _disableAutoEnterPip();
           playerStatus.value = PlayerStatus.paused;
         }
         videoPlayerServiceHandler?.onStatusChange(
@@ -1700,7 +1697,7 @@ class PlPlayerController {
     danmakuController = null;
     _stopListenerForVideoFit();
     _stopListenerForEnterFullScreen();
-    disableAutoEnterPip();
+    _disableAutoEnterPip();
     setPlayCallBack(null);
     dmState.clear();
     if (showSeekPreview) {
@@ -1874,5 +1871,24 @@ class PlPlayerController {
         SmartDialog.showToast('截图失败');
       }
     });
+  }
+
+  bool onPopInvokedWithResult(bool didPop, Object? result) {
+    if (Platform.isAndroid && didPop) {
+      _disableAutoEnterPipIfNeeded();
+    }
+    if (controlsLock.value) {
+      onLockControl(false);
+      return true;
+    }
+    if (isDesktopPip) {
+      exitDesktopPip();
+      return true;
+    }
+    if (isFullScreen.value) {
+      triggerFullScreen(status: false);
+      return true;
+    }
+    return false;
   }
 }

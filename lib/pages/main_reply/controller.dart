@@ -17,7 +17,6 @@ class MainReplyController extends ReplyController<MainListReply>
   bool _showFab = true;
 
   late final AnimationController _fabAnimationCtr;
-  late final CurvedAnimation _curvedAnimation;
   late final Animation<Offset> fabAnim;
 
   @override
@@ -27,15 +26,12 @@ class MainReplyController extends ReplyController<MainListReply>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     )..forward();
-    _curvedAnimation = CurvedAnimation(
-      parent: _fabAnimationCtr,
-      curve: Curves.easeInOut,
+    fabAnim = _fabAnimationCtr.drive(
+      Tween<Offset>(
+        begin: const Offset(0.0, 2.0),
+        end: Offset.zero,
+      ).chain(CurveTween(curve: Curves.easeInOut)),
     );
-    fabAnim = Tween<Offset>(
-      begin: const Offset(0, 2),
-      end: Offset.zero,
-    ).animate(_curvedAnimation);
-
     final args = Get.arguments;
     oid = args['oid'];
     replyType = args['replyType'];
@@ -71,7 +67,6 @@ class MainReplyController extends ReplyController<MainListReply>
 
   @override
   void onClose() {
-    _curvedAnimation.dispose();
     _fabAnimationCtr.dispose();
     super.onClose();
   }

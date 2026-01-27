@@ -42,7 +42,7 @@ class FavFolderItem extends StatelessWidget {
                   color: theme.colorScheme.onInverseSurface.withValues(
                     alpha: 0.4,
                   ),
-                  offset: const Offset(4, -12),
+                  offset: const Offset(6, -8),
                   blurRadius: 0.0,
                   spreadRadius: 0.0,
                 ),

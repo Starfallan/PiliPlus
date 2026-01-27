@@ -179,62 +179,62 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
         ),
       ),
     ),
-    child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                '弹幕字号',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: themeData.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(width: 16),
-              _buildFontSizeItem(18, '小'),
-              const SizedBox(width: 5),
-              _buildFontSizeItem(25, '标准'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                '弹幕样式',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: themeData.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(width: 16),
-              _buildPositionItem(1, '滚动'),
-              const SizedBox(width: 5),
-              _buildPositionItem(5, '顶部'),
-              const SizedBox(width: 5),
-              _buildPositionItem(4, '底部'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '弹幕颜色',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: themeData.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(width: 16),
-              _buildColorPanel,
-            ],
-          ),
-          SizedBox(height: 12 + MediaQuery.viewPaddingOf(context).bottom),
-        ],
+    child: ListView(
+      physics: const ClampingScrollPhysics(),
+      padding: .only(
+        top: 12,
+        bottom: 12 + MediaQuery.viewPaddingOf(context).bottom,
       ),
+      children: [
+        Row(
+          children: [
+            Text(
+              '弹幕字号',
+              style: TextStyle(
+                fontSize: 15,
+                color: themeData.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 16),
+            _buildFontSizeItem(18, '小'),
+            const SizedBox(width: 5),
+            _buildFontSizeItem(25, '标准'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Text(
+              '弹幕样式',
+              style: TextStyle(
+                fontSize: 15,
+                color: themeData.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 16),
+            _buildPositionItem(1, '滚动'),
+            const SizedBox(width: 5),
+            _buildPositionItem(5, '顶部'),
+            const SizedBox(width: 5),
+            _buildPositionItem(4, '底部'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '弹幕颜色',
+              style: TextStyle(
+                fontSize: 15,
+                color: themeData.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 16),
+            _buildColorPanel,
+          ],
+        ),
+      ],
     ),
   );
 

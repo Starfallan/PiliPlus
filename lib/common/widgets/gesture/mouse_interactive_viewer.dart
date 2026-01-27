@@ -81,9 +81,7 @@ class _MouseInteractiveViewerState extends State<MouseInteractiveViewer>
 
   final GlobalKey _parentKey = GlobalKey();
   Animation<Offset>? _animation;
-  CurvedAnimation? _curvedAnimation;
   Animation<double>? _scaleAnimation;
-  CurvedAnimation? _curvedScaleAnimation;
   late Offset _scaleAnimationFocalPoint;
   late AnimationController _controller;
   late AnimationController _scaleController;
@@ -435,20 +433,15 @@ class _MouseInteractiveViewerState extends State<MouseInteractiveViewer>
           details.velocity.pixelsPerSecond.distance,
           widget.interactionEndFrictionCoefficient,
         );
-        _animation =
-            Tween<Offset>(
-                begin: translation,
-                end: Offset(
-                  frictionSimulationX.finalX,
-                  frictionSimulationY.finalX,
-                ),
-              ).animate(
-                _curvedAnimation ??= CurvedAnimation(
-                  parent: _controller,
-                  curve: Curves.decelerate,
-                ),
-              )
-              ..addListener(_handleInertiaAnimation);
+        _animation = _controller.drive(
+          Tween<Offset>(
+            begin: translation,
+            end: Offset(
+              frictionSimulationX.finalX,
+              frictionSimulationY.finalX,
+            ),
+          ).chain(CurveTween(curve: Curves.decelerate)),
+        )..addListener(_handleInertiaAnimation);
         _controller
           ..duration = Duration(milliseconds: (tFinal * 1000).round())
           ..forward();
@@ -468,17 +461,12 @@ class _MouseInteractiveViewerState extends State<MouseInteractiveViewer>
           widget.interactionEndFrictionCoefficient,
           effectivelyMotionless: 0.1,
         );
-        _scaleAnimation =
-            Tween<double>(
-                begin: scale,
-                end: frictionSimulation.x(tFinal),
-              ).animate(
-                _curvedScaleAnimation ??= CurvedAnimation(
-                  parent: _scaleController,
-                  curve: Curves.decelerate,
-                ),
-              )
-              ..addListener(_handleScaleAnimation);
+        _scaleAnimation = _scaleController.drive(
+          Tween<double>(
+            begin: scale,
+            end: frictionSimulation.x(tFinal),
+          ).chain(CurveTween(curve: Curves.decelerate)),
+        )..addListener(_handleScaleAnimation);
         _scaleController
           ..duration = Duration(milliseconds: (tFinal * 1000).round())
           ..forward();
@@ -732,9 +720,7 @@ class _MouseInteractiveViewerState extends State<MouseInteractiveViewer>
   @override
   void dispose() {
     _scaleGestureRecognizer.dispose();
-    _curvedAnimation?.dispose();
     _controller.dispose();
-    _curvedScaleAnimation?.dispose();
     _scaleController.dispose();
     _transformer.removeListener(_handleTransformation);
     if (widget.transformationController == null) {

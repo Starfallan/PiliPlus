@@ -17,12 +17,8 @@ class FavFolderInfo {
   int? favState;
   int mediaCount;
   int? viewCount;
-  int? vt;
   bool? isTop;
-  dynamic recentFav;
-  int? playSwitch;
   int? type;
-  String? link;
   String? bvid;
 
   FavFolderInfo({
@@ -42,12 +38,8 @@ class FavFolderInfo {
     this.favState,
     this.mediaCount = 0,
     this.viewCount,
-    this.vt,
     this.isTop,
-    this.recentFav,
-    this.playSwitch,
     this.type,
-    this.link,
     this.bvid,
   });
 
@@ -70,12 +62,8 @@ class FavFolderInfo {
     favState: json['fav_state'] as int?,
     mediaCount: json['media_count'] as int? ?? 0,
     viewCount: json['view_count'] as int?,
-    vt: json['vt'] as int?,
     isTop: json['is_top'] as bool?,
-    recentFav: json['recent_fav'] as dynamic,
-    playSwitch: json['play_switch'] as int?,
     type: json['type'] as int?,
-    link: json['link'] as String?,
     bvid: json['bvid'] as String?,
   );
 }

@@ -1,5 +1,4 @@
-import 'dart:math' show pi;
-
+import 'package:PiliPlus/common/widgets/custom_arc.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
@@ -52,16 +51,12 @@ class ActionItem extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
-          RepaintBoundary(
-            child: AnimatedBuilder(
-              animation: animation!,
-              builder: (context, child) => CustomPaint(
-                size: const Size.square(28),
-                painter: ArcPainter(
-                  color: primary,
-                  sweepAngle: animation!.value,
-                ),
-              ),
+          AnimatedBuilder(
+            animation: animation!,
+            builder: (context, child) => Arc(
+              size: 28,
+              color: primary,
+              progress: -animation!.value,
             ),
           ),
           child,
@@ -113,42 +108,5 @@ class ActionItem extends StatelessWidget {
       );
     }
     return child;
-  }
-}
-
-class ArcPainter extends CustomPainter {
-  const ArcPainter({
-    required this.color,
-    required this.sweepAngle,
-    this.strokeWidth = 2,
-  });
-  final Color color;
-  final double sweepAngle;
-  final double strokeWidth;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (sweepAngle == 0) {
-      return;
-    }
-
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final rect = Rect.fromCircle(
-      center: Offset(size.width / 2, size.height / 2),
-      radius: size.width / 2,
-    );
-
-    const startAngle = -pi / 2;
-
-    canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant ArcPainter oldDelegate) {
-    return sweepAngle != oldDelegate.sweepAngle || color != oldDelegate.color;
   }
 }

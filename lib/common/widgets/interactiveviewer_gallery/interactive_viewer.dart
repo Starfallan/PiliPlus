@@ -503,9 +503,7 @@ class _InteractiveViewerState extends State<InteractiveViewer>
   final GlobalKey _childKey = GlobalKey();
   final GlobalKey _parentKey = GlobalKey();
   Animation<Offset>? _animation;
-  CurvedAnimation? _curvedAnimation;
   Animation<double>? _scaleAnimation;
-  CurvedAnimation? _curvedScaleAnimation;
   late Offset _scaleAnimationFocalPoint;
   late AnimationController _controller;
   late AnimationController _scaleController;
@@ -924,19 +922,15 @@ class _InteractiveViewerState extends State<InteractiveViewer>
           details.velocity.pixelsPerSecond.distance,
           widget.interactionEndFrictionCoefficient,
         );
-        _animation =
-            Tween<Offset>(
-              begin: translation,
-              end: Offset(
-                frictionSimulationX.finalX,
-                frictionSimulationY.finalX,
-              ),
-            ).animate(
-              _curvedAnimation ??= CurvedAnimation(
-                parent: _controller,
-                curve: Curves.decelerate,
-              ),
-            );
+        _animation = _controller.drive(
+          Tween<Offset>(
+            begin: translation,
+            end: Offset(
+              frictionSimulationX.finalX,
+              frictionSimulationY.finalX,
+            ),
+          ).chain(CurveTween(curve: Curves.decelerate)),
+        );
         _controller.duration = Duration(milliseconds: (tFinal * 1000).round());
         _animation!.addListener(_handleInertiaAnimation);
         _controller.forward();
@@ -956,16 +950,12 @@ class _InteractiveViewerState extends State<InteractiveViewer>
           widget.interactionEndFrictionCoefficient,
           effectivelyMotionless: 0.1,
         );
-        _scaleAnimation =
-            Tween<double>(
-              begin: scale,
-              end: frictionSimulation.x(tFinal),
-            ).animate(
-              _curvedScaleAnimation ??= CurvedAnimation(
-                parent: _scaleController,
-                curve: Curves.decelerate,
-              ),
-            );
+        _scaleAnimation = _scaleController.drive(
+          Tween<double>(
+            begin: scale,
+            end: frictionSimulation.x(tFinal),
+          ).chain(CurveTween(curve: Curves.decelerate)),
+        );
         _scaleController.duration = Duration(
           milliseconds: (tFinal * 1000).round(),
         );
@@ -1155,9 +1145,7 @@ class _InteractiveViewerState extends State<InteractiveViewer>
 
   @override
   void dispose() {
-    _curvedAnimation?.dispose();
     _controller.dispose();
-    _curvedScaleAnimation?.dispose();
     _scaleController.dispose();
     _transformer.removeListener(_handleTransformation);
     if (widget.transformationController == null) {

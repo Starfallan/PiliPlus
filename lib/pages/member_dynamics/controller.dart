@@ -66,13 +66,17 @@ class MemberDynamicsController
         : DynamicsHttp.setTop(dynamicId: dynamicId));
     if (res.isSuccess) {
       List<DynamicItemModel> list = loadingState.value.data!;
-      list[0].modules.moduleTag = null;
+      list[0].modules
+        ..moduleTag = null
+        ..moduleAuthor?.isTop = false;
       if (isTop) {
         loadingState.refresh();
         SmartDialog.showToast('取消置顶成功');
       } else {
         final item = list.firstWhere((item) => item.idStr == dynamicId);
-        item.modules.moduleTag = ModuleTag(text: '置顶');
+        item.modules
+          ..moduleTag = ModuleTag(text: '置顶')
+          ..moduleAuthor?.isTop = true;
         list
           ..remove(item)
           ..insert(0, item);

@@ -124,9 +124,11 @@ class _InteractiveviewerGalleryState extends State<InteractiveviewerGallery>
       ..removeListener(listener)
       ..dispose();
     _transformationController.dispose();
-    for (final item in widget.sources) {
-      if (item.sourceType == SourceType.networkImage) {
-        CachedNetworkImageProvider(_getActualUrl(item.url)).evict();
+    if (widget.quality != _quality) {
+      for (final item in widget.sources) {
+        if (item.sourceType == SourceType.networkImage) {
+          CachedNetworkImageProvider(_getActualUrl(item.url)).evict();
+        }
       }
     }
     super.dispose();
@@ -205,13 +207,12 @@ class _InteractiveviewerGalleryState extends State<InteractiveviewerGallery>
     if (_transformationController.value != Matrix4.identity()) {
       // animate the reset for the transformation of the interactive viewer
 
-      _animation =
-          Matrix4Tween(
-            begin: _transformationController.value,
-            end: Matrix4.identity(),
-          ).animate(
-            CurveTween(curve: Curves.easeOut).animate(_animationController),
-          );
+      _animation = _animationController.drive(
+        Matrix4Tween(
+          begin: _transformationController.value,
+          end: Matrix4.identity(),
+        ).chain(CurveTween(curve: Curves.easeOut)),
+      );
 
       _animationController.forward(from: 0);
     }
@@ -399,13 +400,12 @@ class _InteractiveviewerGalleryState extends State<InteractiveviewerGallery>
       matrix.row3.w,
     ]);
 
-    _animation =
-        Matrix4Tween(
-          begin: _transformationController.value,
-          end: matrix,
-        ).animate(
-          CurveTween(curve: Curves.easeOut).animate(_animationController),
-        );
+    _animation = _animationController.drive(
+      Matrix4Tween(
+        begin: _transformationController.value,
+        end: matrix,
+      ).chain(CurveTween(curve: Curves.easeOut)),
+    );
     _animationController
         .forward(from: 0)
         .whenComplete(() => _onScaleChanged(targetScale));

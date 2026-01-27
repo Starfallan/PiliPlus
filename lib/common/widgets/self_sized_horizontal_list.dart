@@ -1,22 +1,21 @@
+import 'package:PiliPlus/common/widgets/only_layout_widget.dart';
 import 'package:flutter/material.dart';
 
-/// https://stackoverflow.com/a/76605401
-
 class SelfSizedHorizontalList extends StatefulWidget {
-  final Widget Function(int index) childBuilder;
-  final int itemCount;
-  final double gapSize;
-  final EdgeInsetsGeometry? padding;
-  final ScrollController? controller;
-
   const SelfSizedHorizontalList({
     super.key,
-    required this.childBuilder,
     required this.itemCount,
-    this.gapSize = 5,
-    this.padding,
+    required this.itemBuilder,
+    required this.separatorBuilder,
     this.controller,
+    this.padding,
   });
+
+  final int itemCount;
+  final EdgeInsets? padding;
+  final IndexedWidgetBuilder itemBuilder;
+  final IndexedWidgetBuilder separatorBuilder;
+  final ScrollController? controller;
 
   @override
   State<SelfSizedHorizontalList> createState() =>
@@ -24,65 +23,39 @@ class SelfSizedHorizontalList extends StatefulWidget {
 }
 
 class _SelfSizedHorizontalListState extends State<SelfSizedHorizontalList> {
-  final infoKey = GlobalKey();
-
-  double? prevHeight;
-  double? get height {
-    if (prevHeight != null) return prevHeight;
-    prevHeight = infoKey.globalPaintBounds?.height;
-    return prevHeight;
-  }
-
-  bool get isInit => height == null;
-
-  // @override
-  // void didUpdateWidget(SelfSizedHorizontalList oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //   if (BuildConfig.isDebug) {
-  //     prevHeight = null;
-  //   }
-  // }
+  final _key = GlobalKey();
+  double? _height;
 
   @override
   Widget build(BuildContext context) {
-    if (height == null) {
-      WidgetsBinding.instance.addPostFrameCallback((v) => setState(() {}));
-    }
-    if (widget.itemCount == 0) return const SizedBox.shrink();
-    if (isInit) {
-      return Align(
-        alignment: Alignment.centerLeft,
+    if (_height == null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) {
+          _height = (_key.currentContext!.findRenderObject() as RenderBox)
+              .size
+              .height;
+          setState(() {});
+        },
+      );
+      return OnlyLayoutWidget(
+        key: _key,
         child: Padding(
-          key: infoKey,
-          padding: widget.padding ?? EdgeInsets.zero,
-          child: widget.childBuilder(0),
+          padding: widget.padding ?? .zero,
+          child: widget.itemBuilder(context, 0),
         ),
       );
     }
 
     return SizedBox(
-      height: height,
+      height: _height,
       child: ListView.separated(
-        controller: widget.controller,
+        scrollDirection: .horizontal,
         padding: widget.padding,
-        scrollDirection: Axis.horizontal,
         itemCount: widget.itemCount,
-        itemBuilder: (c, i) => widget.childBuilder(i),
-        separatorBuilder: (c, i) => SizedBox(width: widget.gapSize),
+        controller: widget.controller,
+        itemBuilder: widget.itemBuilder,
+        separatorBuilder: widget.separatorBuilder,
       ),
     );
-  }
-}
-
-extension GlobalKeyExtension on GlobalKey {
-  Rect? get globalPaintBounds {
-    final renderObject = currentContext?.findRenderObject();
-    final translation = renderObject?.getTransformTo(null).getTranslation();
-    if (translation != null && renderObject?.paintBounds != null) {
-      final offset = Offset(translation.x, translation.y);
-      return renderObject!.paintBounds.shift(offset);
-    } else {
-      return null;
-    }
   }
 }

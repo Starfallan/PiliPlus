@@ -48,7 +48,7 @@ abstract final class VideoHttp {
   }) async {
     final res = await Request().get(
       Api.recommendListWeb,
-      queryParameters: {
+      queryParameters: await WbiSign.makSign({
         'version': 1,
         'feed_version': 'V8',
         'homepage_ver': 1,
@@ -56,7 +56,7 @@ abstract final class VideoHttp {
         'fresh_idx': freshIdx,
         'brush': freshIdx,
         'fresh_type': 4,
-      },
+      }),
     );
     if (res.data['code'] == 0) {
       List<RecVideoItemModel> list = <RecVideoItemModel>[];

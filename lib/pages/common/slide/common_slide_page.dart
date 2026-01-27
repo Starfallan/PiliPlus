@@ -1,7 +1,8 @@
 import 'dart:math' show max;
 
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:flutter/gestures.dart' show PositionedGestureDetails;
+import 'package:flutter/gestures.dart' show HorizontalDragGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -12,12 +13,14 @@ abstract class CommonSlidePage extends StatefulWidget {
 }
 
 mixin CommonSlideMixin<T extends CommonSlidePage> on State<T>, TickerProvider {
-  Offset? downPos;
-  bool? isSliding;
-  late double maxWidth;
+  static const double offset = 30.0;
+  double? _downDx;
+  late double _maxWidth;
+  double get maxWidth => _maxWidth;
   late bool _isRTL = false;
   late final bool enableSlide;
-  AnimationController? _animController;
+  late final AnimationController _animController;
+  SlideDragGestureRecognizer? _slideDragGestureRecognizer;
 
   static bool slideDismissReplyPage = Pref.slideDismissReplyPage;
 
@@ -30,99 +33,121 @@ mixin CommonSlideMixin<T extends CommonSlidePage> on State<T>, TickerProvider {
         vsync: this,
         reverseDuration: const Duration(milliseconds: 500),
       );
+      _slideDragGestureRecognizer =
+          SlideDragGestureRecognizer(
+              isDxAllowed: (double dx) {
+                final isLTR = dx <= offset;
+                final isRTL = dx >= _maxWidth - offset;
+                if (isLTR || isRTL) {
+                  _isRTL = isRTL;
+                  return true;
+                }
+                return false;
+              },
+            )
+            ..onStart = _onDragStart
+            ..onUpdate = _onDragUpdate
+            ..onEnd = _onDragEnd
+            ..onCancel = _onDragEnd;
     }
   }
 
   @override
   void dispose() {
-    _animController?.dispose();
+    if (enableSlide) {
+      _animController.dispose();
+      _slideDragGestureRecognizer?.dispose();
+      _slideDragGestureRecognizer = null;
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return enableSlide
-        ? LayoutBuilder(
-            builder: (context, constraints) {
-              maxWidth = constraints.maxWidth;
-              return AnimatedBuilder(
-                animation: _animController!,
-                builder: (context, child) {
-                  return Align(
-                    alignment: AlignmentDirectional.topStart,
-                    heightFactor: 1 - _animController!.value,
-                    child: child,
-                  );
-                },
-                child: buildPage(theme),
+    if (enableSlide) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          _maxWidth = constraints.maxWidth;
+          return AnimatedBuilder(
+            animation: _animController,
+            builder: (context, child) {
+              return Align(
+                alignment: AlignmentDirectional.topStart,
+                heightFactor: 1 - _animController.value,
+                child: child,
               );
             },
-          )
-        : buildPage(theme);
+            child: buildPage(theme),
+          );
+        },
+      );
+    }
+    return buildPage(theme);
   }
 
   Widget buildPage(ThemeData theme);
 
   Widget buildList(ThemeData theme) => throw UnimplementedError();
 
-  void onDismiss([_]) {
-    if (isSliding == true) {
-      final dx = downPos!.dx;
-      if (_animController!.value * maxWidth + (_isRTL ? (maxWidth - dx) : dx) >=
-          100) {
-        Get.back();
-      } else {
-        _animController!.reverse();
-      }
-    }
-    downPos = null;
-    isSliding = null;
-  }
-
-  void onPan(PositionedGestureDetails details) {
-    final localPosition = details.localPosition;
-    if (isSliding == false) {
-      return;
-    } else if (isSliding == null) {
-      if (downPos != null) {
-        Offset cumulativeDelta = localPosition - downPos!;
-        if (cumulativeDelta.dx.abs() >= cumulativeDelta.dy.abs()) {
-          downPos = localPosition;
-          isSliding = true;
-        } else {
-          isSliding = false;
-        }
-      } else {
-        isSliding = false;
-      }
-    } else if (isSliding == true) {
-      final from = downPos!.dx;
-      final to = details.localPosition.dx;
-      _animController!.value =
-          max(0, _isRTL ? from - to : to - from) / maxWidth;
-    }
-  }
-
-  void onPanDown(DragDownDetails details) {
-    final dx = details.localPosition.dx;
-    const offset = 30;
-    final isLTR = dx <= offset;
-    final isRTL = dx >= maxWidth - offset;
-    if (isLTR || isRTL) {
-      _isRTL = isRTL;
-      downPos = details.localPosition;
+  void _onDragEnd([_]) {
+    final dx = _downDx!;
+    if (_animController.value * _maxWidth + (_isRTL ? (_maxWidth - dx) : dx) >=
+        100) {
+      Get.back();
     } else {
-      isSliding = false;
+      _animController.reverse();
     }
+    _downDx = null;
   }
 
-  Widget slideList(ThemeData theme) => GestureDetector(
-    onPanDown: onPanDown,
-    onPanStart: onPan,
-    onPanUpdate: onPan,
-    onPanCancel: onDismiss,
-    onPanEnd: onDismiss,
+  void _onDragStart(DragStartDetails details) {
+    _downDx = details.localPosition.dx;
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    final from = _downDx!;
+    final to = details.localPosition.dx;
+    _animController.value = max(0, _isRTL ? from - to : to - from) / _maxWidth;
+  }
+
+  Widget slideList(ThemeData theme) => Listener(
+    onPointerDown: (event) => _slideDragGestureRecognizer?.addPointer(event),
     child: buildList(theme),
   );
+}
+
+typedef IsDxAllowed = bool Function(double dx);
+
+class SlideDragGestureRecognizer extends HorizontalDragGestureRecognizer {
+  SlideDragGestureRecognizer({
+    super.debugOwner,
+    super.supportedDevices,
+    super.allowedButtonsFilter,
+    required this.isDxAllowed,
+  });
+
+  final IsDxAllowed isDxAllowed;
+
+  @override
+  bool isPointerAllowed(PointerEvent event) {
+    return isDxAllowed(event.localPosition.dx) && super.isPointerAllowed(event);
+  }
+}
+
+class TabBarDragGestureRecognizer
+    extends CustomHorizontalDragGestureRecognizer {
+  TabBarDragGestureRecognizer({
+    super.debugOwner,
+    super.supportedDevices,
+    super.allowedButtonsFilter,
+    required this.isDxAllowed,
+  });
+
+  final IsDxAllowed isDxAllowed;
+
+  @override
+  bool isPointerAllowed(PointerEvent event) {
+    return isDxAllowed(event.localPosition.dx) && super.isPointerAllowed(event);
+  }
 }

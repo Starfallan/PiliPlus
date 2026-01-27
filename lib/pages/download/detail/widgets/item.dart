@@ -175,17 +175,24 @@ class DetailItem extends StatelessWidget {
                         final cover = File(
                           path.join(entry.entryDirPath, PathUtils.coverName),
                         );
+                        final maxWidth = constraints.maxWidth;
+                        final maxHeight = constraints.maxHeight;
+                        int? cacheWidth, cacheHeight;
+                        if (entry.pageData?.cacheWidth ?? false) {
+                          cacheWidth = maxWidth.cacheSize(context);
+                        } else {
+                          cacheHeight = maxHeight.cacheSize(context);
+                        }
                         return cover.existsSync()
                             ? ClipRRect(
                                 borderRadius: StyleString.mdRadius,
                                 child: Image.file(
                                   cover,
-                                  width: constraints.maxWidth,
-                                  height: constraints.maxHeight,
+                                  width: maxWidth,
+                                  height: maxHeight,
                                   fit: BoxFit.cover,
-                                  cacheHeight: constraints.maxWidth.cacheSize(
-                                    context,
-                                  ),
+                                  cacheWidth: cacheWidth,
+                                  cacheHeight: cacheHeight,
                                   colorBlendMode: NetworkImgLayer.reduce
                                       ? BlendMode.modulate
                                       : null,
@@ -196,8 +203,9 @@ class DetailItem extends StatelessWidget {
                               )
                             : NetworkImgLayer(
                                 src: entry.cover,
-                                width: constraints.maxWidth,
-                                height: constraints.maxHeight,
+                                width: maxWidth,
+                                height: maxHeight,
+                                cacheWidth: entry.pageData?.cacheWidth,
                               );
                       },
                     ),
@@ -224,8 +232,11 @@ class DetailItem extends StatelessWidget {
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                videoProgressIndicator(
-                                  progress / entry.totalTimeMilli,
+                                VideoProgressIndicator(
+                                  color: theme.colorScheme.primary,
+                                  backgroundColor:
+                                      theme.colorScheme.secondaryContainer,
+                                  progress: progress / entry.totalTimeMilli,
                                 ),
                                 PBadge(
                                   text: progress >= entry.totalTimeMilli - 400

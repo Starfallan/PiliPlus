@@ -11,7 +11,8 @@
 library;
 
 import 'package:PiliPlus/common/widgets/flutter/page/scrollable.dart';
-import 'package:flutter/gestures.dart' show DragStartBehavior;
+import 'package:flutter/gestures.dart'
+    show DragStartBehavior, HorizontalDragGestureRecognizer;
 import 'package:flutter/material.dart' hide Scrollable, ScrollableState;
 import 'package:flutter/rendering.dart';
 
@@ -41,18 +42,18 @@ const PageScrollPhysics _kPagePhysics = PageScrollPhysics();
 ///
 /// You can use a [PageController] to control which page is visible in the view.
 /// In addition to being able to control the pixel offset of the content inside
-/// the [CustomPageView], a [PageController] also lets you control the offset in terms
+/// the [PageView], a [PageController] also lets you control the offset in terms
 /// of pages, which are increments of the viewport size.
 ///
 /// The [PageController] can also be used to control the
 /// [PageController.initialPage], which determines which page is shown when the
-/// [CustomPageView] is first constructed, and the [PageController.viewportFraction],
+/// [PageView] is first constructed, and the [PageController.viewportFraction],
 /// which determines the size of the pages as a fraction of the viewport size.
 ///
 /// {@youtube 560 315 https://www.youtube.com/watch?v=J1gE9xvph-A}
 ///
 /// {@tool dartpad}
-/// Here is an example of [CustomPageView]. It creates a centered [Text] in each of the three pages
+/// Here is an example of [PageView]. It creates a centered [Text] in each of the three pages
 /// which scroll horizontally.
 ///
 /// ** See code in examples/api/lib/widgets/page_view/page_view.0.dart **
@@ -61,7 +62,7 @@ const PageScrollPhysics _kPagePhysics = PageScrollPhysics();
 /// ## Persisting the scroll position during a session
 ///
 /// Scroll views attempt to persist their scroll position using [PageStorage].
-/// For a [CustomPageView], this can be disabled by setting [PageController.keepPage]
+/// For a [PageView], this can be disabled by setting [PageController.keepPage]
 /// to false on the [controller]. If it is enabled, using a [PageStorageKey] for
 /// the [key] of this widget is recommended to help disambiguate different
 /// scroll views from each other.
@@ -74,7 +75,8 @@ const PageScrollPhysics _kPagePhysics = PageScrollPhysics();
 ///  * [GridView], for a scrollable grid of boxes.
 ///  * [ScrollNotification] and [NotificationListener], which can be used to watch
 ///    the scroll position without using a [ScrollController].
-class CustomPageView extends StatefulWidget {
+class PageView<T extends HorizontalDragGestureRecognizer>
+    extends StatefulWidget {
   /// Creates a scrollable list that works page by page from an explicit [List]
   /// of widgets.
   ///
@@ -88,12 +90,12 @@ class CustomPageView extends StatefulWidget {
   /// See the documentation at [SliverChildListDelegate.children] for more details.
   ///
   /// {@template flutter.widgets.PageView.allowImplicitScrolling}
-  /// If [allowImplicitScrolling] is true, the [CustomPageView] will participate in
+  /// If [allowImplicitScrolling] is true, the [PageView] will participate in
   /// accessibility scrolling more like a [ListView], where implicit scroll
   /// actions will move to the next page rather than into the contents of the
-  /// [CustomPageView].
+  /// [PageView].
   /// {@endtemplate}
-  CustomPageView({
+  PageView({
     super.key,
     this.scrollDirection = Axis.horizontal,
     this.reverse = false,
@@ -109,12 +111,10 @@ class CustomPageView extends StatefulWidget {
     this.hitTestBehavior = HitTestBehavior.opaque,
     this.scrollBehavior,
     this.padEnds = true,
-    this.header,
-    this.bgColor = Colors.transparent,
+    required this.horizontalDragGestureRecognizer,
   }) : childrenDelegate = SliverChildListDelegate(children);
 
-  final Widget? header;
-  final Color bgColor;
+  final T horizontalDragGestureRecognizer;
 
   /// Creates a scrollable list that works page by page using widgets that are
   /// created on demand.
@@ -123,7 +123,7 @@ class CustomPageView extends StatefulWidget {
   /// number of children because the builder is called only for those children
   /// that are actually visible.
   ///
-  /// Providing a non-null [itemCount] lets the [CustomPageView] compute the maximum
+  /// Providing a non-null [itemCount] lets the [PageView] compute the maximum
   /// scroll extent.
   ///
   /// [itemBuilder] will be called only with indices greater than or equal to
@@ -141,7 +141,7 @@ class CustomPageView extends StatefulWidget {
   /// {@endtemplate}
   ///
   /// {@macro flutter.widgets.PageView.allowImplicitScrolling}
-  CustomPageView.builder({
+  PageView.builder({
     super.key,
     this.scrollDirection = Axis.horizontal,
     this.reverse = false,
@@ -159,8 +159,7 @@ class CustomPageView extends StatefulWidget {
     this.hitTestBehavior = HitTestBehavior.opaque,
     this.scrollBehavior,
     this.padEnds = true,
-    this.header,
-    this.bgColor = Colors.transparent,
+    required this.horizontalDragGestureRecognizer,
   }) : childrenDelegate = SliverChildBuilderDelegate(
          itemBuilder,
          findChildIndexCallback: findChildIndexCallback,
@@ -171,14 +170,14 @@ class CustomPageView extends StatefulWidget {
   /// model.
   ///
   /// {@tool dartpad}
-  /// This example shows a [CustomPageView] that uses a custom [SliverChildBuilderDelegate] to support child
+  /// This example shows a [PageView] that uses a custom [SliverChildBuilderDelegate] to support child
   /// reordering.
   ///
   /// ** See code in examples/api/lib/widgets/page_view/page_view.1.dart **
   /// {@end-tool}
   ///
   /// {@macro flutter.widgets.PageView.allowImplicitScrolling}
-  const CustomPageView.custom({
+  const PageView.custom({
     super.key,
     this.scrollDirection = Axis.horizontal,
     this.reverse = false,
@@ -194,8 +193,7 @@ class CustomPageView extends StatefulWidget {
     this.hitTestBehavior = HitTestBehavior.opaque,
     this.scrollBehavior,
     this.padEnds = true,
-    this.header,
-    this.bgColor = Colors.transparent,
+    required this.horizontalDragGestureRecognizer,
   });
 
   /// Controls whether the widget's pages will respond to
@@ -265,10 +263,10 @@ class CustomPageView extends StatefulWidget {
   /// Called whenever the page in the center of the viewport changes.
   final ValueChanged<int>? onPageChanged;
 
-  /// A delegate that provides the children for the [CustomPageView].
+  /// A delegate that provides the children for the [PageView].
   ///
   /// The [PageView.custom] constructor lets you specify this delegate
-  /// explicitly. The [CustomPageView] and [PageView.builder] constructors create a
+  /// explicitly. The [PageView] and [PageView.builder] constructors create a
   /// [childrenDelegate] that wraps the given [List] and [IndexedWidgetBuilder],
   /// respectively.
   final SliverChildDelegate childrenDelegate;
@@ -304,10 +302,11 @@ class CustomPageView extends StatefulWidget {
   final bool padEnds;
 
   @override
-  State<CustomPageView> createState() => _CustomPageViewState();
+  State<PageView<T>> createState() => _PageViewState<T>();
 }
 
-class _CustomPageViewState extends State<CustomPageView> {
+class _PageViewState<T extends HorizontalDragGestureRecognizer>
+    extends State<PageView<T>> {
   int _lastReportedPage = 0;
 
   late PageController _controller;
@@ -332,7 +331,7 @@ class _CustomPageViewState extends State<CustomPageView> {
   }
 
   @override
-  void didUpdateWidget(CustomPageView oldWidget) {
+  void didUpdateWidget(PageView<T> oldWidget) {
     if (oldWidget.controller != widget.controller) {
       if (oldWidget.controller == null) {
         _controller.dispose();
@@ -388,9 +387,7 @@ class _CustomPageViewState extends State<CustomPageView> {
         }
         return false;
       },
-      child: CustomScrollable(
-        header: widget.header,
-        bgColor: widget.bgColor,
+      child: Scrollable<T>(
         dragStartBehavior: widget.dragStartBehavior,
         axisDirection: axisDirection,
         controller: _controller,
@@ -419,6 +416,7 @@ class _CustomPageViewState extends State<CustomPageView> {
             ],
           );
         },
+        horizontalDragGestureRecognizer: widget.horizontalDragGestureRecognizer,
       ),
     );
   }

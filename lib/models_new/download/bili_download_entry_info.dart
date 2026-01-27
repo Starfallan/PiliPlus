@@ -239,6 +239,8 @@ class PageInfo {
   final String? downloadTitle;
   final String? downloadSubtitle;
 
+  bool get cacheWidth => width <= height;
+
   PageInfo({
     required this.cid,
     required this.page,

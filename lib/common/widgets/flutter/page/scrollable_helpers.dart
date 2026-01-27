@@ -13,7 +13,7 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/common/widgets/flutter/page/scrollable.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide ScrollableState;
 
 /// An auto scroller that scrolls the [scrollable] if a drag gesture drags close
 /// to its edge.
@@ -30,7 +30,7 @@ class EdgeDraggingAutoScroller {
   });
 
   /// The [CustomScrollable] this auto scroller is scrolling.
-  final CustomScrollableState scrollable;
+  final ScrollableState scrollable;
 
   /// Called when a scroll view is scrolled.
   ///
@@ -102,7 +102,7 @@ class EdgeDraggingAutoScroller {
     final Matrix4 transform = scrollRenderBox.getTransformTo(null);
     final Rect globalRect = MatrixUtils.transformRect(
       transform,
-      Rect.fromLTWH(
+      Rect.fromLTRB(
         0,
         0,
         scrollRenderBox.size.width,

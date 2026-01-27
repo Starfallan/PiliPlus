@@ -68,6 +68,7 @@ class _EmotePanelState extends State<EmotePanel>
                           final size = flag ? 40.0 : 60.0;
                           final isTextEmote = e.type == 4;
                           return GridView.builder(
+                            physics: const ClampingScrollPhysics(),
                             padding: const EdgeInsets.only(
                               left: 12,
                               right: 12,
@@ -103,9 +104,9 @@ class _EmotePanelState extends State<EmotePanel>
                               );
                               if (!isTextEmote) {
                                 child = CustomTooltip(
-                                  indicator: () => CustomPaint(
+                                  indicator: () => Triangle(
+                                    color: color,
                                     size: const Size(14, 8),
-                                    painter: TrianglePainter(color),
                                   ),
                                   overlayWidget: () => Container(
                                     padding: const EdgeInsets.all(8),

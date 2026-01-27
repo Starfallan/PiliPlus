@@ -100,7 +100,7 @@ class _ViewPointsPageState extends State<ViewPointsPage>
       ),
       itemCount: videoDetailController.viewPointList.length,
       itemBuilder: (context, index) {
-        Segment segment = videoDetailController.viewPointList[index];
+        final segment = videoDetailController.viewPointList[index];
         if (currentIndex == -1 && segment.from != null && segment.to != null) {
           final positionSeconds =
               videoDetailController.plPlayerController.positionSeconds.value;
@@ -122,7 +122,7 @@ class _ViewPointsPageState extends State<ViewPointsPage>
     return child;
   }
 
-  Widget _buildItem(ThemeData theme, Segment segment, bool isCurr) {
+  Widget _buildItem(ThemeData theme, ViewPointSegment segment, bool isCurr) {
     final theme = Theme.of(context);
     return Material(
       type: MaterialType.transparency,

@@ -5,53 +5,60 @@ class ImmediateTapGestureRecognizer extends OneSequenceGestureRecognizer {
   ImmediateTapGestureRecognizer({
     super.debugOwner,
     super.supportedDevices,
-    super.allowedButtonsFilter,
+    super.allowedButtonsFilter = _defaultButtonAcceptBehavior,
     this.onTapDown,
-    required this.onTapUp,
+    this.onTapUp,
     this.onTapCancel,
     this.onTap,
   });
 
+  static bool _defaultButtonAcceptBehavior(int buttons) =>
+      buttons == kPrimaryButton;
+
   GestureTapDownCallback? onTapDown;
 
-  final GestureTapUpCallback onTapUp;
+  GestureTapUpCallback? onTapUp;
 
-  final GestureTapCancelCallback? onTapCancel;
+  GestureTapCancelCallback? onTapCancel;
 
-  final GestureTapCallback? onTap;
+  GestureTapCallback? onTap;
 
   PointerUpEvent? _up;
-  int _activePointer = 0;
+  int? _activePointer;
   bool _sentTapDown = false;
   bool _wonArena = false;
+  Offset? _initialPosition;
 
   @override
   bool isPointerPanZoomAllowed(PointerPanZoomStartEvent event) => false;
 
   @override
   bool isPointerAllowed(PointerDownEvent event) =>
-      _activePointer == 0 && super.isPointerAllowed(event);
+      _activePointer == null && super.isPointerAllowed(event);
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
     super.addAllowedPointer(event);
     _reset(event.pointer);
+    _handleTapDown(event);
+    _initialPosition = event.position;
   }
 
   @override
   void handleEvent(PointerEvent event) {
     if (event.pointer != _activePointer) {
+      resolvePointer(event.pointer, GestureDisposition.rejected);
       stopTrackingPointer(event.pointer);
       return;
     }
 
-    if (event is PointerDownEvent) {
-      _handleTapDown(event);
-    } else if (event is PointerMoveEvent) {
+    if (event is PointerMoveEvent) {
       _handlePointerMove(event);
     } else if (event is PointerUpEvent) {
       _up = event;
       _handlePointerUp(event);
+    } else if (event is PointerCancelEvent) {
+      resolve(GestureDisposition.rejected);
     }
 
     stopTrackingIfPointerNoLongerDown(event);
@@ -59,9 +66,9 @@ class ImmediateTapGestureRecognizer extends OneSequenceGestureRecognizer {
 
   void _handleTapDown(PointerDownEvent event) {
     if (_sentTapDown) return;
+    _sentTapDown = true;
 
     if (onTapDown != null) {
-      _sentTapDown = true;
       final details = TapDownDetails(
         globalPosition: event.position,
         localPosition: event.localPosition,
@@ -72,8 +79,8 @@ class ImmediateTapGestureRecognizer extends OneSequenceGestureRecognizer {
   }
 
   void _handlePointerMove(PointerMoveEvent event) {
-    if (event.delta.distanceSquared > 2.0) {
-      _cancelGesture('pointer moved');
+    if ((event.position - _initialPosition!).distanceSquared > 4.0) {
+      resolve(GestureDisposition.rejected);
       stopTrackingPointer(event.pointer);
     }
   }
@@ -85,12 +92,14 @@ class ImmediateTapGestureRecognizer extends OneSequenceGestureRecognizer {
   }
 
   void _handleTapUp(PointerUpEvent event) {
-    final details = TapUpDetails(
-      globalPosition: event.position,
-      localPosition: event.localPosition,
-      kind: event.kind,
-    );
-    invokeCallback<void>('onTapUp', () => onTapUp(details));
+    if (onTapUp != null) {
+      final details = TapUpDetails(
+        globalPosition: event.position,
+        localPosition: event.localPosition,
+        kind: event.kind,
+      );
+      invokeCallback<void>('onTapUp', () => onTapUp!(details));
+    }
 
     if (onTap != null) {
       invokeCallback<void>('onTap', onTap!);
@@ -106,7 +115,7 @@ class ImmediateTapGestureRecognizer extends OneSequenceGestureRecognizer {
     _reset();
   }
 
-  void _reset([int pointer = 0]) {
+  void _reset([int? pointer]) {
     _activePointer = pointer;
     _up = null;
     _sentTapDown = false;
@@ -138,13 +147,7 @@ class ImmediateTapGestureRecognizer extends OneSequenceGestureRecognizer {
 
   @override
   void didStopTrackingLastPointer(int pointer) {
-    // wait for arena
-  }
-
-  @override
-  void dispose() {
-    _cancelGesture('disposed');
-    super.dispose();
+    _initialPosition = null;
   }
 
   @override

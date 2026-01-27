@@ -14,7 +14,7 @@ void imageSaveDialog({
   dynamic aid,
   String? bvid,
 }) {
-  final double imgWidth = MediaQuery.sizeOf(Get.context!).shortestSide - 8 * 2;
+  final double imgWidth = MediaQuery.sizeOf(Get.context!).shortestSide - 16;
   SmartDialog.show(
     animationType: SmartAnimationType.centerScale_otherSlide,
     builder: (context) {
@@ -22,7 +22,7 @@ void imageSaveDialog({
       final theme = Theme.of(context);
       return Container(
         width: imgWidth,
-        margin: const EdgeInsets.symmetric(horizontal: StyleString.safeSpace),
+        margin: const .symmetric(horizontal: StyleString.safeSpace),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: StyleString.mdRadius,
@@ -36,32 +36,29 @@ void imageSaveDialog({
                 GestureDetector(
                   onTap: SmartDialog.dismiss,
                   child: NetworkImgLayer(
-                    width: imgWidth,
-                    height: imgWidth / StyleString.aspectRatio,
                     src: cover,
                     quality: 100,
+                    width: imgWidth,
+                    height: imgWidth / StyleString.aspectRatio16x9,
+                    borderRadius: const .vertical(top: StyleString.imgRadius),
                   ),
                 ),
                 Positioned(
                   right: 8,
                   top: 8,
-                  child: SizedBox(
-                    width: 30,
-                    height: 30,
-                    child: IconButton(
-                      tooltip: '关闭',
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStatePropertyAll(
-                          Colors.black.withValues(alpha: 0.3),
-                        ),
-                        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-                      ),
-                      onPressed: SmartDialog.dismiss,
-                      icon: const Icon(
-                        Icons.close,
-                        size: 18,
-                        color: Colors.white,
-                      ),
+                  width: 30,
+                  height: 30,
+                  child: IconButton(
+                    tooltip: '关闭',
+                    style: IconButton.styleFrom(
+                      padding: .zero,
+                      backgroundColor: Colors.black.withValues(alpha: 0.3),
+                    ),
+                    onPressed: SmartDialog.dismiss,
+                    icon: const Icon(
+                      Icons.close,
+                      size: 18,
+                      color: Colors.white,
                     ),
                   ),
                 ),

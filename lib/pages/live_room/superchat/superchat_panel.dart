@@ -30,7 +30,7 @@ class _SuperChatPanelState extends DebounceStreamState<SuperChatPanel, bool>
     super.build(context);
     return Obx(
       () => ListView.separated(
-        key: const PageStorageKey('live-sc'),
+        key: const PageStorageKey(_SuperChatPanelState),
         padding: const EdgeInsets.symmetric(horizontal: 12),
         physics: const ClampingScrollPhysics(),
         itemCount: widget.controller.superChatMsg.length,

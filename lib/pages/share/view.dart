@@ -104,11 +104,11 @@ class _SharePanelState extends State<SharePanel> {
             children: [
               Expanded(
                 child: SelfSizedHorizontalList(
-                  gapSize: 10,
+                  padding: .zero,
                   itemCount: _userList.length,
                   controller: _scrollController,
-                  padding: EdgeInsets.zero,
-                  childBuilder: (index) {
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (context, index) {
                     final item = _userList[index];
                     return Builder(
                       builder: (context) {

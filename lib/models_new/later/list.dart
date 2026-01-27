@@ -3,6 +3,7 @@ import 'package:PiliPlus/models_new/later/bangumi.dart';
 import 'package:PiliPlus/models_new/later/page.dart';
 import 'package:PiliPlus/models_new/later/rights.dart';
 import 'package:PiliPlus/models_new/later/stat.dart';
+import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 
 class LaterItemModel with MultiSelectData {
@@ -27,6 +28,7 @@ class LaterItemModel with MultiSelectData {
   bool? isPugv;
   int? seasonId;
   bool? isCharging;
+  Dimension? dimension;
 
   LaterItemModel({
     this.aid,
@@ -50,6 +52,7 @@ class LaterItemModel with MultiSelectData {
     this.isPugv,
     this.seasonId,
     this.isCharging,
+    this.dimension,
   });
 
   factory LaterItemModel.fromJson(Map<String, dynamic> json) => LaterItemModel(
@@ -89,5 +92,8 @@ class LaterItemModel with MultiSelectData {
     isPugv: json['is_pugv'] as bool?,
     seasonId: json['season_id'] as int?,
     isCharging: json['charging_pay']?['level'] != null,
+    dimension: json['dimension'] == null
+        ? null
+        : Dimension.fromJson(json['dimension'] as Map<String, dynamic>),
   );
 }

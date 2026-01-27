@@ -141,8 +141,16 @@ class VideoCardHMemberVideo extends StatelessWidget {
                                               left: 0,
                                               right: 0,
                                               bottom: 0,
-                                              child: videoProgressIndicator(
-                                                videoItem.history!.progress! /
+                                              child: VideoProgressIndicator(
+                                                color:
+                                                    theme.colorScheme.primary,
+                                                backgroundColor: theme
+                                                    .colorScheme
+                                                    .secondaryContainer,
+                                                progress:
+                                                    videoItem
+                                                        .history!
+                                                        .progress! /
                                                     videoItem
                                                         .history!
                                                         .duration!,
@@ -206,8 +214,9 @@ class VideoCardHMemberVideo extends StatelessWidget {
           Positioned(
             bottom: 0,
             right: 12,
+            width: 29,
+            height: 29,
             child: VideoPopupMenu(
-              size: 29,
               iconSize: 17,
               videoItem: videoItem,
             ),

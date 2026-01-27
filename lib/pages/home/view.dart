@@ -1,8 +1,6 @@
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
-import 'package:PiliPlus/models/common/dynamic/dynamic_badge_mode.dart';
-import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
@@ -34,7 +32,7 @@ class _HomePageState extends State<HomePage>
     final theme = Theme.of(context);
     return Column(
       children: [
-        if (!_homeController.useSideBar &&
+        if (!_mainController.useSideBar &&
             MediaQuery.sizeOf(context).isPortrait)
           customAppBar(theme),
         if (_homeController.tabs.length > 1)
@@ -77,80 +75,19 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  Widget searchBarAndUser(ThemeData theme) {
-    return Row(
+  Widget customAppBar(ThemeData theme) {
+    const height = 52.0;
+    const padding = EdgeInsets.fromLTRB(14, 6, 14, 0);
+    final child = Row(
       children: [
         searchBar(theme),
         const SizedBox(width: 4),
-        Obx(
-          () => _homeController.accountService.isLogin.value
-              ? msgBadge(_mainController)
-              : const SizedBox.shrink(),
-        ),
+        msgBadge(_mainController),
         const SizedBox(width: 8),
-        Semantics(
-          label: "我的",
-          child: Obx(
-            () => _homeController.accountService.isLogin.value
-                ? Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      NetworkImgLayer(
-                        type: ImageType.avatar,
-                        width: 34,
-                        height: 34,
-                        src: _homeController.accountService.face.value,
-                      ),
-                      Positioned.fill(
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: InkWell(
-                            onTap: _mainController.toMinePage,
-                            splashColor: theme.colorScheme.primaryContainer
-                                .withValues(alpha: 0.3),
-                            customBorder: const CircleBorder(),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        right: -6,
-                        bottom: -6,
-                        child: Obx(
-                          () => MineController.anonymity.value
-                              ? IgnorePointer(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          theme.colorScheme.secondaryContainer,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      size: 16,
-                                      MdiIcons.incognito,
-                                      color: theme
-                                          .colorScheme
-                                          .onSecondaryContainer,
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ),
-                    ],
-                  )
-                : defaultUser(
-                    theme: theme,
-                    onPressed: _mainController.toMinePage,
-                  ),
-          ),
-        ),
+        userAvatar(theme: theme, mainController: _mainController),
       ],
     );
-  }
-
-  Widget customAppBar(ThemeData theme) {
-    if (_homeController.searchBar case final searchBar?) {
+    if (_homeController.showSearchBar case final searchBar?) {
       return Obx(() {
         final showSearchBar = searchBar.value;
         return AnimatedOpacity(
@@ -159,39 +96,39 @@ class _HomePageState extends State<HomePage>
           child: AnimatedContainer(
             curve: Curves.easeInOutCubicEmphasized,
             duration: const Duration(milliseconds: 500),
-            height: showSearchBar ? 52 : 0,
-            padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
-            child: searchBarAndUser(theme),
+            height: showSearchBar ? height : 0,
+            padding: padding,
+            child: child,
           ),
         );
       });
     } else {
       return Container(
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
-        child: searchBarAndUser(theme),
+        height: height,
+        padding: padding,
+        child: child,
       );
     }
   }
 
   Widget searchBar(ThemeData theme) {
+    const borderRadius = BorderRadius.all(Radius.circular(25));
     return Expanded(
       child: SizedBox(
         height: 44,
         child: Material(
-          borderRadius: const BorderRadius.all(Radius.circular(25)),
+          borderRadius: borderRadius,
           color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.05),
           child: InkWell(
-            borderRadius: const BorderRadius.all(Radius.circular(25)),
+            borderRadius: borderRadius,
             splashColor: theme.colorScheme.primaryContainer.withValues(
               alpha: 0.3,
             ),
             onTap: () => Get.toNamed(
               '/search',
-              parameters: {
-                if (_homeController.enableSearchWord)
-                  'hintText': _homeController.defaultSearch.value,
-              },
+              parameters: _homeController.enableSearchWord
+                  ? {'hintText': _homeController.defaultSearch.value}
+                  : null,
             ),
             child: Row(
               children: [
@@ -222,60 +159,109 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-Widget defaultUser({
+Widget userAvatar({
   required ThemeData theme,
-  required VoidCallback onPressed,
+  required MainController mainController,
 }) {
-  return SizedBox(
-    width: 38,
-    height: 38,
-    child: IconButton(
-      tooltip: '点击登录',
-      style: ButtonStyle(
-        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-        backgroundColor: WidgetStatePropertyAll(
-          theme.colorScheme.onInverseSurface,
-        ),
-      ),
-      onPressed: onPressed,
-      icon: Icon(
-        Icons.person_rounded,
-        size: 22,
-        color: theme.colorScheme.primary,
-      ),
+  return Semantics(
+    label: "我的",
+    child: Obx(
+      () {
+        if (mainController.accountService.isLogin.value) {
+          return Stack(
+            clipBehavior: .none,
+            children: [
+              NetworkImgLayer(
+                type: .avatar,
+                width: 34,
+                height: 34,
+                src: mainController.accountService.face.value,
+              ),
+              Positioned.fill(
+                child: Material(
+                  type: .transparency,
+                  child: InkWell(
+                    onTap: mainController.toMinePage,
+                    splashColor: theme.colorScheme.primaryContainer.withValues(
+                      alpha: 0.3,
+                    ),
+                    customBorder: const CircleBorder(),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: -4,
+                bottom: -4,
+                child: Obx(
+                  () => MineController.anonymity.value
+                      ? IgnorePointer(
+                          child: Container(
+                            padding: const .all(2),
+                            decoration: BoxDecoration(
+                              shape: .circle,
+                              color: theme.colorScheme.secondaryContainer,
+                            ),
+                            child: Icon(
+                              size: 14,
+                              MdiIcons.incognito,
+                              color: theme.colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ],
+          );
+        }
+        return SizedBox(
+          width: 38,
+          height: 38,
+          child: IconButton(
+            tooltip: '点击登录',
+            style: IconButton.styleFrom(
+              padding: .zero,
+              backgroundColor: theme.colorScheme.onInverseSurface,
+            ),
+            onPressed: mainController.toMinePage,
+            icon: Icon(
+              Icons.person_rounded,
+              size: 22,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        );
+      },
     ),
   );
 }
 
 Widget msgBadge(MainController mainController) {
-  void toWhisper() {
-    mainController.msgUnReadCount.value = '';
-    mainController.lastCheckUnreadAt = DateTime.now().millisecondsSinceEpoch;
-    Get.toNamed('/whisper');
-  }
-
-  final msgUnReadCount = mainController.msgUnReadCount.value;
-  return GestureDetector(
-    onTap: toWhisper,
-    child: Badge(
-      isLabelVisible:
-          mainController.msgBadgeMode != DynamicBadgeMode.hidden &&
-          msgUnReadCount.isNotEmpty,
-      alignment: mainController.msgBadgeMode == DynamicBadgeMode.number
-          ? const Alignment(0, -0.5)
-          : const Alignment(0.5, -0.5),
-      label:
-          mainController.msgBadgeMode == DynamicBadgeMode.number &&
-              msgUnReadCount.isNotEmpty
-          ? Text(msgUnReadCount)
-          : null,
-      child: IconButton(
-        tooltip: '消息',
-        onPressed: toWhisper,
-        icon: const Icon(
-          Icons.notifications_none,
-        ),
-      ),
-    ),
+  return Obx(
+    () {
+      if (mainController.accountService.isLogin.value) {
+        final count = mainController.msgUnReadCount.value;
+        final isNumBadge = mainController.msgBadgeMode == .number;
+        return IconButton(
+          tooltip: '消息',
+          onPressed: () {
+            mainController
+              ..msgUnReadCount.value = ''
+              ..lastCheckUnreadAt = DateTime.now().millisecondsSinceEpoch;
+            Get.toNamed('/whisper');
+          },
+          icon: Badge(
+            isLabelVisible:
+                mainController.msgBadgeMode != .hidden && count.isNotEmpty,
+            alignment: isNumBadge
+                ? const Alignment(0.0, -0.85)
+                : const Alignment(1.0, -0.85),
+            label: isNumBadge && count.isNotEmpty ? Text(count) : null,
+            child: const Icon(Icons.notifications_none),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    },
   );
 }

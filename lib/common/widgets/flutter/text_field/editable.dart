@@ -2473,7 +2473,7 @@ class RenderEditable extends RenderBox
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
       case TargetPlatform.macOS:
-        _caretPrototype = Rect.fromLTWH(
+        _caretPrototype = Rect.fromLTRB(
           0.0,
           0.0,
           cursorWidth,
@@ -3169,7 +3169,7 @@ class _TextHighlightPainter extends RenderEditablePainter {
             .toRect()
             .shift(renderEditable._paintOffset)
             .intersect(
-              Rect.fromLTWH(0, 0, textPainter.width, textPainter.height),
+              Rect.fromLTRB(0, 0, textPainter.width, textPainter.height),
             ),
         highlightPaint,
       );

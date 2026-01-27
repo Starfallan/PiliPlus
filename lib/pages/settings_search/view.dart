@@ -66,7 +66,7 @@ class _SettingsSearchPageState
             onPressed: () {
               if (_textEditingController.text.isNotEmpty) {
                 _textEditingController.clear();
-                _list.value = <SettingsModel>[];
+                _list.clear();
               } else {
                 Get.back();
               }

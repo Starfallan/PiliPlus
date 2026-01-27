@@ -45,7 +45,7 @@ class _SettingPageState extends State<SettingPage> {
   final RxBool _noAccount = Accounts.account.isEmpty.obs;
   late bool _isPortrait;
 
-  final List<_SettingsModel> _items = const [
+  static const List<_SettingsModel> _items = [
     _SettingsModel(
       type: SettingType.privacySetting,
       subtitle: '黑名单、无痕模式',

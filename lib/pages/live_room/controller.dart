@@ -288,9 +288,14 @@ class LiveRoomController extends GetxController {
             ),
           ),
           TextButton(
-            onPressed: () => Get
-              ..back()
-              ..back(),
+            onPressed: () {
+              if (plPlayerController.isDesktopPip) {
+                plPlayerController.exitDesktopPip();
+              }
+              Get
+                ..back()
+                ..back();
+            },
             child: const Text('退出'),
           ),
         ],

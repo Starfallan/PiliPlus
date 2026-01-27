@@ -55,6 +55,7 @@ class _LocalIntroPanelState extends State<LocalIntroPanel>
   ) {
     final outline = theme.colorScheme.outline;
     final cover = File(path.join(entry.entryDirPath, PathUtils.coverName));
+    final cacheWidth = entry.pageData?.cacheWidth ?? false;
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: SizedBox(
@@ -87,7 +88,12 @@ class _LocalIntroPanelState extends State<LocalIntroPanel>
                                 width: 140.8,
                                 height: 88,
                                 fit: BoxFit.cover,
-                                cacheHeight: 140.8.cacheSize(context),
+                                cacheWidth: cacheWidth
+                                    ? 140.8.cacheSize(context)
+                                    : null,
+                                cacheHeight: cacheWidth
+                                    ? null
+                                    : 88.cacheSize(context),
                                 colorBlendMode: NetworkImgLayer.reduce
                                     ? BlendMode.modulate
                                     : null,

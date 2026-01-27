@@ -174,9 +174,11 @@ class _CreateFavPageState extends State<CreateFavPage> {
   final leadingStyle = const TextStyle(fontSize: 14);
 
   Widget _buildBody(ThemeData theme) => SingleChildScrollView(
+    padding: .only(bottom: MediaQuery.viewPaddingOf(context).bottom + 25),
     child: Column(
+      spacing: 12,
       children: [
-        if (_attr == null || !FavUtils.isDefaultFav(_attr!)) ...[
+        if (_attr == null || !FavUtils.isDefaultFav(_attr!))
           Builder(
             builder: (context) {
               return ListTile(
@@ -260,8 +262,6 @@ class _CreateFavPageState extends State<CreateFavPage> {
               );
             },
           ),
-          const SizedBox(height: 16),
-        ],
         ListTile(
           tileColor: theme.colorScheme.onInverseSurface,
           title: Row(
@@ -318,8 +318,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
             ],
           ),
         ),
-        const SizedBox(height: 16),
-        if (_attr == null || !FavUtils.isDefaultFav(_attr!)) ...[
+        if (_attr == null || !FavUtils.isDefaultFav(_attr!))
           ListTile(
             tileColor: theme.colorScheme.onInverseSurface,
             title: Row(
@@ -362,8 +361,6 @@ class _CreateFavPageState extends State<CreateFavPage> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-        ],
         Builder(
           builder: (context) {
             void onTap() {
@@ -389,7 +386,6 @@ class _CreateFavPageState extends State<CreateFavPage> {
             );
           },
         ),
-        const SizedBox(height: 16),
       ],
     ),
   );

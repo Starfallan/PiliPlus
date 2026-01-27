@@ -13,7 +13,7 @@ abstract final class SettingBoxKey {
       defaultToastOp = 'defaultToastOp',
       defaultPicQa = 'defaultPicQa',
       enableHA = 'enableHA',
-      useOpenSLES = 'useOpenSLES',
+      audioOutput = 'audioOutput',
       expandBuffer = 'expandBuffer',
       hardwareDecoding = 'hardwareDecoding',
       videoSync = 'videoSync',
@@ -146,7 +146,8 @@ abstract final class SettingBoxKey {
       downloadPath = 'downloadPath',
       followOrderType = 'followOrderType',
       enableImgMenu = 'enableImgMenu',
-      showDynDispute = 'showDynDispute';
+      showDynDispute = 'showDynDispute',
+      touchSlopH = 'touchSlopH';
 
   static const String minimizeOnExit = 'minimizeOnExit',
       windowSize = 'windowSize',
@@ -218,8 +219,8 @@ abstract final class SettingBoxKey {
       dynamicsShowAllFollowedUp = 'dynamicsShowAllFollowedUp',
       useSideBar = 'useSideBar',
       enableMYBar = 'enableMYBar',
-      hideSearchBar = 'hideSearchBar',
-      hideTabBar = 'hideTabBar',
+      hideTopBar = 'hideSearchBar',
+      hideBottomBar = 'hideTabBar',
       scrollThreshold = 'scrollThreshold',
       enableScrollThreshold = 'enableScrollThreshold',
       tabBarSort = 'tabBarSort',

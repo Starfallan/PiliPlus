@@ -607,7 +607,7 @@ abstract final class MsgHttp {
   }
 
   static Future<LoadingState<Null>> imMsgReport({
-    required Object accusedUid,
+    required int accusedUid,
     required int reasonType,
     required String reasonDesc,
     required Map comment,

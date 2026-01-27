@@ -98,7 +98,7 @@ class ActionPanel extends StatelessWidget {
               },
               child: Text(
                 like.count != null ? NumUtils.numFormat(like.count) : '点赞',
-                key: ValueKey<String>(like.count?.toString() ?? '点赞'),
+                key: ValueKey<int?>(like.count),
                 style: TextStyle(color: like.status! ? primary : outline),
               ),
             ),

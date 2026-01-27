@@ -8,11 +8,13 @@ import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/widgets/ordered_multi_select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
+import 'package:PiliPlus/plugin/pl_player/models/audio_output_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/hwdec_type.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -317,13 +319,32 @@ List<SettingsModel> get videoSettings => [
       }
     },
   ),
-  if (Platform.isAndroid)
-    const SwitchModel(
-      title: '优先使用 OpenSL ES 输出音频',
-      leading: Icon(Icons.speaker_outlined),
-      subtitle: '关闭则优先使用AudioTrack输出音频（此项即mpv的--ao），若遇系统音效丢失、无声、音画不同步等问题请尝试关闭。',
-      setKey: SettingBoxKey.useOpenSLES,
-      defaultVal: true,
+  if (kDebugMode || Platform.isAndroid)
+    NormalModel(
+      title: '音频输出设备',
+      leading: const Icon(Icons.speaker_outlined),
+      getSubtitle: () => '当前：${Pref.audioOutput}',
+      onTap: (context, setState) async {
+        final result = await showDialog<List<String>>(
+          context: context,
+          builder: (context) {
+            return OrderedMultiSelectDialog<String>(
+              title: '音频输出设备',
+              initValues: Pref.audioOutput.split(','),
+              values: {
+                for (final e in AudioOutput.values) e.name: e.label,
+              },
+            );
+          },
+        );
+        if (result != null && result.isNotEmpty) {
+          await GStorage.setting.put(
+            SettingBoxKey.audioOutput,
+            result.join(','),
+          );
+          setState();
+        }
+      },
     ),
   const SwitchModel(
     title: '扩大缓冲区',

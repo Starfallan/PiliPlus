@@ -1,7 +1,7 @@
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/badge_info.dart';
-import 'package:PiliPlus/models_new/pgc/pgc_info_model/dimension.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/rights.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/skip.dart';
+import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart'
     show BaseEpisodeItem;
 

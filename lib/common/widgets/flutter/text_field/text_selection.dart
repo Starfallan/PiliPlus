@@ -3573,7 +3573,7 @@ class _SelectionHandleOverlayState extends State<_SelectionHandleOverlay>
     final Size handleSize = widget.selectionControls.getHandleSize(
       preferredLineHeight,
     );
-    return Rect.fromLTWH(0.0, 0.0, handleSize.width, handleSize.height);
+    return Rect.fromLTRB(0.0, 0.0, handleSize.width, handleSize.height);
   }
 
   @override

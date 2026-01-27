@@ -4,7 +4,8 @@ abstract final class Api {
   // 推荐视频
   static const String recommendListApp =
       '${HttpString.appBaseUrl}/x/v2/feed/index';
-  static const String recommendListWeb = '/x/web-interface/index/top/feed/rcmd';
+  static const String recommendListWeb =
+      '/x/web-interface/wbi/index/top/feed/rcmd';
 
   // APP端不感兴趣、取消不感兴趣
   static const String feedDislike = '${HttpString.appBaseUrl}/x/feed/dislike';

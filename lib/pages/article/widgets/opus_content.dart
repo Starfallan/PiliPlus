@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/cached_network_svg_image.dart';
 import 'package:PiliPlus/common/widgets/image/custom_grid_view.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -18,7 +19,6 @@ import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
@@ -69,7 +69,7 @@ class OpusContent extends StatelessWidget {
                     ? null
                     : colorScheme.primary,
               ),
-              recognizer: TapGestureRecognizer()
+              recognizer: NoDeadlineTapGestureRecognizer()
                 ..onTap = () {
                   switch (rich.type) {
                     case 'RICH_TEXT_NODE_TYPE_AT':
@@ -293,7 +293,7 @@ class OpusContent extends StatelessWidget {
                             return TextSpan(
                               text: '${hasUrl ? '\u{1F517}' : ''}$text',
                               recognizer: hasUrl
-                                  ? (TapGestureRecognizer()
+                                  ? (NoDeadlineTapGestureRecognizer()
                                       ..onTap = () =>
                                           PiliScheme.routePushFromUrl(jumpUrl))
                                   : null,

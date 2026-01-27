@@ -98,46 +98,47 @@ abstract final class ReplyUtils {
       await Future.delayed(const Duration(seconds: 8));
     }
     void showReplyCheckResult(String message, {bool isBan = false}) {
+      final actions = [
+        if (isBan)
+          TextButton(
+            onPressed: () {
+              Get.back();
+              String? uri;
+              switch (type) {
+                case 1:
+                  uri = IdUtils.av2bv(oid);
+                case 17:
+                  uri = 'https://www.bilibili.com/opus/$oid';
+              }
+              if (uri != null) {
+                Utils.copyText(uri);
+              }
+              Get.toNamed(
+                '/webview',
+                parameters: {
+                  'url':
+                      'https://www.bilibili.com/h5/comment/appeal?${Utils.themeUrl(Get.isDarkMode)}',
+                },
+              );
+            },
+            child: const Text('申诉'),
+          ),
+        if (!isManual)
+          TextButton(
+            onPressed: Get.back,
+            child: Text(
+              '关闭',
+              style: TextStyle(color: Get.theme.colorScheme.outline),
+            ),
+          ),
+      ];
       showDialog(
         context: Get.context!,
         barrierDismissible: isManual,
         builder: (context) => AlertDialog(
           title: const Text('评论检查结果'),
           content: SelectableText(message),
-          actions: [
-            if (isBan)
-              TextButton(
-                onPressed: () {
-                  Get.back();
-                  String? uri;
-                  switch (type) {
-                    case 1:
-                      uri = IdUtils.av2bv(oid);
-                    case 17:
-                      uri = 'https://www.bilibili.com/opus/$oid';
-                  }
-                  if (uri != null) {
-                    Utils.copyText(uri);
-                  }
-                  Get.toNamed(
-                    '/webview',
-                    parameters: {
-                      'url':
-                          'https://www.bilibili.com/h5/comment/appeal?${Utils.themeUrl(Get.isDarkMode)}',
-                    },
-                  );
-                },
-                child: const Text('申诉'),
-              ),
-            if (!isManual)
-              TextButton(
-                onPressed: Get.back,
-                child: Text(
-                  '关闭',
-                  style: TextStyle(color: Get.theme.colorScheme.outline),
-                ),
-              ),
-          ],
+          actions: actions.isEmpty ? null : actions,
         ),
       );
     }

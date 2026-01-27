@@ -69,7 +69,7 @@ class DynamicDetailController extends CommonDynController {
       action: action,
     );
     if (res.isSuccess) {
-      await Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(milliseconds: 500), () {
         if (!isClosed) {
           onReload();
         }

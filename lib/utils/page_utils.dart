@@ -699,7 +699,7 @@ abstract final class PageUtils {
               : const Offset(1.0, 0.0);
           return SlideTransition(
             position: animation.drive(
-              Tween(
+              Tween<Offset>(
                 begin: begin,
                 end: Offset.zero,
               ).chain(CurveTween(curve: Curves.easeInOut)),

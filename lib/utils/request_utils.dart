@@ -281,24 +281,22 @@ abstract final class RequestUtils {
   // }
 
   static Future<void> insertCreatedDyn(dynamic id) async {
-    try {
-      if (id != null) {
+    if (id != null) {
+      try {
         await Future.delayed(const Duration(milliseconds: 450));
         final res = await DynamicsHttp.dynamicDetail(id: id);
         if (res case final Success<DynamicItemModel> e) {
           final ctr = Get.find<DynamicsTabController>(tag: 'all');
-          if (ctr.loadingState.value case Success(:final response)) {
-            if (response != null) {
-              response.insert(0, e.response);
-              ctr.loadingState.refresh();
-              return;
-            }
+          if (ctr.loadingState.value case Success(:final response?)) {
+            response.insert(0, e.response);
+            ctr.loadingState.refresh();
+            return;
           }
           ctr.loadingState.value = Success([e.response]);
         }
+      } catch (e) {
+        if (kDebugMode) debugPrint('create dyn $e');
       }
-    } catch (e) {
-      if (kDebugMode) debugPrint('create dyn $e');
     }
   }
 
@@ -318,6 +316,31 @@ abstract final class RequestUtils {
             clearCookie: true,
           );
           final isSuccess = res.isSuccess;
+          final actions = [
+            if (!isSuccess)
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                  Utils.copyText('https://www.bilibili.com/opus/$id');
+                  Get.toNamed(
+                    '/webview',
+                    parameters: {
+                      'url':
+                          'https://www.bilibili.com/h5/comment/appeal?${Utils.themeUrl(Get.isDarkMode)}',
+                    },
+                  );
+                },
+                child: const Text('申诉'),
+              ),
+            if (!isManual)
+              TextButton(
+                onPressed: Get.back,
+                child: Text(
+                  '关闭',
+                  style: TextStyle(color: Get.theme.colorScheme.outline),
+                ),
+              ),
+          ];
           showDialog(
             context: Get.context!,
             barrierDismissible: isManual,
@@ -326,31 +349,7 @@ abstract final class RequestUtils {
               content: SelectableText(
                 '${isSuccess ? '无账号状态下找到了你的动态，动态正常！' : '你的动态被shadow ban（仅自己可见）！'}${dynText != null ? ' \n\n动态内容: $dynText' : ''}',
               ),
-              actions: [
-                if (!isSuccess)
-                  TextButton(
-                    onPressed: () {
-                      Get.back();
-                      Utils.copyText('https://www.bilibili.com/opus/$id');
-                      Get.toNamed(
-                        '/webview',
-                        parameters: {
-                          'url':
-                              'https://www.bilibili.com/h5/comment/appeal?${Utils.themeUrl(Get.isDarkMode)}',
-                        },
-                      );
-                    },
-                    child: const Text('申诉'),
-                  ),
-                if (!isManual)
-                  TextButton(
-                    onPressed: Get.back,
-                    child: Text(
-                      '关闭',
-                      style: TextStyle(color: Get.theme.colorScheme.outline),
-                    ),
-                  ),
-              ],
+              actions: actions.isEmpty ? null : actions,
             ),
           );
         }
@@ -530,10 +529,10 @@ abstract final class RequestUtils {
         token: captchaData.token,
         validate: captchaData.validate,
       );
-      if (res case Success(:final response)) {
-        if (response?['is_valid'] == 1) {
-          final griskId = response?['grisk_id'];
-          if (griskId != null) {
+      if (res case Success(:final response?)) {
+        if (response['is_valid'] == 1) {
+          final griskId = response['grisk_id'];
+          if (griskId is String) {
             onSuccess(griskId);
           }
         } else {

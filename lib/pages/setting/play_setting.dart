@@ -20,13 +20,14 @@ class _PlaySettingState extends State<PlaySetting> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: showAppBar ? AppBar(title: const Text('播放器设置')) : null,
-      body: ListView(
+      body: ListView.builder(
         padding: EdgeInsets.only(
           left: showAppBar ? padding.left : 0,
           right: showAppBar ? padding.right : 0,
           bottom: padding.bottom + 100,
         ),
-        children: settings.map((item) => item.widget).toList(),
+        itemCount: settings.length,
+        itemBuilder: (context, index) => settings[index].widget,
       ),
     );
   }

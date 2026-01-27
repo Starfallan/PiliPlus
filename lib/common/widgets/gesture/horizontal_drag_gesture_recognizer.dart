@@ -1,0 +1,61 @@
+import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:flutter/gestures.dart';
+
+class CustomHorizontalDragGestureRecognizer
+    extends HorizontalDragGestureRecognizer {
+  CustomHorizontalDragGestureRecognizer({
+    super.debugOwner,
+    super.supportedDevices,
+    super.allowedButtonsFilter,
+  });
+
+  Offset? _initialPosition;
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    _initialPosition = event.position;
+  }
+
+  @override
+  bool hasSufficientGlobalDistanceToAccept(
+    PointerDeviceKind pointerDeviceKind,
+    double? deviceTouchSlop,
+  ) {
+    return _computeHitSlop(
+      globalDistanceMoved.abs(),
+      gestureSettings,
+      pointerDeviceKind,
+      _initialPosition,
+      lastPosition.global,
+    );
+  }
+}
+
+double touchSlopH = Pref.touchSlopH;
+
+bool _computeHitSlop(
+  double globalDistanceMoved,
+  DeviceGestureSettings? settings,
+  PointerDeviceKind kind,
+  Offset? initialPosition,
+  Offset lastPosition,
+) {
+  switch (kind) {
+    case PointerDeviceKind.mouse:
+      return globalDistanceMoved > kPrecisePointerHitSlop;
+    case PointerDeviceKind.stylus:
+    case PointerDeviceKind.invertedStylus:
+    case PointerDeviceKind.unknown:
+    case PointerDeviceKind.touch:
+      return globalDistanceMoved > touchSlopH &&
+          _calc(initialPosition!, lastPosition);
+    case PointerDeviceKind.trackpad:
+      return globalDistanceMoved > (settings?.touchSlop ?? kTouchSlop);
+  }
+}
+
+bool _calc(Offset initialPosition, Offset lastPosition) {
+  final offset = lastPosition - initialPosition;
+  return offset.dx.abs() > offset.dy.abs() * 3;
+}

@@ -2,9 +2,12 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
@@ -40,7 +43,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:floating/floating.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide PageView;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
@@ -308,41 +311,38 @@ class _LiveRoomPageState extends State<LiveRoomPage>
           Positioned(
             left: padding.left + 25,
             bottom: 25,
+            width: 255,
             child: Obx(() {
               final item = _liveRoomController.fsSC.value;
               if (item == null) {
                 return const SizedBox.shrink();
               }
               try {
-                return SizedBox(
+                return Stack(
                   key: ValueKey(item.id),
-                  width: 255,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6, top: 6),
-                        child: SuperChatCard(
-                          item: item,
-                          onRemove: () => _liveRoomController.fsSC.value = null,
-                          onReport: () => _liveRoomController.reportSC(item),
-                        ),
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6, top: 6),
+                      child: SuperChatCard(
+                        item: item,
+                        onRemove: () => _liveRoomController.fsSC.value = null,
+                        onReport: () => _liveRoomController.reportSC(item),
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: iconButton(
-                          size: 24,
-                          iconSize: 14,
-                          bgColor: const Color(0xEEFFFFFF),
-                          iconColor: Colors.black54,
-                          icon: const Icon(Icons.clear),
-                          onPressed: () =>
-                              _liveRoomController.fsSC.value = null,
-                        ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: iconButton(
+                        size: 24,
+                        iconSize: 14,
+                        bgColor: const Color(0xEEFFFFFF),
+                        iconColor: Colors.black54,
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => _liveRoomController.fsSC.value = null,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               } catch (_) {
                 if (kDebugMode) rethrow;
@@ -354,16 +354,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       );
     }
     return PopScope(
-      canPop: !isFullScreen,
-      onPopInvokedWithResult: (bool didPop, Object? result) {
-        if (plPlayerController.controlsLock.value) {
-          plPlayerController.onLockControl(false);
-          return;
-        }
-        if (isFullScreen) {
-          plPlayerController.triggerFullScreen(status: false);
-        }
-      },
+      canPop: !isFullScreen && !plPlayerController.isDesktopPip,
+      onPopInvokedWithResult: plPlayerController.onPopInvokedWithResult,
       child: player,
     );
   }
@@ -428,7 +420,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   }
 
   Widget _buildPH(bool isFullScreen) {
-    final height = maxWidth * 9 / 16;
+    final height = maxWidth / StyleString.aspectRatio16x9;
     final videoHeight = isFullScreen ? maxHeight - padding.top : height;
     final bottomHeight = maxHeight - padding.top - height - kToolbarHeight;
     return Column(
@@ -476,24 +468,20 @@ class _LiveRoomPageState extends State<LiveRoomPage>
           left: 0,
           right: 0,
           bottom: 55 + bottomHeight,
+          height: maxHeight * 0.32,
           child: Offstage(
             offstage: isFullScreen,
-            child: SizedBox(
-              height: maxHeight * 0.32,
-              child: _buildChatWidget(true),
-            ),
+            child: _buildChatWidget(true),
           ),
         ),
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
+          height: bottomHeight,
           child: Offstage(
             offstage: isFullScreen,
-            child: SizedBox(
-              height: bottomHeight,
-              child: _buildInputWidget,
-            ),
+            child: _buildInputWidget,
           ),
         ),
       ],
@@ -735,7 +723,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     return Padding(
       padding: EdgeInsets.only(bottom: 12, top: isPortrait ? 12 : 0),
       child: _liveRoomController.showSuperChat
-          ? PageView(
+          ? PageView<CustomHorizontalDragGestureRecognizer>(
               key: pageKey,
               controller: _liveRoomController.pageController,
               physics: const CustomTabBarViewScrollPhysics(
@@ -743,6 +731,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
               ),
               onPageChanged: (value) =>
                   _liveRoomController.pageIndex.value = value,
+              horizontalDragGestureRecognizer:
+                  CustomHorizontalDragGestureRecognizer(),
               children: [
                 KeepAliveWrapper(builder: (context) => chat()),
                 SuperChatPanel(
@@ -901,30 +891,18 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (_liveRoomController.showSuperChat) {
       return Stack(
         children: [
+          child,
           Positioned(
             left: 0,
             top: 0,
             right: 0,
-            child: Obx(() {
-              return ClipRect(
-                clipper: _BorderClipper(
-                  _liveRoomController.pageIndex.value == 0,
-                ),
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    border: Border(
-                      top: BorderSide(color: Colors.white38),
-                    ),
-                  ),
-                  child: SizedBox(width: double.infinity, height: 20),
-                ),
-              );
-            }),
+            child: Obx(
+              () => _BorderIndicator(
+                radius: const Radius.circular(20),
+                isLeft: _liveRoomController.pageIndex.value == 0,
+              ),
+            ),
           ),
-          child,
         ],
       );
     }
@@ -957,25 +935,85 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       });
 }
 
-class _BorderClipper extends CustomClipper<Rect> {
-  _BorderClipper(this.isLeft);
+class _BorderIndicator extends LeafRenderObjectWidget {
+  const _BorderIndicator({
+    required this.radius,
+    required this.isLeft,
+  });
 
+  final Radius radius;
   final bool isLeft;
 
   @override
-  Rect getClip(Size size) {
-    return Rect.fromLTWH(
-      isLeft ? 0 : size.width / 2,
-      0,
-      size.width / 2,
-      size.height,
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderBorderIndicator(
+      radius: radius,
+      isLeft: isLeft,
     );
   }
 
   @override
-  bool shouldReclip(_BorderClipper oldClipper) {
-    return isLeft != oldClipper.isLeft;
+  void updateRenderObject(
+    BuildContext context,
+    _RenderBorderIndicator renderObject,
+  ) {
+    renderObject
+      ..radius = radius
+      ..isLeft = isLeft;
   }
+}
+
+class _RenderBorderIndicator extends RenderBox {
+  _RenderBorderIndicator({
+    required Radius radius,
+    required bool isLeft,
+  }) : _radius = radius,
+       _isLeft = isLeft;
+
+  Radius _radius;
+  Radius get radius => _radius;
+  set radius(Radius value) {
+    if (_radius == value) return;
+    _radius = value;
+    markNeedsLayout();
+  }
+
+  bool _isLeft;
+  bool get isLeft => _isLeft;
+  set isLeft(bool value) {
+    if (_isLeft == value) return;
+    _isLeft = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.constrainDimensions(constraints.maxWidth, _radius.x);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final size = this.size;
+    final canvas = context.canvas;
+    final width = size.width / 2;
+    if (!_isLeft) {
+      canvas.translate(width, 0);
+    }
+    BoxBorder.paintNonUniformBorder(
+      canvas,
+      Rect.fromLTRB(0, 0, width, size.height),
+      borderRadius: BorderRadius.only(
+        topLeft: _isLeft ? _radius : .zero,
+        topRight: _isLeft ? .zero : _radius,
+      ),
+      textDirection: null,
+      top: const BorderSide(),
+      color: Colors.white38,
+    );
+  }
+
+  @override
+  bool get isRepaintBoundary => true;
 }
 
 class LiveDanmaku extends StatefulWidget {
@@ -1016,6 +1054,7 @@ class _LiveDanmakuState extends State<LiveDanmaku> {
 
   @override
   Widget build(BuildContext context) {
+    final option = DanmakuOptions.get(notFullscreen: widget.notFullscreen);
     return Obx(
       () => AnimatedOpacity(
         opacity: plPlayerController.enableShowDanmaku.value
@@ -1027,7 +1066,7 @@ class _LiveDanmakuState extends State<LiveDanmaku> {
             widget.liveRoomController.danmakuController =
                 plPlayerController.danmakuController = e;
           },
-          option: DanmakuOptions.get(notFullscreen: widget.notFullscreen),
+          option: option,
           size: widget.size,
         ),
       ),

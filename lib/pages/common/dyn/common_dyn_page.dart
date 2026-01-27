@@ -40,7 +40,6 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
   final fabOffset = const Offset(0, 1);
 
   late final AnimationController _fabAnimationCtr;
-  late final CurvedAnimation _curvedAnimation;
   late final Animation<Offset> fabAnim;
 
   @override
@@ -50,14 +49,12 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
       vsync: this,
       duration: const Duration(milliseconds: 200),
     )..forward();
-    _curvedAnimation = CurvedAnimation(
-      parent: _fabAnimationCtr,
-      curve: Curves.easeInOut,
+    fabAnim = _fabAnimationCtr.drive(
+      Tween<Offset>(
+        begin: fabOffset,
+        end: Offset.zero,
+      ).chain(CurveTween(curve: Curves.easeInOut)),
     );
-    fabAnim = Tween<Offset>(
-      begin: fabOffset,
-      end: Offset.zero,
-    ).animate(_curvedAnimation);
     scrollController = ScrollController()..addListener(listener);
   }
 
@@ -100,7 +97,6 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
     scrollController
       ..removeListener(listener)
       ..dispose();
-    _curvedAnimation.dispose();
     _fabAnimationCtr.dispose();
     super.dispose();
   }

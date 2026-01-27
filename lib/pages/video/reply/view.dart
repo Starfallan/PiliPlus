@@ -85,7 +85,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                       parent: ClampingScrollPhysics(),
                     )
                   : const AlwaysScrollableScrollPhysics(),
-              key: const PageStorageKey<String>('评论'),
+              key: const PageStorageKey(_VideoReplyPanelState),
               slivers: <Widget>[
                 SliverPersistentHeader(
                   pinned: false,

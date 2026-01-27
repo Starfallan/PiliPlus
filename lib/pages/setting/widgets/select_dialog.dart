@@ -91,6 +91,17 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
   void initState() {
     _cdnSpeedTest = Pref.cdnSpeedTest;
     if (_cdnSpeedTest) {
+      _dio =
+          Dio(
+              BaseOptions(
+                connectTimeout: const Duration(seconds: 15),
+                receiveTimeout: const Duration(seconds: 15),
+              ),
+            )
+            ..options.headers = {
+              'user-agent': UaType.pc.ua,
+              'referer': HttpString.baseUrl,
+            };
       final length = CDNService.values.length;
       _cdnResList = List.generate(
         length,
@@ -156,11 +167,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
     }
   }
 
-  late final _dio = Dio()
-    ..options.headers = {
-      'user-agent': UaType.pc.ua,
-      'referer': HttpString.baseUrl,
-    };
+  late final Dio _dio;
 
   Future<void> _measureDownloadSpeed(String url, int index) async {
     const maxSize = 8 * 1024 * 1024;
@@ -247,7 +254,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
                 valueListenable: item,
                 builder: (context, value, _) {
                   return Text(
-                    item.value ?? '---',
+                    value ?? '---',
                     style: const TextStyle(fontSize: 13),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

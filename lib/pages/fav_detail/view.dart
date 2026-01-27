@@ -127,8 +127,10 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
 
   Widget _buildHeader(bool enableMultiSelect, ThemeData theme) {
     return SliverAppBar.medium(
+      leadingWidth: enableMultiSelect ? 125 : null,
       leading: enableMultiSelect
           ? Row(
+              mainAxisSize: .min,
               children: [
                 IconButton(
                   tooltip: '取消',

@@ -331,20 +331,20 @@ List<SettingsModel> get styleSettings => [
     getSubtitle: () =>
         '当前消息类型：${Pref.msgUnReadTypeV2.map((item) => item.title).join('、')}',
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '首页顶栏收起',
     subtitle: '首页列表滑动时，收起顶栏',
-    leading: Icon(Icons.vertical_align_top_outlined),
-    setKey: SettingBoxKey.hideSearchBar,
-    defaultVal: true,
+    leading: const Icon(Icons.vertical_align_top_outlined),
+    setKey: SettingBoxKey.hideTopBar,
+    defaultVal: PlatformUtils.isMobile,
     needReboot: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '首页底栏收起',
     subtitle: '首页列表滑动时，收起底栏',
-    leading: Icon(Icons.vertical_align_bottom_outlined),
-    setKey: SettingBoxKey.hideTabBar,
-    defaultVal: true,
+    leading: const Icon(Icons.vertical_align_bottom_outlined),
+    setKey: SettingBoxKey.hideBottomBar,
+    defaultVal: PlatformUtils.isMobile,
     needReboot: true,
   ),
   SwitchModel(

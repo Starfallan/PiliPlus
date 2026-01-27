@@ -95,43 +95,41 @@ class _LivePageState extends CommonPageState<LivePage, LiveController>
                       child: SizedBox(
                         // 10+14*textScaler
                         height: 10.0 + textScaler.scale(14),
-                        child: ListView.separated(
-                          scrollDirection: .horizontal,
-                          padding: const .only(right: 8),
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          separatorBuilder: (_, _) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            late final item = list[index - 1];
-                            return Obx(
-                              () {
-                                final isCurr =
-                                    index == controller.areaIndex.value;
-                                return SearchText(
-                                  fontSize: 14,
-                                  height: 1,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 5,
-                                  ),
-                                  text: index == 0 ? '推荐' : '${item.title}',
-                                  bgColor: isCurr
-                                      ? theme.colorScheme.secondaryContainer
-                                      : Colors.transparent,
-                                  textColor: isCurr
-                                      ? theme.colorScheme.onSecondaryContainer
-                                      : null,
-                                  onTap: (value) {
-                                    controller.onSelectArea(
-                                      index,
-                                      index == 0 ? null : item,
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                          itemCount: list.length + 1,
-                        ),
+                        child: Obx(() {
+                          final areaIndex = controller.areaIndex.value;
+                          return ListView.separated(
+                            scrollDirection: .horizontal,
+                            padding: const .only(right: 8),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              final isFirst = index == 0;
+                              late final item = list[index - 1];
+                              final isCurr = index == areaIndex;
+                              return SearchText(
+                                fontSize: 14,
+                                height: 1,
+                                padding: const .symmetric(
+                                  horizontal: 8,
+                                  vertical: 5,
+                                ),
+                                text: isFirst ? '推荐' : item.title!,
+                                bgColor: isCurr
+                                    ? theme.colorScheme.secondaryContainer
+                                    : Colors.transparent,
+                                textColor: isCurr
+                                    ? theme.colorScheme.onSecondaryContainer
+                                    : null,
+                                onTap: (_) => controller.onSelectArea(
+                                  index,
+                                  isFirst ? null : item,
+                                ),
+                              );
+                            },
+                            itemCount: list.length + 1,
+                          );
+                        }),
                       ),
                     ),
                     iconButton(
@@ -189,42 +187,34 @@ class _LivePageState extends CommonPageState<LivePage, LiveController>
                 child: SizedBox(
                   // 8+10+13*textScaler
                   height: 18.0 + textScaler.scale(13),
-                  child: ListView.separated(
-                    scrollDirection: .horizontal,
-                    padding: const .only(bottom: 8),
-                    separatorBuilder: (_, _) => const SizedBox(width: 12),
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      late final item = newTags[index];
-                      return Obx(
-                        () {
-                          final isCurr = index == controller.tagIndex.value;
-                          return SearchText(
-                            height: 1,
-                            fontSize: 13,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 5,
-                            ),
-                            text: '${item.name}',
-                            bgColor: isCurr
-                                ? theme.colorScheme.secondaryContainer
-                                : Colors.transparent,
-                            textColor: isCurr
-                                ? theme.colorScheme.onSecondaryContainer
-                                : null,
-                            onTap: (value) {
-                              controller.onSelectTag(
-                                index,
-                                item.sortType,
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                    itemCount: newTags.length,
-                  ),
+                  child: Obx(() {
+                    final tagIndex = controller.tagIndex.value;
+                    return ListView.separated(
+                      scrollDirection: .horizontal,
+                      padding: const .only(bottom: 8),
+                      separatorBuilder: (_, _) => const SizedBox(width: 12),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        final item = newTags[index];
+                        final isCurr = index == tagIndex;
+                        return SearchText(
+                          height: 1,
+                          fontSize: 13,
+                          padding: const .symmetric(horizontal: 8, vertical: 5),
+                          text: item.name!,
+                          bgColor: isCurr
+                              ? theme.colorScheme.secondaryContainer
+                              : Colors.transparent,
+                          textColor: isCurr
+                              ? theme.colorScheme.onSecondaryContainer
+                              : null,
+                          onTap: (value) =>
+                              controller.onSelectTag(index, item.sortType),
+                        );
+                      },
+                      itemCount: newTags.length,
+                    );
+                  }),
                 ),
               ),
           response != null && response.isNotEmpty

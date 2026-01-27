@@ -114,7 +114,7 @@ class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
 
     _scaleAnimation = _animateController.drive(
       Tween<double>(
-        begin: 1,
+        begin: 1.0,
         end: 0.25,
       ),
     );

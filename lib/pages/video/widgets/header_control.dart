@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:convert' show jsonDecode, utf8;
 import 'dart:io';
 import 'dart:math';
 
@@ -717,34 +717,41 @@ class HeaderControlState extends State<HeaderControl>
                         final first = file.files.first;
                         final path = first.path;
                         if (path != null) {
-                          final file = File(path);
-                          final stream = file.openRead().transform(
-                            utf8.decoder,
-                          );
-                          final buffer = StringBuffer();
-                          await for (final chunk in stream) {
-                            if (!mounted) return;
-                            buffer.write(chunk);
-                          }
-                          if (!mounted) return;
-                          String sub = buffer.toString();
                           final name = first.name;
+                          final length = videoDetailCtr.subtitles.length;
                           if (name.endsWith('.json')) {
+                            final file = File(path);
+                            final stream = file.openRead().transform(
+                              utf8.decoder,
+                            );
+                            final buffer = StringBuffer();
+                            await for (final chunk in stream) {
+                              if (!mounted) return;
+                              buffer.write(chunk);
+                            }
+                            if (!mounted) return;
+                            String sub = buffer.toString();
                             sub = await compute<List, String>(
                               VideoHttp.processList,
                               jsonDecode(sub)['body'],
                             );
                             if (!mounted) return;
+                            videoDetailCtr.vttSubtitles[length] = (
+                              isData: true,
+                              id: sub,
+                            );
+                          } else {
+                            videoDetailCtr.vttSubtitles[length] = (
+                              isData: false,
+                              id: path,
+                            );
                           }
-                          final length = videoDetailCtr.subtitles.length;
-                          videoDetailCtr
-                            ..subtitles.add(
-                              Subtitle(
-                                lan: '',
-                                lanDoc: name.split('.').firstOrNull ?? name,
-                              ),
-                            )
-                            ..vttSubtitles[length] = sub;
+                          videoDetailCtr.subtitles.add(
+                            Subtitle(
+                              lan: '',
+                              lanDoc: name.split('.').firstOrNull ?? name,
+                            ),
+                          );
                           await videoDetailCtr.setSubtitle(length + 1);
                         }
                       }
@@ -1848,11 +1855,13 @@ class HeaderControlState extends State<HeaderControl>
                     color: Colors.white,
                   ),
                   onPressed: () {
-                    if (plPlayerController.isDesktopPip) {
-                      plPlayerController.exitDesktopPip();
-                    } else if (isFullScreen) {
-                      plPlayerController.triggerFullScreen(status: false);
-                    } else if (PlatformUtils.isMobile &&
+                    if (plPlayerController.onPopInvokedWithResult(
+                      false,
+                      null,
+                    )) {
+                      return;
+                    }
+                    if (PlatformUtils.isMobile &&
                         !horizontalScreen &&
                         !isPortrait) {
                       verticalScreenForTwoSeconds();

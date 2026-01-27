@@ -6399,7 +6399,7 @@ class _ScribbleFocusableState extends State<_ScribbleFocusable>
     final Matrix4 transform = box.getTransformTo(null);
     return MatrixUtils.transformRect(
       transform,
-      Rect.fromLTWH(0, 0, box.size.width, box.size.height),
+      Rect.fromLTRB(0, 0, box.size.width, box.size.height),
     );
   }
 

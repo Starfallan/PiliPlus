@@ -19,8 +19,7 @@ class HomeController extends GetxController
   late List<HomeTabType> tabs;
   late TabController tabController;
 
-  RxBool? searchBar;
-  final bool useSideBar = Pref.useSideBar;
+  RxBool? showSearchBar;
 
   bool enableSearchWord = Pref.enableSearchWord;
   late final RxString defaultSearch = ''.obs;
@@ -37,8 +36,8 @@ class HomeController extends GetxController
   void onInit() {
     super.onInit();
 
-    if (Pref.hideSearchBar) {
-      searchBar = true.obs;
+    if (!Pref.useSideBar && Pref.hideTopBar) {
+      showSearchBar = true.obs;
     }
 
     if (enableSearchWord) {

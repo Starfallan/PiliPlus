@@ -2,12 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:ui' show SemanticsRole;
-
 import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
 import 'package:flutter/foundation.dart' show clampDouble;
-import 'package:flutter/gestures.dart' show DragStartBehavior;
-import 'package:flutter/material.dart' hide TabBarView, PageView;
+import 'package:flutter/gestures.dart'
+    show DragStartBehavior, HorizontalDragGestureRecognizer;
+import 'package:flutter/material.dart' hide PageView;
 
 /// A page view that displays the widget which corresponds to the currently
 /// selected tab.
@@ -23,11 +22,12 @@ import 'package:flutter/material.dart' hide TabBarView, PageView;
 /// [children] list and the length of the [TabBar.tabs] list.
 ///
 /// To see a sample implementation, visit the [TabController] documentation.
-class CustomTabBarView extends StatefulWidget {
+class TabBarView<T extends HorizontalDragGestureRecognizer>
+    extends StatefulWidget {
   /// Creates a page view with one child per tab.
   ///
   /// The length of [children] must be the same as the [controller]'s length.
-  const CustomTabBarView({
+  const TabBarView({
     super.key,
     required this.children,
     this.controller,
@@ -35,13 +35,10 @@ class CustomTabBarView extends StatefulWidget {
     this.dragStartBehavior = DragStartBehavior.start,
     this.viewportFraction = 1.0,
     this.clipBehavior = Clip.hardEdge,
-    this.scrollDirection = Axis.horizontal,
-    this.header,
-    this.bgColor = Colors.transparent,
+    required this.horizontalDragGestureRecognizer,
   });
 
-  final Widget? header;
-  final Color bgColor;
+  final T horizontalDragGestureRecognizer;
 
   /// This widget's selection and animation state.
   ///
@@ -77,13 +74,12 @@ class CustomTabBarView extends StatefulWidget {
   /// Defaults to [Clip.hardEdge].
   final Clip clipBehavior;
 
-  final Axis scrollDirection;
-
   @override
-  State<CustomTabBarView> createState() => _CustomTabBarViewState();
+  State<TabBarView<T>> createState() => _TabBarViewState<T>();
 }
 
-class _CustomTabBarViewState extends State<CustomTabBarView> {
+class _TabBarViewState<T extends HorizontalDragGestureRecognizer>
+    extends State<TabBarView<T>> {
   TabController? _controller;
   PageController? _pageController;
   late List<Widget> _childrenWithKey;
@@ -168,7 +164,7 @@ class _CustomTabBarViewState extends State<CustomTabBarView> {
   }
 
   @override
-  void didUpdateWidget(CustomTabBarView oldWidget) {
+  void didUpdateWidget(TabBarView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
       _updateTabController();
@@ -203,7 +199,7 @@ class _CustomTabBarViewState extends State<CustomTabBarView> {
   void _updateChildren() {
     _childrenWithKey = KeyedSubtree.ensureUniqueKeysForList(
       widget.children.map<Widget>((Widget child) {
-        return Semantics(role: SemanticsRole.tabPanel, child: child);
+        return Semantics(role: .tabPanel, child: child);
       }).toList(),
     );
   }
@@ -361,16 +357,14 @@ class _CustomTabBarViewState extends State<CustomTabBarView> {
 
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
-      child: CustomPageView(
-        scrollDirection: widget.scrollDirection,
+      child: PageView<T>(
         dragStartBehavior: widget.dragStartBehavior,
         clipBehavior: widget.clipBehavior,
         controller: _pageController,
         physics: widget.physics == null
             ? const PageScrollPhysics().applyTo(const ClampingScrollPhysics())
             : const PageScrollPhysics().applyTo(widget.physics),
-        header: widget.header,
-        bgColor: widget.bgColor,
+        horizontalDragGestureRecognizer: widget.horizontalDragGestureRecognizer,
         children: _childrenWithKey,
       ),
     );

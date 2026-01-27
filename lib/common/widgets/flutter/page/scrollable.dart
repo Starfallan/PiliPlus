@@ -28,32 +28,30 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
-export 'package:flutter/physics.dart' show Tolerance;
-
 // The return type of _performEnsureVisible.
 //
 // The list of futures represents each pending ScrollPosition call to
 // ensureVisible. The returned ScrollableState's context is used to find the
 // next potential ancestor Scrollable.
-typedef _EnsureVisibleResults = (List<Future<void>>, CustomScrollableState);
+typedef _EnsureVisibleResults = (List<Future<void>>, ScrollableState);
 
 /// A widget that manages scrolling in one dimension and informs the [Viewport]
 /// through which the content is viewed.
 ///
-/// [CustomScrollable] implements the interaction model for a scrollable widget,
+/// [Scrollable] implements the interaction model for a scrollable widget,
 /// including gesture recognition, but does not have an opinion about how the
 /// viewport, which actually displays the children, is constructed.
 ///
-/// It's rare to construct a [CustomScrollable] directly. Instead, consider [ListView]
+/// It's rare to construct a [Scrollable] directly. Instead, consider [ListView]
 /// or [GridView], which combine scrolling, viewporting, and a layout model. To
 /// combine layout models (or to use a custom layout mode), consider using
 /// [CustomScrollView].
 ///
-/// The static [CustomScrollable.of] and [CustomScrollable.ensureVisible] functions are
-/// often used to interact with the [CustomScrollable] widget inside a [ListView] or
+/// The static [Scrollable.of] and [Scrollable.ensureVisible] functions are
+/// often used to interact with the [Scrollable] widget inside a [ListView] or
 /// a [GridView].
 ///
-/// To further customize scrolling behavior with a [CustomScrollable]:
+/// To further customize scrolling behavior with a [Scrollable]:
 ///
 /// 1. You can provide a [viewportBuilder] to customize the child model. For
 ///    example, [SingleChildScrollView] uses a viewport that displays a single
@@ -63,7 +61,7 @@ typedef _EnsureVisibleResults = (List<Future<void>>, CustomScrollableState);
 /// 2. You can provide a custom [ScrollController] that creates a custom
 ///    [ScrollPosition] subclass. For example, [PageView] uses a
 ///    [PageController], which creates a page-oriented scroll position subclass
-///    that keeps the same page visible when the [CustomScrollable] resizes.
+///    that keeps the same page visible when the [Scrollable] resizes.
 ///
 /// ## Persisting the scroll position during a session
 ///
@@ -71,7 +69,7 @@ typedef _EnsureVisibleResults = (List<Future<void>>, CustomScrollableState);
 /// This can be disabled by setting [ScrollController.keepScrollOffset] to false
 /// on the [controller]. If it is enabled, using a [PageStorageKey] for the
 /// [key] of this widget (or one of its ancestors, e.g. a [ScrollView]) is
-/// recommended to help disambiguate different [CustomScrollable]s from each other.
+/// recommended to help disambiguate different [Scrollable]s from each other.
 ///
 /// See also:
 ///
@@ -87,9 +85,10 @@ typedef _EnsureVisibleResults = (List<Future<void>>, CustomScrollableState);
 ///    child.
 ///  * [ScrollNotification] and [NotificationListener], which can be used to watch
 ///    the scroll position without using a [ScrollController].
-class CustomScrollable extends StatefulWidget {
+class Scrollable<T extends HorizontalDragGestureRecognizer>
+    extends StatefulWidget {
   /// Creates a widget that scrolls.
-  const CustomScrollable({
+  const Scrollable({
     super.key,
     this.axisDirection = AxisDirection.down,
     this.controller,
@@ -103,19 +102,15 @@ class CustomScrollable extends StatefulWidget {
     this.scrollBehavior,
     this.clipBehavior = Clip.hardEdge,
     this.hitTestBehavior = HitTestBehavior.opaque,
-    this.enableSlide,
-    this.header,
-    this.bgColor = Colors.transparent,
+    required this.horizontalDragGestureRecognizer,
   }) : assert(semanticChildCount == null || semanticChildCount >= 0);
 
-  final Widget? header;
-  final bool? enableSlide;
-  final Color bgColor;
+  final T horizontalDragGestureRecognizer;
 
   /// {@template flutter.widgets.Scrollable.axisDirection}
   /// The direction in which this widget scrolls.
   ///
-  /// For example, if the [CustomScrollable.axisDirection] is [AxisDirection.down],
+  /// For example, if the [Scrollable.axisDirection] is [AxisDirection.down],
   /// increasing the scroll position will cause content below the bottom of the
   /// viewport to become visible through the viewport. Similarly, if the
   /// axisDirection is [AxisDirection.right], increasing the scroll position
@@ -138,12 +133,12 @@ class CustomScrollable extends StatefulWidget {
   /// scroll position (see [ScrollController.offset]), or change it (see
   /// [ScrollController.animateTo]).
   ///
-  /// If null, a [ScrollController] will be created internally by [CustomScrollable]
+  /// If null, a [ScrollController] will be created internally by [Scrollable]
   /// in order to create and manage the [ScrollPosition].
   ///
   /// See also:
   ///
-  ///  * [CustomScrollable.ensureVisible], which animates the scroll position to
+  ///  * [Scrollable.ensureVisible], which animates the scroll position to
   ///    reveal a given [BuildContext].
   /// {@endtemplate}
   final ScrollController? controller;
@@ -158,8 +153,8 @@ class CustomScrollable extends StatefulWidget {
   /// the ambient [ScrollConfiguration].
   ///
   /// If an explicit [ScrollBehavior] is provided to
-  /// [CustomScrollable.scrollBehavior], the [ScrollPhysics] provided by that behavior
-  /// will take precedence after [CustomScrollable.physics].
+  /// [Scrollable.scrollBehavior], the [ScrollPhysics] provided by that behavior
+  /// will take precedence after [Scrollable.physics].
   ///
   /// The physics can be changed dynamically, but new physics will only take
   /// effect if the _class_ of the provided object changes. Merely constructing
@@ -194,7 +189,7 @@ class CustomScrollable extends StatefulWidget {
   /// scroll when the scrollable is asked to scroll via the keyboard using a
   /// [ScrollAction].
   ///
-  /// If not supplied, the [CustomScrollable] will scroll a default amount when a
+  /// If not supplied, the [Scrollable] will scroll a default amount when a
   /// keyboard navigation key is pressed (e.g. pageUp/pageDown, control-upArrow,
   /// etc.), or otherwise invoked by a [ScrollAction].
   ///
@@ -205,7 +200,7 @@ class CustomScrollable extends StatefulWidget {
   final ScrollIncrementCalculator? incrementCalculator;
 
   /// {@template flutter.widgets.scrollable.excludeFromSemantics}
-  /// Whether the scroll actions introduced by this [CustomScrollable] are exposed
+  /// Whether the scroll actions introduced by this [Scrollable] are exposed
   /// in the semantics tree.
   ///
   /// Text fields with an overflow are usually scrollable to make sure that the
@@ -220,10 +215,10 @@ class CustomScrollable extends StatefulWidget {
   final bool excludeFromSemantics;
 
   /// {@template flutter.widgets.scrollable.hitTestBehavior}
-  /// Defines the behavior of gesture detector used in this [CustomScrollable].
+  /// Defines the behavior of gesture detector used in this [Scrollable].
   ///
   /// This defaults to [HitTestBehavior.opaque] which means it prevents targets
-  /// behind this [CustomScrollable] from receiving events.
+  /// behind this [Scrollable] from receiving events.
   /// {@endtemplate}
   ///
   /// See also:
@@ -305,7 +300,7 @@ class CustomScrollable extends StatefulWidget {
   /// Defaults to [Clip.hardEdge].
   ///
   /// This is passed to decorators in [ScrollableDetails], and does not directly affect
-  /// clipping of the [CustomScrollable]. This reflects the same [Clip] that is provided
+  /// clipping of the [Scrollable]. This reflects the same [Clip] that is provided
   /// to [ScrollView.clipBehavior] and is supplied to the [Viewport].
   final Clip clipBehavior;
 
@@ -315,7 +310,7 @@ class CustomScrollable extends StatefulWidget {
   Axis get axis => axisDirectionToAxis(axisDirection);
 
   @override
-  CustomScrollableState createState() => CustomScrollableState();
+  ScrollableState<T> createState() => ScrollableState<T>();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -335,31 +330,31 @@ class CustomScrollable extends StatefulWidget {
   /// ScrollableState? scrollable = Scrollable.maybeOf(context);
   /// ```
   ///
-  /// Calling this method will create a dependency on the [CustomScrollableState]
+  /// Calling this method will create a dependency on the [ScrollableState]
   /// that is returned, if there is one. This is typically the closest
-  /// [CustomScrollable], but may be a more distant ancestor if [axis] is used to
-  /// target a specific [CustomScrollable].
+  /// [Scrollable], but may be a more distant ancestor if [axis] is used to
+  /// target a specific [Scrollable].
   ///
   /// Using the optional [Axis] is useful when Scrollables are nested and the
-  /// target [CustomScrollable] is not the closest instance. When [axis] is provided,
-  /// the nearest enclosing [CustomScrollableState] in that [Axis] is returned, or
+  /// target [Scrollable] is not the closest instance. When [axis] is provided,
+  /// the nearest enclosing [ScrollableState] in that [Axis] is returned, or
   /// null if there is none.
   ///
-  /// This finds the nearest _ancestor_ [CustomScrollable] of the `context`. This
-  /// means that if the `context` is that of a [CustomScrollable], it will _not_ find
-  /// _that_ [CustomScrollable].
+  /// This finds the nearest _ancestor_ [Scrollable] of the `context`. This
+  /// means that if the `context` is that of a [Scrollable], it will _not_ find
+  /// _that_ [Scrollable].
   ///
   /// See also:
   ///
-  /// * [CustomScrollable.of], which is similar to this method, but asserts
-  ///   if no [CustomScrollable] ancestor is found.
-  static CustomScrollableState? maybeOf(BuildContext context, {Axis? axis}) {
+  /// * [Scrollable.of], which is similar to this method, but asserts
+  ///   if no [Scrollable] ancestor is found.
+  static ScrollableState? maybeOf(BuildContext context, {Axis? axis}) {
     // This is the context that will need to establish the dependency.
     final BuildContext originalContext = context;
     InheritedElement? element = context
         .getElementForInheritedWidgetOfExactType<_ScrollableScope>();
     while (element != null) {
-      final CustomScrollableState scrollable =
+      final ScrollableState scrollable =
           (element.widget as _ScrollableScope).scrollable;
       if (axis == null ||
           axisDirectionToAxis(scrollable.axisDirection) == axis) {
@@ -383,28 +378,28 @@ class CustomScrollable extends StatefulWidget {
   /// ScrollableState scrollable = Scrollable.of(context);
   /// ```
   ///
-  /// Calling this method will create a dependency on the [CustomScrollableState]
+  /// Calling this method will create a dependency on the [ScrollableState]
   /// that is returned, if there is one. This is typically the closest
-  /// [CustomScrollable], but may be a more distant ancestor if [axis] is used to
-  /// target a specific [CustomScrollable].
+  /// [Scrollable], but may be a more distant ancestor if [axis] is used to
+  /// target a specific [Scrollable].
   ///
   /// Using the optional [Axis] is useful when Scrollables are nested and the
-  /// target [CustomScrollable] is not the closest instance. When [axis] is provided,
-  /// the nearest enclosing [CustomScrollableState] in that [Axis] is returned.
+  /// target [Scrollable] is not the closest instance. When [axis] is provided,
+  /// the nearest enclosing [ScrollableState] in that [Axis] is returned.
   ///
-  /// This finds the nearest _ancestor_ [CustomScrollable] of the `context`. This
-  /// means that if the `context` is that of a [CustomScrollable], it will _not_ find
-  /// _that_ [CustomScrollable].
+  /// This finds the nearest _ancestor_ [Scrollable] of the `context`. This
+  /// means that if the `context` is that of a [Scrollable], it will _not_ find
+  /// _that_ [Scrollable].
   ///
-  /// If no [CustomScrollable] ancestor is found, then this method will assert in
+  /// If no [Scrollable] ancestor is found, then this method will assert in
   /// debug mode, and throw an exception in release mode.
   ///
   /// See also:
   ///
-  /// * [CustomScrollable.maybeOf], which is similar to this method, but returns null
-  ///   if no [CustomScrollable] ancestor is found.
-  static CustomScrollableState of(BuildContext context, {Axis? axis}) {
-    final CustomScrollableState? scrollableState = maybeOf(context, axis: axis);
+  /// * [Scrollable.maybeOf], which is similar to this method, but returns null
+  ///   if no [Scrollable] ancestor is found.
+  static ScrollableState of(BuildContext context, {Axis? axis}) {
+    final ScrollableState? scrollableState = maybeOf(context, axis: axis);
     assert(() {
       if (scrollableState == null) {
         throw FlutterError.fromParts(<DiagnosticsNode>[
@@ -440,16 +435,16 @@ class CustomScrollable extends StatefulWidget {
   /// This also means that the value returned is only good for the point in time
   /// when it is called, and callers will not get updated if the value changes.
   ///
-  /// The heuristic used is determined by the [physics] of this [CustomScrollable]
+  /// The heuristic used is determined by the [physics] of this [Scrollable]
   /// via [ScrollPhysics.recommendDeferredLoading]. That method is called with
   /// the current [ScrollPosition.activity]'s [ScrollActivity.velocity].
   ///
-  /// The optional [Axis] allows targeting of a specific [CustomScrollable] of that
+  /// The optional [Axis] allows targeting of a specific [Scrollable] of that
   /// axis, useful when Scrollables are nested. When [axis] is provided,
   /// [ScrollPosition.recommendDeferredLoading] is called for the nearest
-  /// [CustomScrollable] in that [Axis].
+  /// [Scrollable] in that [Axis].
   ///
-  /// If there is no [CustomScrollable] in the widget tree above the [context], this
+  /// If there is no [Scrollable] in the widget tree above the [context], this
   /// method returns false.
   static bool recommendDeferredLoadingForContext(
     BuildContext context, {
@@ -471,7 +466,7 @@ class CustomScrollable extends StatefulWidget {
   /// Scrolls all scrollables that enclose the given context so as to make the
   /// given context visible.
   ///
-  /// If a [CustomScrollable] enclosing the provided [BuildContext] is a
+  /// If a [Scrollable] enclosing the provided [BuildContext] is a
   /// [TwoDimensionalScrollable], both vertical and horizontal axes will ensure
   /// the target is made visible.
   static Future<void> ensureVisible(
@@ -492,7 +487,7 @@ class CustomScrollable extends StatefulWidget {
     //
     // Also see https://github.com/flutter/flutter/issues/65100
     RenderObject? targetRenderObject;
-    CustomScrollableState? scrollable = CustomScrollable.maybeOf(context);
+    ScrollableState? scrollable = Scrollable.maybeOf(context);
     while (scrollable != null) {
       final List<Future<void>> newFutures;
       (newFutures, scrollable) = scrollable._performEnsureVisible(
@@ -507,7 +502,7 @@ class CustomScrollable extends StatefulWidget {
 
       targetRenderObject ??= context.findRenderObject();
       context = scrollable.context;
-      scrollable = CustomScrollable.maybeOf(context);
+      scrollable = Scrollable.maybeOf(context);
     }
 
     if (futures.isEmpty || duration == Duration.zero) {
@@ -529,7 +524,7 @@ class _ScrollableScope extends InheritedWidget {
     required super.child,
   });
 
-  final CustomScrollableState scrollable;
+  final ScrollableState scrollable;
   final ScrollPosition position;
 
   @override
@@ -538,30 +533,31 @@ class _ScrollableScope extends InheritedWidget {
   }
 }
 
-/// State object for a [CustomScrollable] widget.
+/// State object for a [Scrollable] widget.
 ///
-/// To manipulate a [CustomScrollable] widget's scroll position, use the object
+/// To manipulate a [Scrollable] widget's scroll position, use the object
 /// obtained from the [position] property.
 ///
-/// To be informed of when a [CustomScrollable] widget is scrolling, use a
+/// To be informed of when a [Scrollable] widget is scrolling, use a
 /// [NotificationListener] to listen for [ScrollNotification] notifications.
 ///
 /// This class is not intended to be subclassed. To specialize the behavior of a
-/// [CustomScrollable], provide it with a [ScrollPhysics].
-class CustomScrollableState extends State<CustomScrollable>
+/// [Scrollable], provide it with a [ScrollPhysics].
+class ScrollableState<T extends HorizontalDragGestureRecognizer>
+    extends State<Scrollable<T>>
     with TickerProviderStateMixin, RestorationMixin
     implements ScrollContext {
   // GETTERS
 
-  /// The manager for this [CustomScrollable] widget's viewport position.
+  /// The manager for this [Scrollable] widget's viewport position.
   ///
-  /// To control what kind of [ScrollPosition] is created for a [CustomScrollable],
+  /// To control what kind of [ScrollPosition] is created for a [Scrollable],
   /// provide it with custom [ScrollController] that creates the appropriate
   /// [ScrollPosition] in its [ScrollController.createScrollPosition] method.
   ScrollPosition get position => _position!;
   ScrollPosition? _position;
 
-  /// The resolved [ScrollPhysics] of the [CustomScrollableState].
+  /// The resolved [ScrollPhysics] of the [ScrollableState].
   ScrollPhysics? get resolvedPhysics => _physics;
   ScrollPhysics? _physics;
 
@@ -661,10 +657,6 @@ class CustomScrollableState extends State<CustomScrollable>
       _fallbackScrollController = ScrollController();
     }
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      reverseDuration: const Duration(milliseconds: 500),
-    );
   }
 
   @protected
@@ -678,7 +670,7 @@ class CustomScrollableState extends State<CustomScrollable>
     super.didChangeDependencies();
   }
 
-  bool _shouldUpdatePosition(CustomScrollable oldWidget) {
+  bool _shouldUpdatePosition(Scrollable oldWidget) {
     if ((widget.scrollBehavior == null) != (oldWidget.scrollBehavior == null)) {
       return true;
     }
@@ -705,7 +697,7 @@ class CustomScrollableState extends State<CustomScrollable>
 
   @protected
   @override
-  void didUpdateWidget(CustomScrollable oldWidget) {
+  void didUpdateWidget(Scrollable<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.controller != oldWidget.controller) {
@@ -747,8 +739,6 @@ class CustomScrollableState extends State<CustomScrollable>
 
     position.dispose();
     _persistedScrollOffset.dispose();
-
-    _animController.dispose();
     super.dispose();
   }
 
@@ -777,12 +767,6 @@ class CustomScrollableState extends State<CustomScrollable>
 
   bool? _lastCanDrag;
   Axis? _lastAxisDirection;
-
-  late bool _isRTL = false;
-  Offset? _downPos;
-  bool? _isSliding;
-
-  late AnimationController _animController;
 
   @override
   @protected
@@ -830,32 +814,27 @@ class CustomScrollableState extends State<CustomScrollable>
           };
         case Axis.horizontal:
           _gestureRecognizers = <Type, GestureRecognizerFactory>{
-            HorizontalDragGestureRecognizer:
-                GestureRecognizerFactoryWithHandlers<
-                  HorizontalDragGestureRecognizer
-                >(
-                  () => HorizontalDragGestureRecognizer(
-                    supportedDevices: _configuration.dragDevices,
-                  ),
-                  (HorizontalDragGestureRecognizer instance) {
-                    instance
-                      ..onDown = _handleDragDown
-                      ..onStart = _handleDragStart
-                      ..onUpdate = _handleDragUpdate
-                      ..onEnd = _handleDragEnd
-                      ..onCancel = _handleDragCancel
-                      ..minFlingDistance = _physics?.minFlingDistance
-                      ..minFlingVelocity = _physics?.minFlingVelocity
-                      ..maxFlingVelocity = _physics?.maxFlingVelocity
-                      ..velocityTrackerBuilder = _configuration
-                          .velocityTrackerBuilder(context)
-                      ..dragStartBehavior = widget.dragStartBehavior
-                      ..multitouchDragStrategy = _configuration
-                          .getMultitouchDragStrategy(context)
-                      ..gestureSettings = _mediaQueryGestureSettings
-                      ..supportedDevices = _configuration.dragDevices;
-                  },
-                ),
+            T: GestureRecognizerFactoryWithHandlers<T>(
+              () => widget.horizontalDragGestureRecognizer,
+              (T instance) {
+                instance
+                  ..onDown = _handleDragDown
+                  ..onStart = _handleDragStart
+                  ..onUpdate = _handleDragUpdate
+                  ..onEnd = _handleDragEnd
+                  ..onCancel = _handleDragCancel
+                  ..minFlingDistance = _physics?.minFlingDistance
+                  ..minFlingVelocity = _physics?.minFlingVelocity
+                  ..maxFlingVelocity = _physics?.maxFlingVelocity
+                  ..velocityTrackerBuilder = _configuration
+                      .velocityTrackerBuilder(context)
+                  ..dragStartBehavior = widget.dragStartBehavior
+                  ..multitouchDragStrategy = _configuration
+                      .getMultitouchDragStrategy(context)
+                  ..gestureSettings = _mediaQueryGestureSettings
+                  ..supportedDevices = _configuration.dragDevices;
+              },
+            ),
           };
       }
     }
@@ -889,65 +868,12 @@ class CustomScrollableState extends State<CustomScrollable>
   ScrollHoldController? _hold;
 
   void _handleDragDown(DragDownDetails details) {
-    final dx = details.localPosition.dx;
-    const offset = 30;
-    final isLTR = dx <= offset;
-    final isRTL = dx >= _maxWidth - offset;
-    if (isLTR || isRTL) {
-      _isRTL = isRTL;
-      _downPos = details.localPosition;
-      return;
-    }
     assert(_drag == null);
     assert(_hold == null);
     _hold = position.hold(_disposeHold);
   }
 
-  void _onPan(Offset localPosition) {
-    if (_isSliding == false) {
-      return;
-    } else if (_isSliding == null) {
-      if (_downPos != null) {
-        Offset cumulativeDelta = localPosition - _downPos!;
-        if (cumulativeDelta.dx.abs() >= cumulativeDelta.dy.abs()) {
-          _downPos = localPosition;
-          _isSliding = true;
-        } else {
-          _downPos = null;
-          _isSliding = false;
-        }
-      } else {
-        _downPos = null;
-        _isSliding = false;
-      }
-    } else if (_isSliding == true) {
-      final from = _downPos!.dx;
-      final to = localPosition.dx;
-      _animController.value =
-          math.max(0, _isRTL ? from - to : to - from) / _maxWidth;
-    }
-  }
-
-  void _onDismiss() {
-    if (_isSliding == true) {
-      final dx = _downPos!.dx;
-      if (_animController.value * _maxWidth +
-              (_isRTL ? (_maxWidth - dx) : dx) >=
-          100) {
-        Navigator.pop(context);
-      } else {
-        _animController.reverse();
-      }
-    }
-    _downPos = null;
-    _isSliding = null;
-  }
-
   void _handleDragStart(DragStartDetails details) {
-    if (_downPos != null) {
-      _onPan(details.localPosition);
-      return;
-    }
     // It's possible for _hold to become null between _handleDragDown and
     // _handleDragStart, for example if some user code calls jumpTo or otherwise
     // triggers a new activity to begin.
@@ -961,20 +887,12 @@ class CustomScrollableState extends State<CustomScrollable>
   }
 
   void _handleDragUpdate(DragUpdateDetails details) {
-    if (_downPos != null) {
-      _onPan(details.localPosition);
-      return;
-    }
     // _drag might be null if the drag activity ended and called _disposeDrag.
     assert(_hold == null || _drag == null);
     _drag?.update(details);
   }
 
   void _handleDragEnd(DragEndDetails details) {
-    if (_downPos != null) {
-      _onDismiss();
-      return;
-    }
     // _drag might be null if the drag activity ended and called _disposeDrag.
     assert(_hold == null || _drag == null);
     _drag?.end(details);
@@ -982,10 +900,6 @@ class CustomScrollableState extends State<CustomScrollable>
   }
 
   void _handleDragCancel() {
-    if (_downPos != null) {
-      _onDismiss();
-      return;
-    }
     if (_gestureDetectorKey.currentContext == null) {
       // The cancel was caused by the GestureDetector getting disposed, which
       // means we will get disposed momentarily as well and shouldn't do
@@ -1099,8 +1013,6 @@ class CustomScrollableState extends State<CustomScrollable>
     return false;
   }
 
-  late double _maxWidth;
-
   Widget _buildChrome(BuildContext context, Widget child) {
     final ScrollableDetails details = ScrollableDetails(
       direction: widget.axisDirection,
@@ -1178,32 +1090,7 @@ class CustomScrollableState extends State<CustomScrollable>
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        _maxWidth = constraints.maxWidth;
-        return AnimatedBuilder(
-          animation: _animController,
-          builder: (context, child) {
-            return Align(
-              alignment: AlignmentDirectional.topStart,
-              heightFactor: 1 - _animController.value,
-              child: child,
-            );
-          },
-          child: Material(
-            color: widget.bgColor,
-            child: widget.header != null
-                ? Column(
-                    children: [
-                      widget.header!,
-                      Expanded(child: result),
-                    ],
-                  )
-                : result,
-          ),
-        );
-      },
-    );
+    return result;
   }
 
   // Returns the Future from calling ensureVisible for the ScrollPosition, as
@@ -1251,7 +1138,7 @@ class _ScrollableSelectionHandler extends StatefulWidget {
     required this.child,
   });
 
-  final CustomScrollableState state;
+  final ScrollableState state;
   final ScrollPosition position;
   final Widget child;
   final SelectionRegistrar registrar;
@@ -1324,7 +1211,7 @@ class _ScrollableSelectionContainerDelegate
   // An eye-balled value for a smooth scrolling speed.
   static const double _kDefaultSelectToScrollVelocityScalar = 30;
 
-  final CustomScrollableState state;
+  final ScrollableState state;
   final EdgeDraggingAutoScroller _autoScroller;
   bool _scheduledLayoutChange = false;
   Offset? _currentDragStartRelatedToOrigin;
@@ -1683,7 +1570,7 @@ class _ScrollableSelectionContainerDelegate
   bool _globalPositionInScrollable(Offset globalPosition) {
     final RenderBox box = state.context.findRenderObject()! as RenderBox;
     final Offset localPosition = box.globalToLocal(globalPosition);
-    final Rect rect = Rect.fromLTWH(0, 0, box.size.width, box.size.height);
+    final Rect rect = Rect.fromLTRB(0, 0, box.size.width, box.size.height);
     return rect.contains(localPosition);
   }
 
@@ -1776,7 +1663,7 @@ class _ScrollableSelectionContainerDelegate
   }
 }
 
-Offset _getDeltaToScrollOrigin(CustomScrollableState scrollableState) {
+Offset _getDeltaToScrollOrigin(ScrollableState scrollableState) {
   return switch (scrollableState.axisDirection) {
     AxisDirection.up => Offset(0, -scrollableState.position.pixels),
     AxisDirection.down => Offset(0, scrollableState.position.pixels),
@@ -1795,7 +1682,7 @@ Offset _getDeltaToScrollOrigin(CustomScrollableState scrollableState) {
 /// [RenderObject.describeSemanticsConfiguration].
 ///
 /// If the tag [RenderViewport.useTwoPaneSemantics] is present on the viewport,
-/// two semantics nodes will be used to represent the [CustomScrollable]: The outer
+/// two semantics nodes will be used to represent the [Scrollable]: The outer
 /// node will contain all children, that are excluded from scrolling. The inner
 /// node, which is annotated with the scrolling actions, will house the
 /// scrollable children.

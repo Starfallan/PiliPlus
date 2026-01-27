@@ -8,6 +8,7 @@ import 'package:PiliPlus/common/widgets/flutter/draggable_sheet/draggable_scroll
     as dyn_sheet;
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
+import 'package:PiliPlus/common/widgets/flutter/time_picker.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -31,7 +32,8 @@ import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
-import 'package:flutter/material.dart' hide DraggableScrollableSheet;
+import 'package:flutter/material.dart'
+    hide DraggableScrollableSheet, showTimePicker;
 import 'package:flutter/services.dart' show LengthLimitingTextInputFormatter;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -280,46 +282,45 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
 
   Widget _buildImageList(ThemeData theme) => SizedBox(
     height: 100,
-    child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Obx(
-        () => Row(
-          spacing: 10,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ...List.generate(
-              imageList.length,
-              (index) => buildImage(index, 100),
-            ),
-            if (imageList.length != limit)
-              Builder(
-                builder: (context) {
-                  const borderRadius = StyleString.mdRadius;
-                  return Material(
-                    borderRadius: borderRadius,
-                    child: InkWell(
-                      borderRadius: borderRadius,
-                      onTap: () => onPickImage(() {
-                        if (imageList.isNotEmpty && !enablePublish.value) {
-                          enablePublish.value = true;
-                        }
-                      }),
-                      child: Ink(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: borderRadius,
-                          color: theme.colorScheme.secondaryContainer,
-                        ),
-                        child: const Center(child: Icon(Icons.add, size: 35)),
-                      ),
-                    ),
-                  );
-                },
+    child: Obx(
+      () => CustomScrollView(
+        scrollDirection: Axis.horizontal,
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(width: 16)),
+          if (imageList.isNotEmpty)
+            SliverPadding(
+              padding: const .only(right: 10),
+              sliver: SliverList.separated(
+                itemCount: imageList.length,
+                itemBuilder: (context, index) => buildImage(index, 100),
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
               ),
-          ],
-        ),
+            ),
+          if (imageList.length != limit)
+            SliverToBoxAdapter(
+              child: Material(
+                borderRadius: StyleString.mdRadius,
+                child: InkWell(
+                  borderRadius: StyleString.mdRadius,
+                  onTap: () => onPickImage(() {
+                    if (imageList.isNotEmpty && !enablePublish.value) {
+                      enablePublish.value = true;
+                    }
+                  }),
+                  child: Ink(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      borderRadius: StyleString.mdRadius,
+                      color: theme.colorScheme.secondaryContainer,
+                    ),
+                    child: const Center(child: Icon(Icons.add, size: 35)),
+                  ),
+                ),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(width: 16)),
+        ],
       ),
     ),
   );
@@ -629,18 +630,18 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
     }
 
     final color = theme.colorScheme.onSurfaceVariant;
-    late final gridDelegate = SliverGridDelegateWithExtentAndRatio(
-      maxCrossAxisExtent: 65,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      mainAxisExtent: 25,
-    );
 
     return SizedBox(
       height: height,
       child: GridView(
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.only(left: 12, bottom: 12, right: 12),
-        gridDelegate: gridDelegate,
+        gridDelegate: SliverGridDelegateWithExtentAndRatio(
+          maxCrossAxisExtent: 65,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          mainAxisExtent: 25,
+        ),
         children: [
           item(
             onTap: _onReserve,

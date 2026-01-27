@@ -140,17 +140,15 @@ class SubItem extends StatelessWidget {
           Positioned(
             bottom: 0,
             right: 0,
-            child: SizedBox(
-              height: 35,
-              width: 35,
-              child: IconButton(
-                onPressed: cancelSub,
-                style: TextButton.styleFrom(
-                  foregroundColor: theme.colorScheme.outline,
-                  padding: EdgeInsets.zero,
-                ),
-                icon: const Icon(Icons.delete_outline, size: 18),
+            height: 35,
+            width: 35,
+            child: IconButton(
+              onPressed: cancelSub,
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.outline,
+                padding: EdgeInsets.zero,
               ),
+              icon: const Icon(Icons.delete_outline, size: 18),
             ),
           ),
         ],

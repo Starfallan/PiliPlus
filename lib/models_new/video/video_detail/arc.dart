@@ -1,5 +1,5 @@
 import 'package:PiliPlus/models/model_owner.dart';
-import 'package:PiliPlus/models/model_video.dart';
+import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/models_new/video/video_detail/rights.dart';
 import 'package:PiliPlus/models_new/video/video_detail/stat.dart';
 

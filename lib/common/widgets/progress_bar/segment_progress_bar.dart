@@ -1,23 +1,43 @@
-import 'package:flutter/material.dart';
+/*
+ * This file is part of PiliPlus
+ *
+ * PiliPlus is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PiliPlus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PiliPlus.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-class Segment {
+import 'package:flutter/foundation.dart' show listEquals, kDebugMode;
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show BoxHitTestEntry;
+
+sealed class BaseSegment {
   final double start;
   final double end;
-  final Color color;
-  final String? title;
-  final String? url;
-  final int? from;
-  final int? to;
 
-  Segment(
-    this.start,
-    this.end,
-    this.color, [
-    this.title,
-    this.url,
-    this.from,
-    this.to,
-  ]);
+  BaseSegment({
+    required this.start,
+    required this.end,
+  });
+}
+
+class Segment extends BaseSegment {
+  final Color color;
+
+  Segment({
+    required super.start,
+    required super.end,
+    required this.color,
+  });
 
   @override
   bool operator ==(Object other) {
@@ -25,9 +45,38 @@ class Segment {
       return true;
     }
     if (other is Segment) {
+      return start == other.start && end == other.end && color == other.color;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => Object.hash(start, end, color);
+}
+
+class ViewPointSegment extends BaseSegment {
+  final String? title;
+  final String? url;
+  final int? from;
+  final int? to;
+
+  ViewPointSegment({
+    required super.start,
+    required super.end,
+    this.title,
+    this.url,
+    this.from,
+    this.to,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is ViewPointSegment) {
       return start == other.start &&
           end == other.end &&
-          color == other.color &&
           title == other.title &&
           url == other.url &&
           from == other.from &&
@@ -37,116 +86,278 @@ class Segment {
   }
 
   @override
-  int get hashCode => Object.hash(start, end, color, title, url, from, to);
+  int get hashCode => Object.hash(start, end, title, url, from, to);
 }
 
-class SegmentProgressBar extends CustomPainter {
-  final List<Segment> segmentColors;
-  double? _defHeight;
-
-  SegmentProgressBar({
-    required this.segmentColors,
+class SegmentProgressBar extends BaseSegmentProgressBar<Segment> {
+  const SegmentProgressBar({
+    super.key,
+    super.height = 3.5,
+    required super.segments,
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderProgressBar(
+      height: height,
+      segments: segments,
+    );
+  }
+}
+
+class RenderProgressBar extends BaseRenderProgressBar<Segment> {
+  RenderProgressBar({
+    required super.height,
+    required super.segments,
+  });
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final size = this.size;
+    final canvas = context.canvas;
     final paint = Paint()..style = PaintingStyle.fill;
 
-    for (int i = 0; i < segmentColors.length; i++) {
-      final item = segmentColors[i];
-      paint.color = item.color;
+    for (final segment in segments) {
+      paint.color = segment.color;
+      final segmentStart = segment.start * size.width;
+      final segmentEnd = segment.end * size.width;
+
+      if (segmentEnd > segmentStart ||
+          (segmentEnd == segmentStart && segmentStart > 0)) {
+        canvas.drawRect(
+          Rect.fromLTRB(
+            segmentStart,
+            0,
+            segmentEnd == segmentStart ? segmentStart + 2 : segmentEnd,
+            size.height,
+          ),
+          paint,
+        );
+      }
+    }
+  }
+}
+
+class ViewPointSegmentProgressBar
+    extends BaseSegmentProgressBar<ViewPointSegment> {
+  const ViewPointSegmentProgressBar({
+    super.key,
+    super.height = 3.5,
+    required super.segments,
+    this.onSeek,
+  });
+
+  final ValueSetter<Duration>? onSeek;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderViewPointProgressBar(
+      height: height,
+      segments: segments,
+      onSeek: onSeek,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    RenderViewPointProgressBar renderObject,
+  ) {
+    renderObject
+      ..height = height
+      ..segments = segments
+      ..onSeek = onSeek;
+  }
+}
+
+class RenderViewPointProgressBar
+    extends BaseRenderProgressBar<ViewPointSegment> {
+  RenderViewPointProgressBar({
+    required super.height,
+    required super.segments,
+    ValueSetter<Duration>? onSeek,
+  }) : _onSeek = onSeek,
+       _hitTestSelf = onSeek != null {
+    if (onSeek != null) {
+      _tapGestureRecognizer = TapGestureRecognizer()..onTapUp = _onTapUp;
+    }
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.constrainDimensions(constraints.maxWidth, _barHeight);
+  }
+
+  static const double _barHeight = 15.0;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final size = this.size;
+    final canvas = context.canvas;
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    canvas.drawRect(
+      Rect.fromLTRB(0, 0, size.width, _barHeight),
+      paint..color = Colors.grey[600]!.withValues(alpha: 0.45),
+    );
+
+    paint.color = Colors.black.withValues(alpha: 0.5);
+
+    for (int index = 0; index < segments.length; index++) {
+      final isFirst = index == 0;
+      final item = segments[index];
       final segmentStart = item.start * size.width;
       final segmentEnd = item.end * size.width;
 
       if (segmentEnd > segmentStart ||
           (segmentEnd == segmentStart && segmentStart > 0)) {
-        if (item.title != null) {
-          double fontSize = 10;
+        double fontSize = 10;
 
-          _defHeight ??=
-              (TextPainter(
-                text: TextSpan(
-                  text: item.title,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                  ),
-                ),
-                textDirection: TextDirection.ltr,
-              )..layout()).height +
-              2;
-
-          TextPainter getTextPainter() => TextPainter(
-            text: TextSpan(
-              text: item.title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: fontSize,
-                height: 1,
-              ),
+        TextPainter getTextPainter() => TextPainter(
+          text: TextSpan(
+            text: item.title,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: fontSize,
+              height: 1,
             ),
-            strutStyle: StrutStyle(leading: 0, height: 1, fontSize: fontSize),
-            textDirection: TextDirection.ltr,
-          )..layout();
+          ),
+          strutStyle: StrutStyle(leading: 0, height: 1, fontSize: fontSize),
+          textDirection: TextDirection.ltr,
+        )..layout();
 
-          TextPainter textPainter = getTextPainter();
+        TextPainter textPainter = getTextPainter();
 
-          late double prevStart;
-          if (i != 0) {
-            prevStart = segmentColors[i - 1].start * size.width;
-          }
-          double width = i == 0 ? segmentStart : segmentStart - prevStart;
-
-          while (textPainter.width > width - 2 && fontSize >= 2) {
-            fontSize -= 0.5;
-            textPainter = getTextPainter();
-          }
-
-          if (i == 0) {
-            canvas.drawRect(
-              Rect.fromLTRB(
-                0,
-                -_defHeight!,
-                size.width,
-                0,
-              ),
-              Paint()..color = Colors.grey[600]!.withValues(alpha: 0.45),
-            );
-          }
-
-          canvas.drawRect(
-            Rect.fromLTWH(
-              segmentStart,
-              -_defHeight!,
-              segmentEnd == segmentStart ? 2 : segmentEnd - segmentStart,
-              size.height + _defHeight!,
-            ),
-            paint,
-          );
-
-          double textX = i == 0
-              ? (segmentStart - textPainter.width) / 2
-              : (segmentStart - prevStart - textPainter.width) / 2 +
-                    prevStart +
-                    1;
-          double textY = (-_defHeight! - textPainter.height) / 2;
-          textPainter.paint(canvas, Offset(textX, textY));
-        } else {
-          canvas.drawRect(
-            Rect.fromLTWH(
-              segmentStart,
-              0,
-              segmentEnd == segmentStart ? 2 : segmentEnd - segmentStart,
-              size.height,
-            ),
-            paint,
-          );
+        late double prevStart;
+        if (!isFirst) {
+          prevStart = segments[index - 1].start * size.width;
         }
+        final width = isFirst ? segmentStart : segmentStart - prevStart;
+
+        while (textPainter.width > width - 2 && fontSize >= 2) {
+          fontSize -= 0.5;
+          textPainter.dispose();
+          textPainter = getTextPainter();
+        }
+
+        canvas.drawRect(
+          Rect.fromLTRB(
+            segmentStart,
+            0,
+            segmentEnd == segmentStart ? segmentStart + 2 : segmentEnd,
+            _barHeight + height,
+          ),
+          paint,
+        );
+
+        final textX = isFirst
+            ? (segmentStart - textPainter.width) / 2
+            : (segmentStart - prevStart - textPainter.width) / 2 +
+                  prevStart +
+                  1;
+        final textY = (_barHeight - textPainter.height) / 2;
+        textPainter.paint(canvas, Offset(textX, textY));
       }
     }
   }
 
-  @override
-  bool shouldRepaint(SegmentProgressBar oldDelegate) {
-    return segmentColors != oldDelegate.segmentColors;
+  ValueSetter<Duration>? _onSeek;
+  set onSeek(ValueSetter<Duration>? value) {
+    if (_onSeek == value) {
+      return;
+    }
+    _onSeek = value;
   }
+
+  TapGestureRecognizer? _tapGestureRecognizer;
+
+  @override
+  void dispose() {
+    _onSeek = null;
+    _tapGestureRecognizer
+      ?..onTapUp = null
+      ..dispose();
+    _tapGestureRecognizer = null;
+    super.dispose();
+  }
+
+  final bool _hitTestSelf;
+  @override
+  bool hitTestSelf(Offset position) => _hitTestSelf;
+
+  @override
+  void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
+    if (event is PointerDownEvent) {
+      _tapGestureRecognizer?.addPointer(event);
+    }
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    try {
+      final seg = details.localPosition.dx / size.width;
+      final item = _segments
+          .where((item) => item.start >= seg)
+          .reduce((a, b) => a.start < b.start ? a : b);
+      if (item.from case final from?) {
+        _onSeek?.call(Duration(seconds: from));
+      }
+      // if (kDebugMode) debugPrint('${item.title},,${item.from}');
+    } catch (e) {
+      if (kDebugMode) rethrow;
+    }
+  }
+}
+
+abstract class BaseSegmentProgressBar<T extends BaseSegment>
+    extends LeafRenderObjectWidget {
+  const BaseSegmentProgressBar({
+    super.key,
+    this.height = 3.5,
+    required this.segments,
+  });
+
+  final double height;
+  final List<T> segments;
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    BaseRenderProgressBar renderObject,
+  ) {
+    renderObject
+      ..height = height
+      ..segments = segments;
+  }
+}
+
+class BaseRenderProgressBar<T extends BaseSegment> extends RenderBox {
+  BaseRenderProgressBar({
+    required double height,
+    required List<T> segments,
+  }) : _height = height,
+       _segments = segments;
+
+  double _height;
+  double get height => _height;
+  set height(double value) {
+    if (_height == value) return;
+    _height = value;
+    markNeedsLayout();
+  }
+
+  List<T> _segments;
+  List<T> get segments => _segments;
+  set segments(List<T> value) {
+    if (listEquals(_segments, value)) return;
+    _segments = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.constrainDimensions(constraints.maxWidth, height);
+  }
+
+  @override
+  bool get isRepaintBoundary => true;
 }

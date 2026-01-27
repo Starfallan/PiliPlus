@@ -63,6 +63,7 @@ class VideoCardH extends StatelessWidget {
       title: videoItem.title,
       cover: videoItem.cover,
     );
+    final colorScheme = ColorScheme.of(context);
     return Material(
       type: MaterialType.transparency,
       child: Stack(
@@ -166,8 +167,11 @@ class VideoCardH extends StatelessWidget {
                                 left: 0,
                                 bottom: 0,
                                 right: 0,
-                                child: videoProgressIndicator(
-                                  progress == -1
+                                child: VideoProgressIndicator(
+                                  color: colorScheme.primary,
+                                  backgroundColor:
+                                      colorScheme.secondaryContainer,
+                                  progress: progress == -1
                                       ? 1
                                       : progress / videoItem.duration,
                                 ),
@@ -195,8 +199,9 @@ class VideoCardH extends StatelessWidget {
           Positioned(
             bottom: 0,
             right: 12,
+            width: 29,
+            height: 29,
             child: VideoPopupMenu(
-              size: 29,
               iconSize: 17,
               videoItem: videoItem,
               onRemove: onRemove,

@@ -16,13 +16,10 @@ abstract class CommonTextPubPageState<T extends CommonTextPubPage>
   late final TextEditingController editController;
 
   @override
-  void initState() {
-    super.initState();
-    editController = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
   void initPubState() {
+    editController = TextEditingController(
+      text: widget.initialValue,
+    );
     if (widget.initialValue?.trim().isNotEmpty == true) {
       enablePublish.value = true;
     }

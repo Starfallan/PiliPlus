@@ -1,23 +1,25 @@
+import 'package:PiliPlus/common/widgets/flutter/page/tabs.dart';
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide TabBarView;
 
 Widget videoTabBarView({
   required List<Widget> children,
   TabController? controller,
-}) => TabBarView(
-  physics: const CustomTabBarViewScrollPhysics(
-    parent: ClampingScrollPhysics(),
-  ),
+}) => TabBarView<CustomHorizontalDragGestureRecognizer>(
   controller: controller,
+  physics: const CustomTabBarViewScrollPhysics(parent: ClampingScrollPhysics()),
+  horizontalDragGestureRecognizer: CustomHorizontalDragGestureRecognizer(),
   children: children,
 );
 
 Widget tabBarView({
   required List<Widget> children,
   TabController? controller,
-}) => TabBarView(
+}) => TabBarView<CustomHorizontalDragGestureRecognizer>(
   physics: const CustomTabBarViewScrollPhysics(),
   controller: controller,
+  horizontalDragGestureRecognizer: CustomHorizontalDragGestureRecognizer(),
   children: children,
 );
 

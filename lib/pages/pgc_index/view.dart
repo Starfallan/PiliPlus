@@ -103,58 +103,45 @@ class _PgcIndexPageState extends State<PgcIndexPage>
     ThemeData theme,
     int index,
     PgcIndexConditionData data,
-    item,
+    Object item,
+    Map<String, dynamic> indexParams,
   ) {
-    if (item case final PgcConditionOrder e) {
-      return Obx(
-        () {
-          final isCurr = _ctr.indexParams['order'] == e.field;
-          return SearchText(
-            bgColor: isCurr
-                ? theme.colorScheme.secondaryContainer
-                : Colors.transparent,
-            textColor: isCurr
-                ? theme.colorScheme.onSecondaryContainer
-                : theme.colorScheme.onSurfaceVariant,
-            text: e.name!,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 6,
-              vertical: 3,
-            ),
-            onTap: (_) => _ctr
-              ..indexParams['order'] = e.field
-              ..onReload(),
-          );
-        },
+    if (item is PgcConditionOrder) {
+      final isCurr = indexParams['order'] == item.field;
+      return SearchText(
+        bgColor: isCurr
+            ? theme.colorScheme.secondaryContainer
+            : Colors.transparent,
+        textColor: isCurr
+            ? theme.colorScheme.onSecondaryContainer
+            : theme.colorScheme.onSurfaceVariant,
+        text: item.name!,
+        padding: const .symmetric(horizontal: 6, vertical: 3),
+        onTap: (_) => _ctr
+          ..indexParams['order'] = item.field
+          ..onReload(),
       );
     }
-    if (item case final PgcConditionValue e) {
+    if (item is PgcConditionValue) {
       final hasOrder = data.order?.isNotEmpty == true;
       if (hasOrder) index -= 1;
       final key = data.filter![index].field!;
-      return Obx(
-        () {
-          final isCurr = _ctr.indexParams[key] == e.keyword;
-          return SearchText(
-            bgColor: isCurr
-                ? theme.colorScheme.secondaryContainer
-                : Colors.transparent,
-            textColor: isCurr
-                ? theme.colorScheme.onSecondaryContainer
-                : theme.colorScheme.onSurfaceVariant,
-            text: e.name!,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 6,
-              vertical: 3,
-            ),
-            onTap: (_) => _ctr
-              ..indexParams[key] = e.keyword
-              ..onReload(),
-          );
-        },
+      final isCurr = indexParams[key] == item.keyword;
+      return SearchText(
+        bgColor: isCurr
+            ? theme.colorScheme.secondaryContainer
+            : Colors.transparent,
+        textColor: isCurr
+            ? theme.colorScheme.onSecondaryContainer
+            : theme.colorScheme.onSurfaceVariant,
+        text: item.name!,
+        padding: const .symmetric(horizontal: 6, vertical: 3),
+        onTap: (_) => _ctr
+          ..indexParams[key] = item.keyword
+          ..onReload(),
       );
     }
-    throw UnsupportedError('${item.runtimeType}');
+    throw UnsupportedError(item.runtimeType.toString());
   }
 
   Widget _buildSortsWidget(
@@ -172,31 +159,33 @@ class _PgcIndexPageState extends State<PgcIndexPage>
                   : count ~/ 2
             : count,
         (index) {
+          final isFirst = index == 0;
           List? item = data.order?.isNotEmpty == true
-              ? index == 0
+              ? isFirst
                     ? data.order
                     : data.filter![index - 1].values
               : data.filter![index].values;
-          return item != null && item.isNotEmpty
-              ? Padding(
-                  padding: index == 0
-                      ? EdgeInsets.zero
-                      : const EdgeInsets.only(top: 10),
-                  child: SelfSizedHorizontalList(
-                    gapSize: 12,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    childBuilder: (childIndex) {
-                      return _buildSortWidget(
-                        theme,
-                        index,
-                        data,
-                        item[childIndex],
-                      );
-                    },
-                    itemCount: item.length,
-                  ),
-                )
-              : const SizedBox.shrink();
+          if (item != null && item.isNotEmpty) {
+            return Obx(() {
+              // ignore: invalid_use_of_protected_member
+              final indexParams = _ctr.indexParams.value;
+              return SelfSizedHorizontalList(
+                padding: isFirst
+                    ? const .symmetric(horizontal: 12)
+                    : const .fromLTRB(12, 10, 12, 0),
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, childIndex) => _buildSortWidget(
+                  theme,
+                  index,
+                  data,
+                  item[childIndex],
+                  indexParams,
+                ),
+                itemCount: item.length,
+              );
+            });
+          }
+          return const SizedBox.shrink();
         },
       ),
       if (count > 5) ...[

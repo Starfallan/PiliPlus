@@ -40,15 +40,3 @@ class PlayStat extends BaseStat {
     danmu = json['danmaku'];
   }
 }
-
-class Dimension {
-  int? width;
-  int? height;
-  int? rotate;
-
-  Dimension.fromJson(Map<String, dynamic> json) {
-    width = json["width"];
-    height = json["height"];
-    rotate = json["rotate"];
-  }
-}

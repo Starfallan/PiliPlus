@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' show pi;
 
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +23,6 @@ mixin TripleMixin on GetxController, TickerProvider {
 
   // no need for pugv
   AnimationController? _tripleAnimCtr;
-  CurvedAnimation? _curvedAnimation;
   Animation<double>? _tripleAnimation;
 
   AnimationController get tripleAnimCtr =>
@@ -34,15 +32,8 @@ mixin TripleMixin on GetxController, TickerProvider {
         reverseDuration: const Duration(milliseconds: 400),
       );
 
-  CurvedAnimation get curvedAnimation => _curvedAnimation ??= CurvedAnimation(
-    parent: tripleAnimCtr,
-    curve: Curves.easeInOut,
-  );
-
-  Animation<double> get tripleAnimation => _tripleAnimation ??= Tween<double>(
-    begin: 0,
-    end: -2 * pi,
-  ).animate(curvedAnimation);
+  Animation<double> get tripleAnimation => _tripleAnimation ??= tripleAnimCtr
+      .drive(CurveTween(curve: Curves.easeInOut));
 
   Timer? _timer;
 
@@ -84,7 +75,6 @@ mixin TripleMixin on GetxController, TickerProvider {
   @override
   void onClose() {
     _cancelTimer();
-    _curvedAnimation?.dispose();
     _tripleAnimCtr?.dispose();
     super.onClose();
   }

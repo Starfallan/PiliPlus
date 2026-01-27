@@ -7,7 +7,6 @@ class Part extends BaseEpisodeItem {
   String? part;
   int? duration;
   String? vid;
-  String? weblink;
   Dimension? dimension;
   int? ctime;
   String? firstFrame;
@@ -19,7 +18,6 @@ class Part extends BaseEpisodeItem {
     this.part,
     this.duration,
     this.vid,
-    this.weblink,
     this.dimension,
     this.ctime,
     this.firstFrame,
@@ -33,7 +31,6 @@ class Part extends BaseEpisodeItem {
     part: json['part'] as String?,
     duration: json['duration'] as int?,
     vid: json['vid'] as String?,
-    weblink: json['weblink'] as String?,
     dimension: json['dimension'] == null
         ? null
         : Dimension.fromJson(json['dimension'] as Map<String, dynamic>),

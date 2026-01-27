@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/flutter/dyn/ink_well.dart';
+import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -8,7 +9,6 @@ import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide InkWell;
 import 'package:get/get.dart';
 
@@ -125,7 +125,7 @@ Widget addWidget(
                                   ),
                                   recognizer: reserve.desc3!.jumpUrl == null
                                       ? null
-                                      : (TapGestureRecognizer()
+                                      : (NoDeadlineTapGestureRecognizer()
                                           ..onTap = () {
                                             Get.toNamed(
                                               '/webview',
@@ -261,7 +261,7 @@ Widget addWidget(
                                 ),
                                 recognizer: content.desc!.jumpUrl == null
                                     ? null
-                                    : (TapGestureRecognizer()
+                                    : (NoDeadlineTapGestureRecognizer()
                                         ..onTap = () {
                                           Get.toNamed(
                                             '/webview',

@@ -16,7 +16,7 @@ class AppBarAni extends StatelessWidget {
   final bool isFullScreen;
 
   static final _topPos = Tween<Offset>(
-    begin: const Offset(0, -1),
+    begin: const Offset(0.0, -1.0),
     end: Offset.zero,
   );
 
@@ -49,8 +49,8 @@ class AppBarAni extends StatelessWidget {
   Widget build(BuildContext context) {
     return SlideTransition(
       position: isTop
-          ? _topPos.animate(controller)
-          : _bottomPos.animate(controller),
+          ? controller.drive(_topPos)
+          : controller.drive(_bottomPos),
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: isTop ? _topDecoration : _bottomDecoration,
