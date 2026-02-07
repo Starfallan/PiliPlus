@@ -47,7 +47,8 @@ class LiveRoomController extends GetxController {
   LiveRoomController(this.heroTag);
   final String heroTag;
 
-  int roomId = Get.arguments;
+  late final int roomId;
+  late final bool isReturningFromPip;
   int? ruid;
   DanmakuController<DanmakuExtra>? danmakuController;
   PlPlayerController plPlayerController = PlPlayerController.getInstance(
@@ -124,6 +125,9 @@ class LiveRoomController extends GetxController {
   final superChatType = Pref.superChatType;
   late final showSuperChat = superChatType != SuperChatType.disable;
 
+  // 小窗相关状态
+  final RxBool isInPipMode = false.obs;
+
   final headerKey = GlobalKey<TimeBatteryMixin>();
 
   final RxString title = ''.obs;
@@ -181,11 +185,19 @@ class LiveRoomController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    final args = Get.arguments;
+    if (args is Map) {
+      roomId = (args['roomId'] as int?) ?? (args['id'] as int? ?? 0);
+      isReturningFromPip = args['fromPip'] == true;
+    } else {
+      roomId = args as int;
+      isReturningFromPip = false;
+    }
     scrollController = ScrollController()..addListener(listener);
     final account = Accounts.heartbeat;
     isLogin = account.isLogin;
     mid = account.mid;
-    queryLiveUrl();
+    queryLiveUrl(reinitializePlayer: !isReturningFromPip);
     queryLiveInfoH5();
     if (isLogin && !Pref.historyPause) {
       VideoHttp.roomEntryAction(roomId: roomId);
@@ -197,6 +209,10 @@ class LiveRoomController extends GetxController {
 
   Future<void>? playerInit({bool autoplay = true}) {
     if (videoUrl == null) {
+      return null;
+    }
+    // 如果是从小窗返回，播放器已在播放，跳过初始化
+    if (isReturningFromPip) {
       return null;
     }
     return plPlayerController.setDataSource(
@@ -216,7 +232,7 @@ class LiveRoomController extends GetxController {
     );
   }
 
-  Future<void> queryLiveUrl() async {
+  Future<void> queryLiveUrl({bool reinitializePlayer = true}) async {
     currentQn ??= await Utils.isWiFi
         ? Pref.liveQuality
         : Pref.liveQualityCellular;
@@ -255,7 +271,9 @@ class LiveRoomController extends GetxController {
       currentQnDesc.value =
           LiveQuality.fromCode(currentQn)?.desc ?? currentQn.toString();
       videoUrl = VideoUtils.getLiveCdnUrl(item);
-      await playerInit();
+      if (reinitializePlayer) {
+        await playerInit();
+      }
       isLoaded.value = true;
     } else {
       _showDialog(res.toString());
@@ -391,21 +409,24 @@ class LiveRoomController extends GetxController {
 
   @override
   void onClose() {
-    closeLiveMsg();
-    cancelLikeTimer();
-    cancelLiveTimer();
-    savedDanmaku?.clear();
-    savedDanmaku = null;
-    messages.clear();
-    if (showSuperChat) {
-      superChatMsg.clear();
-      fsSC.value = null;
+    // 如果在小窗模式，不清理资源
+    if (!isInPipMode.value) {
+      closeLiveMsg();
+      cancelLikeTimer();
+      cancelLiveTimer();
+      savedDanmaku?.clear();
+      savedDanmaku = null;
+      messages.clear();
+      if (showSuperChat) {
+        superChatMsg.clear();
+        fsSC.value = null;
+      }
+      scrollController
+        ..removeListener(listener)
+        ..dispose();
+      pageController?.dispose();
+      danmakuController = null;
     }
-    scrollController
-      ..removeListener(listener)
-      ..dispose();
-    pageController?.dispose();
-    danmakuController = null;
     super.onClose();
   }
 

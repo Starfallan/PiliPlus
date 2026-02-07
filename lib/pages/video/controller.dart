@@ -1226,6 +1226,7 @@ class VideoDetailController extends GetxController
   Future<void> queryVideoUrl({
     Duration? defaultST,
     bool fromReset = false,
+    bool reinitializePlayer = true,
   }) async {
     if (isFileSource) {
       return _initPlayerIfNeeded();
@@ -1308,7 +1309,9 @@ class VideoDetailController extends GetxController
         setVideoHeight();
         currentDecodeFormats = VideoDecodeFormatType.fromString('avc1');
         currentVideoQa.value = videoQuality;
-        await _initPlayerIfNeeded();
+        if (reinitializePlayer) {
+          await _initPlayerIfNeeded();
+        }
         isQuerying = false;
         return;
       }
@@ -1407,7 +1410,9 @@ class VideoDetailController extends GetxController
       } else {
         audioUrl = '';
       }
-      await _initPlayerIfNeeded();
+      if (reinitializePlayer) {
+        await _initPlayerIfNeeded();
+      }
     } else {
       autoPlay.value = false;
       videoState.value = result..toast();

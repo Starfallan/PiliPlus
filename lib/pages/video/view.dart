@@ -131,8 +131,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   @override
   void initState() {
     super.initState();
+    final bool fromPip = Get.arguments['fromPip'] ?? false;
     if (PipOverlayService.isInPipMode) {
-      PipOverlayService.stopPip(callOnClose: false, immediate: true);
+      if (fromPip) {
+        PipOverlayService.stopPip(callOnClose: false, immediate: true);
+      } else {
+        PipOverlayService.stopPip(callOnClose: false);
+      }
     }
 
     PlPlayerController.setPlayCallBack(playCallBack);
@@ -157,7 +162,38 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       pgcIntroController = Get.put(PgcIntroController(), tag: heroTag);
     }
 
-    videoSourceInit();
+    if (fromPip) {
+      plPlayerController = videoDetailController.plPlayerController;
+      plPlayerController!
+        ..addStatusLister(playerListener)
+        ..addPositionListener(positionListener);
+
+      if (plPlayerController!.isFullScreen.value) {
+        plPlayerController!.triggerFullScreen(status: false);
+      }
+      if (plPlayerController!.playerStatus.value != PlayerStatus.playing) {
+        plPlayerController!.play();
+      }
+      plPlayerController!.controls = true;
+
+      videoDetailController.videoState.value = LoadingState.loading();
+      videoDetailController
+          .queryVideoUrl(
+            defaultST: videoDetailController.playedTime,
+            fromReset: true,
+            reinitializePlayer: false,
+          )
+          .then((_) {
+            if (videoDetailController.videoState.value is! Error) {
+              videoDetailController.videoState.value = const Success(null);
+            }
+          })
+          .catchError((e) {
+            videoDetailController.videoState.value = Error(e.toString());
+          });
+    } else {
+      videoSourceInit();
+    }
     autoScreen();
 
     WidgetsBinding.instance.addObserver(this);
@@ -403,8 +439,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       videoDetailController.makeHeartBeat();
       plPlayerController!
         ..removeStatusLister(playerListener)
-        ..removePositionListener(positionListener)
-        ..pause();
+        ..removePositionListener(positionListener);
+
+      // 如果正在播放且不是全屏，启动小窗
+      if (plPlayerController!.playerStatus.playing &&
+          !plPlayerController!.isFullScreen.value) {
+        _startInAppPipIfNeeded();
+      } else {
+        plPlayerController!.pause();
+      }
     }
     isShowing = false;
     super.didPushNext();
@@ -425,6 +468,17 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     WidgetsBinding.instance.addObserver(this);
 
     plPlayerController?.isLive = false;
+
+    // 如果是从小窗返回，播放器已在运行，跳过恢复逻辑
+    final bool fromPip = Get.arguments['fromPip'] ?? false;
+    if (fromPip) {
+      isShowing = true;
+      PlPlayerController.setPlayCallBack(playCallBack);
+      introController.startTimer();
+      super.didPopNext();
+      return;
+    }
+
     if (videoDetailController.plPlayerController.playerStatus.playing &&
         videoDetailController.playerStatus != PlayerStatus.playing) {
       videoDetailController.plPlayerController.pause();
@@ -2242,7 +2296,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         _handleInAppPipCloseCleanup();
       },
       onTapToReturn: () {
-        Get.toNamed('/videoV', arguments: videoDetailController.args);
+        final currentPosition = plPlayerController?.position.value;
+        final args = Map<String, dynamic>.from(videoDetailController.args);
+        final progress =
+            currentPosition?.inMilliseconds ??
+            videoDetailController.playedTime?.inMilliseconds;
+        if (progress != null) {
+          args['progress'] = progress;
+        }
+        args['fromPip'] = true;
+        Get.toNamed('/videoV', arguments: args);
       },
     );
   }

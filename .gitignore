@@ -147,3 +147,6 @@ pili_release.json
 dist
 
 test.dart
+
+
+docs/*.dart

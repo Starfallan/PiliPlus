@@ -72,20 +72,37 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    final args = Get.arguments;
+    final bool fromPip = args is Map && args['fromPip'] == true;
     _liveRoomController = Get.put(
       LiveRoomController(heroTag),
       tag: heroTag,
     );
-    if (LivePipOverlayService.isCurrentLiveRoom(
+    if (fromPip) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        LivePipOverlayService.stopLivePip(callOnClose: false);
+      });
+    } else if (LivePipOverlayService.isCurrentLiveRoom(
       _liveRoomController.roomId,
     )) {
       LivePipOverlayService.stopLivePip(callOnClose: false);
     }
     plPlayerController = _liveRoomController.plPlayerController;
     PlPlayerController.setPlayCallBack(plPlayerController.play);
-    plPlayerController
-      ..autoEnterFullscreen()
-      ..addStatusLister(playerListener);
+    if (fromPip) {
+      plPlayerController
+        ..isLive = true
+        ..danmakuController = _liveRoomController.danmakuController;
+      _liveRoomController
+        ..danmakuController?.resume()
+        ..startLiveTimer()
+        ..startLiveMsg();
+      plPlayerController.addStatusLister(playerListener);
+    } else {
+      plPlayerController
+        ..autoEnterFullscreen()
+        ..addStatusLister(playerListener);
+    }
   }
 
   @override
@@ -110,6 +127,17 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       ..danmakuController = _liveRoomController.danmakuController;
     PlPlayerController.setPlayCallBack(plPlayerController.play);
     _liveRoomController.startLiveTimer();
+
+    // 如果是从小窗返回，直接恢复状态，不重新初始化
+    if (_liveRoomController.isReturningFromPip) {
+      _liveRoomController
+        ..danmakuController?.resume()
+        ..startLiveMsg();
+      plPlayerController.addStatusLister(playerListener);
+      super.didPopNext();
+      return;
+    }
+
     if (plPlayerController.playerStatus.playing &&
         plPlayerController.cid == null) {
       _liveRoomController
@@ -133,12 +161,20 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   void didPushNext() {
     WidgetsBinding.instance.removeObserver(this);
     plPlayerController.removeStatusLister(playerListener);
-    _liveRoomController
-      ..danmakuController?.clear()
-      ..danmakuController?.pause()
-      ..cancelLiveTimer()
-      ..closeLiveMsg()
-      ..isPlaying = plPlayerController.playerStatus.playing;
+
+    // 如果正在播放且不是全屏状态，启动小窗
+    if (plPlayerController.playerStatus.playing && !isFullScreen) {
+      _startLivePipIfNeeded();
+    } else {
+      // 不启动小窗，只暂停
+      _liveRoomController
+        ..danmakuController?.clear()
+        ..danmakuController?.pause()
+        ..cancelLiveTimer()
+        ..closeLiveMsg()
+        ..isPlaying = plPlayerController.playerStatus.playing;
+    }
+
     super.didPushNext();
   }
 
@@ -400,6 +436,11 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (!_shouldStartLivePip()) {
       return;
     }
+    // 设置小窗模式标志
+    _liveRoomController.isInPipMode.value = true;
+    // 继续播放直播消息
+    _liveRoomController.startLiveMsg();
+
     LivePipOverlayService.startLivePip(
       context: context,
       heroTag: heroTag,
@@ -409,7 +450,13 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         _handleLivePipCloseCleanup();
       },
       onReturn: () {
-        Get.toNamed('/liveRoom', arguments: _liveRoomController.roomId);
+        Get.toNamed(
+          '/liveRoom',
+          arguments: {
+            'roomId': _liveRoomController.roomId,
+            'fromPip': true,
+          },
+        );
       },
     );
   }
@@ -418,6 +465,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (plPlayerController.isCloseAll) {
       return;
     }
+    _liveRoomController.isInPipMode.value = false;
     videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
     if (Platform.isAndroid && !plPlayerController.setSystemBrightness) {
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
