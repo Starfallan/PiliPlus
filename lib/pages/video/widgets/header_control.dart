@@ -1186,8 +1186,9 @@ class HeaderControlState extends State<HeaderControl>
                     dense: true,
                     onTap: () async {
                       Get.back();
-                      final format = await Get.dialog<String>(
-                        SimpleDialog(
+                      final format = await showDialog<String>(
+                        context: context,
+                        builder: (context) => SimpleDialog(
                           title: const Text('选择格式'),
                           children: [
                             SimpleDialogOption(
