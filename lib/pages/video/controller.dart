@@ -1311,6 +1311,13 @@ class VideoDetailController extends GetxController
         currentVideoQa.value = videoQuality;
         if (reinitializePlayer) {
           await _initPlayerIfNeeded();
+        } else {
+          // 从 PiP 返回时，重新初始化 SponsorBlock
+          if (plPlayerController.enableSponsorBlock && segmentList.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              initSkip();
+            });
+          }
         }
         isQuerying = false;
         return;
@@ -1412,6 +1419,14 @@ class VideoDetailController extends GetxController
       }
       if (reinitializePlayer) {
         await _initPlayerIfNeeded();
+      } else {
+        // 从 PiP 返回时，播放器已在运行，但需要重新初始化 SponsorBlock 的跳过监听器
+        if (plPlayerController.enableSponsorBlock && segmentList.isNotEmpty) {
+          // 等待播放器就绪
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            initSkip();
+          });
+        }
       }
     } else {
       autoPlay.value = false;

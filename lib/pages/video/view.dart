@@ -2308,6 +2308,14 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         Get.toNamed('/videoV', arguments: args);
       },
     );
+
+    // 在小窗启动后，重新初始化 SponsorBlock 监听器（如果启用）
+    if (videoDetailController.plPlayerController.enableBlock &&
+        videoDetailController.segmentList.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        videoDetailController.initSkip();
+      });
+    }
   }
 
   void _handleInAppPipCloseCleanup() {
