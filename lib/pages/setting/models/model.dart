@@ -240,6 +240,82 @@ SettingsModel getListBanWordModel({
   );
 }
 
+/// Creates a list-based UID filter model with user names using ListEditorDialog
+/// 
+/// 支持显示用户名的 UID 过滤模型
+SettingsModel getListUidWithNameModel({
+  required String title,
+  required Map<int, String> Function() getUidsMap,
+  required void Function(Map<int, String>) setUidsMap,
+  required void Function() onUpdate,
+}) {
+  return NormalModel(
+    leading: const Icon(Icons.person_off_outlined),
+    title: title,
+    getSubtitle: () {
+      final uidsMap = getUidsMap();
+      if (uidsMap.isEmpty) return '点击添加';
+      return '已屏蔽 ${uidsMap.length} 个用户';
+    },
+    onTap: (context, setState) async {
+      final uidsMap = getUidsMap();
+      // 将 Map 转换为显示格式："用户名 (UID)"
+      final items = uidsMap.entries.map((e) {
+        return '${e.value} (${e.key})';
+      }).toList();
+
+      final result = await showDialog<List<String>>(
+        context: context,
+        builder: (context) {
+          return ListEditorDialog(
+            title: title,
+            initialItems: items,
+            hintText: '输入用户UID',
+            itemLabel: 'UID',
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            validator: (value) {
+              if (value.isEmpty) return '请输入UID';
+              final uid = int.tryParse(value);
+              if (uid == null) return 'UID必须是数字';
+              if (uid <= 0) return 'UID必须大于0';
+              return null;
+            },
+          );
+        },
+      );
+
+      if (result != null) {
+        final newMap = <int, String>{};
+        
+        for (final item in result) {
+          // 解析格式 "用户名 (UID)" 或纯数字 "UID"
+          final match = RegExp(r'(.+?)\s*\((\d+)\)$').firstMatch(item);
+          if (match != null) {
+            // 格式: "用户名 (UID)"
+            final name = match.group(1)?.trim() ?? '';
+            final uid = int.tryParse(match.group(2) ?? '');
+            if (uid != null && uid > 0) {
+              newMap[uid] = name;
+            }
+          } else {
+            // 纯数字格式：新添加的UID
+            final uid = int.tryParse(item);
+            if (uid != null && uid > 0) {
+              newMap[uid] = 'UID:$uid'; // 默认名称
+            }
+          }
+        }
+        
+        setUidsMap(newMap);
+        onUpdate();
+        setState();
+        SmartDialog.showToast('已保存');
+      }
+    },
+  );
+}
+
 /// Creates a list-based UID filter model using ListEditorDialog
 /// 
 /// 使用 getListUidModel 替代了上游的 getUidModel

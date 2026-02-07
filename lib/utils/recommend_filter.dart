@@ -12,7 +12,7 @@ abstract final class RecommendFilter {
     caseSensitive: false,
   );
   static bool enableFilter = rcmdRegExp.pattern.isNotEmpty;
-  static Set<int> recommendBlockedMids = Pref.recommendBlockedMids;
+  static Map<int, String> recommendBlockedMids = Pref.recommendBlockedMids;
 
   static bool filter(BaseVideoItemModel videoItem) {
     //由于相关视频中没有已关注标签，只能视为非关注视频
@@ -39,7 +39,7 @@ abstract final class RecommendFilter {
   static bool filterUser(int? mid) {
     return recommendBlockedMids.isNotEmpty && 
            mid != null && 
-           recommendBlockedMids.contains(mid);
+           recommendBlockedMids.containsKey(mid);
   }
 
   static bool filterAll(BaseVideoItemModel videoItem) {

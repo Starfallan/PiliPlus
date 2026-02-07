@@ -15,7 +15,7 @@ class GlobalData {
 
   Set<int> dynamicsBlockedMids = Pref.dynamicsBlockedMids;
 
-  Set<int> recommendBlockedMids = Pref.recommendBlockedMids;
+  Map<int, String> recommendBlockedMids = Pref.recommendBlockedMids;
 
   bool dynamicsWaterfallFlow = Pref.dynamicsWaterfallFlow;
 

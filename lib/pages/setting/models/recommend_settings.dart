@@ -73,13 +73,13 @@ List<SettingsModel> get recommendSettings => [
       VideoHttp.enableFilter = value.pattern.isNotEmpty;
     },
   ),
-  getListUidModel(
+  getListUidWithNameModel(
     title: '屏蔽用户',
-    getUids: () => Pref.recommendBlockedMids,
-    setUids: (uids) {
-      Pref.recommendBlockedMids = uids;
-      GlobalData().recommendBlockedMids = uids;
-      RecommendFilter.recommendBlockedMids = uids;
+    getUidsMap: () => Pref.recommendBlockedMids,
+    setUidsMap: (uidsMap) {
+      Pref.recommendBlockedMids = uidsMap;
+      GlobalData().recommendBlockedMids = uidsMap;
+      RecommendFilter.recommendBlockedMids = uidsMap;
     },
     onUpdate: () {
       // Changes are immediately reflected

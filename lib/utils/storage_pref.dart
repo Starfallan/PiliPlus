@@ -71,11 +71,33 @@ abstract final class Pref {
     _localCache.put(LocalCacheKey.dynamicsBlockedMids, blockedMidsSet);
   }
 
-  static Set<int> get recommendBlockedMids =>
-      _localCache.get(LocalCacheKey.recommendBlockedMids, defaultValue: <int>{});
+  static Map<int, String> get recommendBlockedMids {
+    final data = _localCache.get(LocalCacheKey.recommendBlockedMids);
+    
+    // 向后兼容：如果是旧的 Set<int> 格式，转换为 Map<int, String>
+    if (data is Set) {
+      final map = <int, String>{};
+      for (final mid in data) {
+        if (mid is int) {
+          map[mid] = 'UID:$mid'; // 旧数据使用默认名称
+        }
+      }
+      // 自动迁移数据
+      _localCache.put(LocalCacheKey.recommendBlockedMids, map);
+      return map;
+    }
+    
+    // 如果是新格式 Map，直接返回
+    if (data is Map) {
+      return Map<int, String>.from(data);
+    }
+    
+    // 默认返回空 Map
+    return <int, String>{};
+  }
 
-  static set recommendBlockedMids(Set<int> blockedMidsSet) {
-    _localCache.put(LocalCacheKey.recommendBlockedMids, blockedMidsSet);
+  static set recommendBlockedMids(Map<int, String> blockedMidsMap) {
+    _localCache.put(LocalCacheKey.recommendBlockedMids, blockedMidsMap);
   }
 
   static RuleFilter get danmakuFilterRule => _localCache.get(
