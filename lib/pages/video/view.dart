@@ -2239,12 +2239,30 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         isPipMode: true,
       ),
       onClose: () {
-        PipOverlayService.stopPip(callOnClose: false, immediate: true);
+        _handleInAppPipCloseCleanup();
       },
       onTapToReturn: () {
         Get.toNamed('/videoV', arguments: videoDetailController.args);
       },
     );
+  }
+
+  void _handleInAppPipCloseCleanup() {
+    if (videoDetailController.plPlayerController.isCloseAll) {
+      return;
+    }
+    if (Platform.isAndroid && !videoDetailController.setSystemBrightness) {
+      ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
+    }
+    PlPlayerController.setPlayCallBack(null);
+    videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
+    plPlayerController ??= videoDetailController.plPlayerController;
+    if (plPlayerController != null) {
+      videoDetailController.makeHeartBeat();
+      plPlayerController!.dispose();
+    } else {
+      PlPlayerController.updatePlayCount();
+    }
   }
 
   void onShowMemberPage(int? mid) {

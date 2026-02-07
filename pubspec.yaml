@@ -149,7 +149,7 @@ dependencies:
   # 原始仓库: https://github.com/bggRGjQaUbCoE/canvas_danmaku.git (ref: main)
   canvas_danmaku:
     git:
-      url: https://github.com/Starfallan/canvas_danmaku
+      url: https://github.com/Starfallan/canvas_danmaku.git
       ref: main
   # 状态栏图标控制
   # status_bar_control: ^3.2.1

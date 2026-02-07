@@ -406,12 +406,25 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       roomId: _liveRoomController.roomId,
       plPlayerController: plPlayerController,
       onClose: () {
-        LivePipOverlayService.stopLivePip(callOnClose: false);
+        _handleLivePipCloseCleanup();
       },
       onReturn: () {
         Get.toNamed('/liveRoom', arguments: _liveRoomController.roomId);
       },
     );
+  }
+
+  void _handleLivePipCloseCleanup() {
+    if (plPlayerController.isCloseAll) {
+      return;
+    }
+    videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
+    if (Platform.isAndroid && !plPlayerController.setSystemBrightness) {
+      ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
+    }
+    PlPlayerController.setPlayCallBack(null);
+    plPlayerController.removeStatusLister(playerListener);
+    plPlayerController.dispose();
   }
 
   Widget get childWhenDisabled {
