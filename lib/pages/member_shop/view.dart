@@ -29,10 +29,16 @@ class MemberShop extends StatefulWidget {
 
 class _MemberShopState extends State<MemberShop>
     with AutomaticKeepAliveClientMixin {
-  late final _controller = Get.put(
-    MemberShopController(widget.mid),
-    tag: widget.heroTag,
-  );
+  late final MemberShopController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      MemberShopController(widget.mid),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

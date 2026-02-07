@@ -93,14 +93,14 @@ class _SetSwitchItemState extends State<SetSwitchItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    TextStyle titleStyle =
+    final titleStyle =
         widget.titleStyle ??
         theme.textTheme.titleMedium!.copyWith(
           color: widget.onTap != null && !val
               ? theme.colorScheme.outline
               : null,
         );
-    TextStyle subTitleStyle = theme.textTheme.labelMedium!.copyWith(
+    final subTitleStyle = theme.textTheme.labelMedium!.copyWith(
       color: theme.colorScheme.outline,
     );
     return ListTile(
@@ -113,8 +113,8 @@ class _SetSwitchItemState extends State<SetSwitchItem> {
           : null,
       leading: widget.leading,
       trailing: Transform.scale(
-        alignment: Alignment.centerRight,
         scale: 0.8,
+        alignment: .centerRight,
         child: Switch(
           value: val,
           onChanged: switchChange,

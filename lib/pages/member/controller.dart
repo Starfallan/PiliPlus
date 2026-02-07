@@ -148,28 +148,26 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
     }
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('提示'),
-          content: Text(relation.value != 128 ? '确定拉黑UP主?' : '从黑名单移除UP主'),
-          actions: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text(
-                '点错了',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
-              ),
+      builder: (context) => AlertDialog(
+        title: const Text('提示'),
+        content: Text(relation.value != 128 ? '确定拉黑UP主?' : '从黑名单移除UP主'),
+        actions: [
+          TextButton(
+            onPressed: Get.back,
+            child: Text(
+              '点错了',
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
-            TextButton(
-              onPressed: () {
-                Get.back();
-                _onBlock();
-              },
-              child: const Text('确认'),
-            ),
-          ],
-        );
-      },
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              _onBlock();
+            },
+            child: const Text('确认'),
+          ),
+        ],
+      ),
     );
   }
 

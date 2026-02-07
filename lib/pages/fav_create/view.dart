@@ -192,40 +192,38 @@ class _CreateFavPageState extends State<CreateFavPage> {
                       if (_cover?.isNotEmpty == true) {
                         showDialog(
                           context: context,
-                          builder: (_) {
-                            return AlertDialog(
-                              clipBehavior: Clip.hardEdge,
-                              contentPadding: const .symmetric(vertical: 12),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ListTile(
-                                    dense: true,
-                                    onTap: () {
-                                      Get.back();
-                                      _pickImg(context, theme);
-                                    },
-                                    title: const Text(
-                                      '替换封面',
-                                      style: TextStyle(fontSize: 14),
-                                    ),
+                          builder: (_) => AlertDialog(
+                            clipBehavior: Clip.hardEdge,
+                            contentPadding: const .symmetric(vertical: 12),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  dense: true,
+                                  onTap: () {
+                                    Get.back();
+                                    _pickImg(context, theme);
+                                  },
+                                  title: const Text(
+                                    '替换封面',
+                                    style: TextStyle(fontSize: 14),
                                   ),
-                                  ListTile(
-                                    dense: true,
-                                    onTap: () {
-                                      Get.back();
-                                      _cover = null;
-                                      (context as Element).markNeedsBuild();
-                                    },
-                                    title: const Text(
-                                      '移除封面',
-                                      style: TextStyle(fontSize: 14),
-                                    ),
+                                ),
+                                ListTile(
+                                  dense: true,
+                                  onTap: () {
+                                    Get.back();
+                                    _cover = null;
+                                    (context as Element).markNeedsBuild();
+                                  },
+                                  title: const Text(
+                                    '移除封面',
+                                    style: TextStyle(fontSize: 14),
                                   ),
-                                ],
-                              ),
-                            );
-                          },
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       } else {
                         _pickImg(context, theme);

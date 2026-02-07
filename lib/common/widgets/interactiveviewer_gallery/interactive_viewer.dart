@@ -71,7 +71,6 @@ class InteractiveViewer extends StatefulWidget {
     this.onPanStart,
     this.onPanUpdate,
     this.onPanEnd,
-    this.onReset,
     this.isAnimating,
     required Widget this.child,
   }) : assert(minScale > 0),
@@ -121,7 +120,6 @@ class InteractiveViewer extends StatefulWidget {
     this.onPanStart,
     this.onPanUpdate,
     this.onPanEnd,
-    this.onReset,
     this.isAnimating,
     required InteractiveViewerWidgetBuilder this.builder,
   }) : assert(minScale > 0),
@@ -143,8 +141,7 @@ class InteractiveViewer extends StatefulWidget {
        constrained = false,
        child = null;
 
-  final Function? isAnimating;
-  final VoidCallback? onReset;
+  final ValueGetter<bool>? isAnimating;
   final ValueChanged<ScaleStartDetails>? onPanStart;
   final ValueChanged<ScaleUpdateDetails>? onPanUpdate;
   final ValueChanged<ScaleEndDetails>? onPanEnd;
@@ -873,9 +870,6 @@ class _InteractiveViewerState extends State<InteractiveViewer>
   // Handle the end of a gesture of _GestureType. All of pan, scale, and rotate
   // are handled with GestureDetector's scale gesture.
   void _onScaleEnd(ScaleEndDetails details) {
-    if (_transformer.value.storage[0] == 1.0) {
-      widget.onReset?.call();
-    }
     if (widget.isAnimating?.call() == true ||
         (details.pointerCount < 2 && _transformer.value.storage[0] == 1.0)) {
       widget.onPanEnd?.call(details);

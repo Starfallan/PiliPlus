@@ -16,10 +16,16 @@ class RelatedVideoPanel extends StatefulWidget {
 }
 
 class _RelatedVideoPanelState extends State<RelatedVideoPanel> with GridMixin {
-  late final RelatedController _relatedController = Get.putOrFind(
-    RelatedController.new,
-    tag: widget.heroTag,
-  );
+  late final RelatedController _relatedController;
+
+  @override
+  void initState() {
+    super.initState();
+    _relatedController = Get.putOrFind(
+      RelatedController.new,
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

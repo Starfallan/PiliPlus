@@ -107,14 +107,20 @@ class _ContributionRankType extends StatefulWidget {
 
 class _ContributionRankTypeState extends State<_ContributionRankType>
     with AutomaticKeepAliveClientMixin {
-  late final _controller = Get.put(
-    ContributionRankController(
-      ruid: widget.ruid,
-      roomId: widget.roomId,
-      type: widget.type,
-    ),
-    tag: '${widget.roomId}${widget.type.name}',
-  );
+  late final ContributionRankController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      ContributionRankController(
+        ruid: widget.ruid,
+        roomId: widget.roomId,
+        type: widget.type,
+      ),
+      tag: '${widget.roomId}${widget.type.name}',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -115,6 +115,8 @@ abstract final class ThemeUtils {
         selectionHandleColor: colorScheme.primary,
       ),
       switchTheme: const SwitchThemeData(
+        padding: .zero,
+        materialTapTargetSize: .shrinkWrap,
         thumbIcon: WidgetStateProperty<Icon?>.fromMap(
           <WidgetStatesConstraint, Icon?>{
             WidgetState.selected: Icon(Icons.done),

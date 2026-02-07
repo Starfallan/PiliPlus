@@ -28,14 +28,20 @@ class _SearchArticlePanelState
         >
     with GridMixin {
   @override
-  late final SearchArticleController controller = Get.put(
-    SearchArticleController(
-      keyword: widget.keyword,
-      searchType: widget.searchType,
-      tag: widget.tag,
-    ),
-    tag: widget.searchType.name + widget.tag,
-  );
+  late final SearchArticleController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(
+      SearchArticleController(
+        keyword: widget.keyword,
+        searchType: widget.searchType,
+        tag: widget.tag,
+      ),
+      tag: widget.searchType.name + widget.tag,
+    );
+  }
 
   @override
   Widget buildHeader(ThemeData theme) {

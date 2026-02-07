@@ -1,11 +1,14 @@
-class AreaItem {
-  dynamic id;
-  String? name;
-  String? pic;
-  dynamic parentId;
-  String? parentName;
+import 'package:flutter/foundation.dart' show immutable;
 
-  AreaItem({
+@immutable
+class AreaItem {
+  final dynamic id;
+  final String? name;
+  final String? pic;
+  final dynamic parentId;
+  final String? parentName;
+
+  const AreaItem({
     this.id,
     this.name,
     this.pic,

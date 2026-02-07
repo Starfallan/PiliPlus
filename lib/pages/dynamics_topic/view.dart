@@ -81,13 +81,14 @@ class _DynTopicPageState extends State<DynTopicPage> with DynMixin {
                 return SliverPersistentHeader(
                   pinned: true,
                   delegate: CustomSliverPersistentHeaderDelegate(
-                    extent: 30,
+                    extent: 36,
                     needRebuild: true,
                     bgColor: theme.colorScheme.surface,
                     child: Container(
-                      height: 30,
+                      height: 36,
                       padding: EdgeInsets.only(
                         left: 12 + padding.left,
+                        top: 6,
                         bottom: 6,
                       ),
                       child: Builder(
@@ -101,16 +102,14 @@ class _DynTopicPageState extends State<DynTopicPage> with DynMixin {
                               minHeight: 24,
                             ),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(25),
-                            ),
+                            borderRadius: const .all(.circular(25)),
                             onPressed: (index) {
                               _controller.onSort(allSortBy[index].sortBy!);
                               (context as Element).markNeedsBuild();
                             },
-                            isSelected: allSortBy.map((e) {
-                              return e.sortBy == _controller.sortBy;
-                            }).toList(),
+                            isSelected: allSortBy
+                                .map((e) => e.sortBy == _controller.sortBy)
+                                .toList(),
                             children: allSortBy.map((e) {
                               return Text(
                                 e.sortName!,
@@ -160,7 +159,7 @@ class _DynTopicPageState extends State<DynTopicPage> with DynMixin {
       Loading() => const SliverAppBar(),
       Success(:final response) when response != null => DynamicSliverAppBarMedium(
         pinned: true,
-        afterCalc: (value) =>
+        onPerformLayout: (value) =>
             _controller.appbarOffset = value - kToolbarHeight - padding.top,
         title: IgnorePointer(child: Text(response.topicItem!.name)),
         flexibleSpace: Container(

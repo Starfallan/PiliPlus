@@ -25,7 +25,7 @@ class ReplyMePage extends StatefulWidget {
 }
 
 class _ReplyMePageState extends State<ReplyMePage> {
-  late final _replyMeController = Get.put(ReplyMeController());
+  final _replyMeController = Get.put(ReplyMeController());
 
   @override
   Widget build(BuildContext context) {

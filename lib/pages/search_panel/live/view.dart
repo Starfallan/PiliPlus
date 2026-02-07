@@ -28,14 +28,21 @@ class _SearchLivePanelState
           SearchLiveItemModel
         > {
   @override
-  late final controller = Get.put(
-    SearchPanelController<SearchLiveData, SearchLiveItemModel>(
-      keyword: widget.keyword,
-      searchType: widget.searchType,
-      tag: widget.tag,
-    ),
-    tag: widget.searchType.name + widget.tag,
-  );
+  late final SearchPanelController<SearchLiveData, SearchLiveItemModel>
+  controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(
+      SearchPanelController<SearchLiveData, SearchLiveItemModel>(
+        keyword: widget.keyword,
+        searchType: widget.searchType,
+        tag: widget.tag,
+      ),
+      tag: widget.searchType.name + widget.tag,
+    );
+  }
 
   late final gridDelegate = SliverGridDelegateWithExtentAndRatio(
     maxCrossAxisExtent: Grid.smallCardWidth,

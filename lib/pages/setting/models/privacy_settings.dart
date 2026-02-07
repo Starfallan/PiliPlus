@@ -35,20 +35,18 @@ List<SettingsModel> get privacySettings => [
     onTap: (context, setState) {
       showDialog(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('账号模式详情'),
-            content: SingleChildScrollView(
-              child: _getAccountDetail(context),
+        builder: (context) => AlertDialog(
+          title: const Text('账号模式详情'),
+          content: SingleChildScrollView(
+            child: _getAccountDetail(context),
+          ),
+          actions: [
+            TextButton(
+              onPressed: Get.back,
+              child: const Text('确认'),
             ),
-            actions: [
-              TextButton(
-                onPressed: Get.back,
-                child: const Text('确认'),
-              ),
-            ],
-          );
-        },
+          ],
+        ),
       );
     },
     leading: const Icon(Icons.flag_outlined),

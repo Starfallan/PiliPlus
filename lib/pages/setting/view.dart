@@ -223,15 +223,13 @@ class _SettingPageState extends State<SettingPage> {
   Future<void> _logoutDialog(BuildContext context) async {
     final result = await showDialog<Set<LoginAccount>>(
       context: context,
-      builder: (context) {
-        return MultiSelectDialog<LoginAccount>(
-          title: '选择要登出的账号uid',
-          initValues: const Iterable.empty(),
-          values: {
-            for (final i in Accounts.account.values) i: i.mid.toString(),
-          },
-        );
-      },
+      builder: (context) => MultiSelectDialog<LoginAccount>(
+        title: '选择要登出的账号uid',
+        initValues: const Iterable.empty(),
+        values: {
+          for (final i in Accounts.account.values) i: i.mid.toString(),
+        },
+      ),
     );
     if (!context.mounted || result == null || result.isEmpty) return;
     Future<void> logout() {

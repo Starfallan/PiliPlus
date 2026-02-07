@@ -1500,84 +1500,85 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       }).toList(),
     );
 
-    return Container(
-      height: 45,
+    return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            width: 1,
             color: themeData.dividerColor.withValues(alpha: 0.1),
           ),
         ),
       ),
-      child: Row(
-        children: [
-          if (tabs.isEmpty)
-            const Spacer()
-          else
+      child: SizedBox(
+        height: 45,
+        child: Row(
+          children: [
+            if (tabs.isEmpty)
+              const Spacer()
+            else
+              Flexible(
+                flex: tabs.length == 3 ? 2 : 1,
+                child: tabBar(),
+              ),
             Flexible(
-              flex: tabs.length == 3 ? 2 : 1,
-              child: tabBar(),
-            ),
-          Flexible(
-            flex: 1,
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  SizedBox(
-                    height: 32,
-                    child: TextButton(
-                      style: const ButtonStyle(
-                        padding: WidgetStatePropertyAll(EdgeInsets.zero),
-                      ),
-                      onPressed: videoDetailController.showShootDanmakuSheet,
-                      child: Text(
-                        '发弹幕',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: themeData.colorScheme.onSurfaceVariant,
+              flex: 1,
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      height: 32,
+                      child: TextButton(
+                        style: const ButtonStyle(
+                          padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                        ),
+                        onPressed: videoDetailController.showShootDanmakuSheet,
+                        child: Text(
+                          '发弹幕',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: themeData.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                    width: 38,
-                    height: 38,
-                    child: Obx(
-                      () {
-                        final ctr = videoDetailController.plPlayerController;
-                        final enableShowDanmaku = ctr.enableShowDanmaku.value;
-                        return IconButton(
-                          onPressed: () {
-                            final newVal = !enableShowDanmaku;
-                            ctr.enableShowDanmaku.value = newVal;
-                            if (!ctr.tempPlayerConf) {
-                              GStorage.setting.put(
-                                SettingBoxKey.enableShowDanmaku,
-                                newVal,
-                              );
-                            }
-                          },
-                          icon: Icon(
-                            size: 22,
-                            enableShowDanmaku
-                                ? CustomIcons.dm_on
-                                : CustomIcons.dm_off,
-                            color: enableShowDanmaku
-                                ? themeData.colorScheme.secondary
-                                : themeData.colorScheme.outline,
-                          ),
-                        );
-                      },
+                    SizedBox(
+                      width: 38,
+                      height: 38,
+                      child: Obx(
+                        () {
+                          final ctr = videoDetailController.plPlayerController;
+                          final enableShowDanmaku = ctr.enableShowDanmaku.value;
+                          return IconButton(
+                            onPressed: () {
+                              final newVal = !enableShowDanmaku;
+                              ctr.enableShowDanmaku.value = newVal;
+                              if (!ctr.tempPlayerConf) {
+                                GStorage.setting.put(
+                                  SettingBoxKey.enableShowDanmaku,
+                                  newVal,
+                                );
+                              }
+                            },
+                            icon: Icon(
+                              size: 22,
+                              enableShowDanmaku
+                                  ? CustomIcons.dm_on
+                                  : CustomIcons.dm_off,
+                              color: enableShowDanmaku
+                                  ? themeData.colorScheme.secondary
+                                  : themeData.colorScheme.outline,
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                ],
+                    const SizedBox(width: 14),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

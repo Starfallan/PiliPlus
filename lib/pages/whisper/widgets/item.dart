@@ -9,7 +9,6 @@ import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart'
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/pages/whisper_secondary/view.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
-import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -56,51 +55,49 @@ class WhisperSessionItem extends StatelessWidget {
           : null,
       onLongPress: () => showDialog(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            clipBehavior: Clip.hardEdge,
-            contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            content: DefaultTextStyle(
-              style: const TextStyle(fontSize: 14),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+        builder: (context) => AlertDialog(
+          clipBehavior: Clip.hardEdge,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          content: DefaultTextStyle(
+            style: const TextStyle(fontSize: 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  dense: true,
+                  onTap: () {
+                    Get.back();
+                    onSetTop(item.isPinned, item.id);
+                  },
+                  title: Text(item.isPinned ? '移除置顶' : '置顶'),
+                ),
+                if (item.id.privateId.hasTalkerUid())
                   ListTile(
                     dense: true,
                     onTap: () {
                       Get.back();
-                      onSetTop(item.isPinned, item.id);
+                      onSetMute(item.isMuted, item.id.privateId.talkerUid);
                     },
-                    title: Text(item.isPinned ? '移除置顶' : '置顶'),
+                    title: Text('${item.isMuted ? '关闭' : '开启'}免打扰'),
                   ),
-                  if (item.id.privateId.hasTalkerUid())
-                    ListTile(
-                      dense: true,
-                      onTap: () {
-                        Get.back();
-                        onSetMute(item.isMuted, item.id.privateId.talkerUid);
-                      },
-                      title: Text('${item.isMuted ? '关闭' : '开启'}免打扰'),
-                    ),
-                  if (item.id.privateId.hasTalkerUid())
-                    ListTile(
-                      dense: true,
-                      onTap: () {
-                        Get.back();
-                        showConfirmDialog(
-                          context: context,
-                          title: '确定删除该对话？',
-                          onConfirm: () =>
-                              onRemove(item.id.privateId.talkerUid.toInt()),
-                        );
-                      },
-                      title: const Text('删除'),
-                    ),
-                ],
-              ),
+                if (item.id.privateId.hasTalkerUid())
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      showConfirmDialog(
+                        context: context,
+                        title: '确定删除该对话？',
+                        onConfirm: () =>
+                            onRemove(item.id.privateId.talkerUid.toInt()),
+                      );
+                    },
+                    title: const Text('删除'),
+                  ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
       onSecondaryTapUp: PlatformUtils.isDesktop
           ? (details) => showMenu(
@@ -192,7 +189,7 @@ class WhisperSessionItem extends StatelessWidget {
       leading: Builder(
         builder: (context) {
           final pendant = item.sessionInfo.avatar.fallbackLayers.layers
-              .getOrNull(1)
+              .elementAtOrNull(1)
               ?.resource;
           final official = item
               .sessionInfo

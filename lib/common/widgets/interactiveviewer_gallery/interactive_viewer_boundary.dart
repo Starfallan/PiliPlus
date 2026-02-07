@@ -19,18 +19,13 @@ class InteractiveViewerBoundary extends StatefulWidget {
     required this.child,
     required this.boundaryWidth,
     required this.controller,
-    this.onScaleChanged,
-    this.onLeftBoundaryHit,
-    this.onRightBoundaryHit,
-    this.onNoBoundaryHit,
     required this.maxScale,
     required this.minScale,
     this.onDismissed,
-    this.onReset,
     this.dismissThreshold = 0.2,
+    this.onInteractionEnd,
   });
 
-  final VoidCallback? onReset;
   final double dismissThreshold;
   final VoidCallback? onDismissed;
 
@@ -45,21 +40,11 @@ class InteractiveViewerBoundary extends StatefulWidget {
   /// The [TransformationController] for the [InteractiveViewer].
   final TransformationController controller;
 
-  /// Called when the scale changed after an interaction ended.
-  final ScaleChanged? onScaleChanged;
-
-  /// Called when the left boundary has been hit after an interaction ended.
-  final VoidCallback? onLeftBoundaryHit;
-
-  /// Called when the right boundary has been hit after an interaction ended.
-  final VoidCallback? onRightBoundaryHit;
-
-  /// Called when no boundary has been hit after an interaction ended.
-  final VoidCallback? onNoBoundaryHit;
-
   final double maxScale;
 
   final double minScale;
+
+  final GestureScaleEndCallback? onInteractionEnd;
 
   @override
   InteractiveViewerBoundaryState createState() =>
@@ -69,9 +54,6 @@ class InteractiveViewerBoundary extends StatefulWidget {
 class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
     with SingleTickerProviderStateMixin {
   late TransformationController _controller;
-
-  double? _scale;
-
   late AnimationController _animateController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
@@ -93,6 +75,17 @@ class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
     );
 
     _updateMoveAnimation();
+
+    _scaleAnimation = _animateController.drive(
+      Tween<double>(begin: 1.0, end: 0.25),
+    );
+
+    _opacityAnimation = _animateController.drive(
+      DecorationTween(
+        begin: const BoxDecoration(color: Colors.black),
+        end: const BoxDecoration(color: Colors.transparent),
+      ),
+    );
   }
 
   @override
@@ -104,29 +97,10 @@ class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
   void _updateMoveAnimation() {
     final double endX = _offset.dx.sign * (_offset.dx.abs() / _offset.dy.abs());
     final double endY = _offset.dy.sign;
-
     _slideAnimation = _animateController.drive(
       Tween<Offset>(
         begin: Offset.zero,
         end: Offset(endX, endY),
-      ),
-    );
-
-    _scaleAnimation = _animateController.drive(
-      Tween<double>(
-        begin: 1.0,
-        end: 0.25,
-      ),
-    );
-
-    _opacityAnimation = _animateController.drive(
-      DecorationTween(
-        begin: const BoxDecoration(
-          color: Colors.black,
-        ),
-        end: const BoxDecoration(
-          color: Colors.transparent,
-        ),
       ),
     );
   }
@@ -179,36 +153,6 @@ class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
     }
   }
 
-  void _updateBoundaryDetection() {
-    final double scale = _controller.value.row0[0];
-
-    if (_scale != scale) {
-      // the scale changed
-      _scale = scale;
-      widget.onScaleChanged?.call(scale);
-    }
-
-    if (scale <= 1.01) {
-      // cant hit any boundaries when the child is not scaled
-      return;
-    }
-
-    final double xOffset = _controller.value.row0[3];
-    final double boundaryWidth = widget.boundaryWidth;
-    final double boundaryEnd = boundaryWidth * scale;
-    final double xPos = boundaryEnd + xOffset;
-
-    if (boundaryEnd.round() == xPos.round()) {
-      // left boundary hit
-      widget.onLeftBoundaryHit?.call();
-    } else if (boundaryWidth.round() == xPos.round()) {
-      // right boundary hit
-      widget.onRightBoundaryHit?.call();
-    } else {
-      widget.onNoBoundaryHit?.call();
-    }
-  }
-
   Widget get content => DecoratedBoxTransition(
     decoration: _opacityAnimation,
     child: SlideTransition(
@@ -226,11 +170,10 @@ class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
       maxScale: widget.maxScale,
       minScale: widget.minScale,
       transformationController: _controller,
-      onInteractionEnd: (_) => _updateBoundaryDetection(),
       onPanStart: _handleDragStart,
       onPanUpdate: _handleDragUpdate,
       onPanEnd: _handleDragEnd,
-      onReset: widget.onReset,
+      onInteractionEnd: widget.onInteractionEnd,
       isAnimating: () => _animateController.value != 0,
       child: content,
     );

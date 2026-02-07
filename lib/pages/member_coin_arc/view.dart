@@ -28,10 +28,16 @@ class MemberCoinArcPage extends StatefulWidget {
 
 class _MemberCoinArcPageState extends State<MemberCoinArcPage> {
   late final mid = Accounts.main.mid;
-  late final _ctr = Get.put(
-    MemberCoinArcController(mid: widget.mid),
-    tag: Utils.makeHeroTag(widget.mid),
-  );
+  late final MemberCoinArcController _ctr;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctr = Get.put(
+      MemberCoinArcController(mid: widget.mid),
+      tag: Utils.makeHeroTag(widget.mid),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

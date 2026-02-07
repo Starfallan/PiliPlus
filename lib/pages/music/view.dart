@@ -40,7 +40,7 @@ class MusicDetailPage extends StatefulWidget {
 
 class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
   @override
-  late final MusicDetailController controller = Get.putOrFind(
+  final MusicDetailController controller = Get.putOrFind(
     MusicDetailController.new,
     tag: Get.parameters['musicId']!,
   );

@@ -99,8 +99,6 @@ class _CustomTooltipState extends State<CustomTooltip> {
   }
 }
 
-enum _ChildType { overlay, indicator }
-
 class _CustomTooltipOverlay extends StatelessWidget {
   const _CustomTooltipOverlay({
     required this.target,
@@ -121,14 +119,8 @@ class _CustomTooltipOverlay extends StatelessWidget {
       preferBelow: false,
       onTap: PlatformUtils.isMobile ? onDismiss : null,
       children: [
-        LayoutId(
-          id: _ChildType.indicator,
-          child: indicator(),
-        ),
-        LayoutId(
-          id: _ChildType.overlay,
-          child: overlayWidget(),
-        ),
+        indicator(),
+        overlayWidget(),
       ],
     );
   }

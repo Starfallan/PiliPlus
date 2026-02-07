@@ -104,36 +104,34 @@ class PostPanel extends CommonSlidePage {
               tooltip: '编辑',
               icon: const Icon(Icons.edit),
               onPressed: () async {
+                String initV = value;
                 final res = await showDialog<String>(
                   context: context,
-                  builder: (context) {
-                    String initV = value;
-                    return AlertDialog(
-                      content: TextFormField(
-                        initialValue: value,
-                        autofocus: true,
-                        onChanged: (value) => initV = value,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[\d:.]+')),
-                        ],
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: Get.back,
-                          child: Text(
-                            '取消',
-                            style: TextStyle(
-                              color: theme.colorScheme.outline,
-                            ),
+                  builder: (context) => AlertDialog(
+                    content: TextFormField(
+                      initialValue: value,
+                      autofocus: true,
+                      onChanged: (value) => initV = value,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[\d:.]+')),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: Get.back,
+                        child: Text(
+                          '取消',
+                          style: TextStyle(
+                            color: theme.colorScheme.outline,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () => Get.back(result: initV),
-                          child: const Text('确定'),
-                        ),
-                      ],
-                    );
-                  },
+                      ),
+                      TextButton(
+                        onPressed: () => Get.back(result: initV),
+                        child: const Text('确定'),
+                      ),
+                    ],
+                  ),
                 );
 
                 if (res != null) {

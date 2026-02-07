@@ -11,34 +11,32 @@ Future<bool> showConfirmDialog({
   assert(content is String? || content is Widget);
   return await showDialog<bool>(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(title),
-            content: content is String
-                ? Text(content)
-                : content is Widget
-                ? content
-                : null,
-            actions: [
-              TextButton(
-                onPressed: Get.back,
-                child: Text(
-                  '取消',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: content is String
+              ? Text(content)
+              : content is Widget
+              ? content
+              : null,
+          actions: [
+            TextButton(
+              onPressed: Get.back,
+              child: Text(
+                '取消',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.outline,
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  Get.back(result: true);
-                  onConfirm?.call();
-                },
-                child: const Text('确认'),
-              ),
-            ],
-          );
-        },
+            ),
+            TextButton(
+              onPressed: () {
+                Get.back(result: true);
+                onConfirm?.call();
+              },
+              child: const Text('确认'),
+            ),
+          ],
+        ),
       ) ??
       false;
 }

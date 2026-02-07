@@ -53,34 +53,32 @@ mixin BaseLaterController
   ) {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('提示'),
-          content: const Text('即将移除该视频，确定是否移除'),
-          actions: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text(
-                '取消',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
-              ),
+      builder: (context) => AlertDialog(
+        title: const Text('提示'),
+        content: const Text('即将移除该视频，确定是否移除'),
+        actions: [
+          TextButton(
+            onPressed: Get.back,
+            child: Text(
+              '取消',
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
-            TextButton(
-              onPressed: () async {
-                Get.back();
-                final res = await UserHttp.toViewDel(aids: aid.toString());
-                if (res.isSuccess) {
-                  loadingState
-                    ..value.data!.removeAt(index)
-                    ..refresh();
-                  updateCount?.call(1);
-                }
-              },
-              child: const Text('确认移除'),
-            ),
-          ],
-        );
-      },
+          ),
+          TextButton(
+            onPressed: () async {
+              Get.back();
+              final res = await UserHttp.toViewDel(aids: aid.toString());
+              if (res.isSuccess) {
+                loadingState
+                  ..value.data!.removeAt(index)
+                  ..refresh();
+                updateCount?.call(1);
+              }
+            },
+            child: const Text('确认移除'),
+          ),
+        ],
+      ),
     );
   }
 }

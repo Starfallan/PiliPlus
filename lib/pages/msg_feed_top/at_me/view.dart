@@ -25,7 +25,7 @@ class AtMePage extends StatefulWidget {
 }
 
 class _AtMePageState extends State<AtMePage> {
-  late final AtMeController _atMeController = Get.put(AtMeController());
+  final AtMeController _atMeController = Get.put(AtMeController());
 
   @override
   Widget build(BuildContext context) {

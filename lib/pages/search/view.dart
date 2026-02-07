@@ -25,10 +25,16 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final _tag = Utils.generateRandomString(6);
-  late final SSearchController _searchController = Get.put(
-    SSearchController(_tag),
-    tag: _tag,
-  );
+  late final SSearchController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = Get.put(
+      SSearchController(_tag),
+      tag: _tag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

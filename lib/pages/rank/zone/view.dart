@@ -23,10 +23,16 @@ class ZonePage extends StatefulWidget {
 class _ZonePageState extends CommonPageState<ZonePage, ZoneController>
     with AutomaticKeepAliveClientMixin, GridMixin {
   @override
-  late ZoneController controller = Get.put(
-    ZoneController(rid: widget.rid, seasonType: widget.seasonType),
-    tag: '${widget.rid}${widget.seasonType}',
-  );
+  late final ZoneController controller;
+
+  @override
+  void initState() {
+    controller = Get.put(
+      ZoneController(rid: widget.rid, seasonType: widget.seasonType),
+      tag: '${widget.rid}${widget.seasonType}',
+    );
+    super.initState();
+  }
 
   @override
   bool get wantKeepAlive => true;

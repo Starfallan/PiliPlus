@@ -1,3 +1,5 @@
+import 'dart:async' show StreamSubscription;
+
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/common/search/article_search_type.dart';
@@ -54,16 +56,22 @@ class SearchPanelController<R extends SearchNumData<T>, T>
     onReload().whenComplete(SmartDialog.dismiss);
   }
 
+  StreamSubscription? _listener;
+
+  void cancelListener() {
+    _listener?.cancel();
+  }
+
   @override
   void onInit() {
     super.onInit();
     try {
-      searchResultController = Get.find<SearchResultController>(tag: tag)
-        ..toTopIndex.listen((index) {
-          if (index == searchType.index) {
-            scrollController.animToTop();
-          }
-        });
+      searchResultController = Get.find<SearchResultController>(tag: tag);
+      _listener = searchResultController!.toTopIndex.listen((index) {
+        if (index == searchType.index) {
+          scrollController.animToTop();
+        }
+      });
     } catch (_) {}
     queryData();
   }

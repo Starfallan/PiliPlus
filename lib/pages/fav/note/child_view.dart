@@ -21,10 +21,16 @@ class FavNoteChildPage extends StatefulWidget {
 
 class _FavNoteChildPageState extends State<FavNoteChildPage>
     with AutomaticKeepAliveClientMixin, GridMixin {
-  late final FavNoteController _favNoteController = Get.put(
-    FavNoteController(widget.isPublish),
-    tag: '${widget.isPublish}',
-  );
+  late final FavNoteController _favNoteController;
+
+  @override
+  void initState() {
+    super.initState();
+    _favNoteController = Get.put(
+      FavNoteController(widget.isPublish),
+      tag: widget.isPublish.toString(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

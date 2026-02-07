@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/custom_sliver_persistent_header_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
+import 'package:PiliPlus/common/widgets/flutter/selectable_text/selectable_text.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -17,7 +18,7 @@ import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SelectableText;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
@@ -39,12 +40,19 @@ class PgcReviewChildPage extends StatefulWidget {
 
 class _PgcReviewChildPageState extends State<PgcReviewChildPage>
     with AutomaticKeepAliveClientMixin {
-  late final _tag = '${widget.mediaId}${widget.type.name}';
-  late final _controller = Get.put(
-    PgcReviewController(type: widget.type, mediaId: widget.mediaId),
-    tag: _tag,
-  );
+  late final String _tag;
+  late final PgcReviewController _controller;
   late final isLongReview = widget.type == PgcReviewType.long;
+
+  @override
+  void initState() {
+    super.initState();
+    _tag = '${widget.mediaId}${widget.type.name}';
+    _controller = Get.put(
+      PgcReviewController(type: widget.type, mediaId: widget.mediaId),
+      tag: _tag,
+    );
+  }
 
   @override
   void dispose() {

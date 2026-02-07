@@ -104,9 +104,7 @@ List<SettingsModel> get recommendSettings => [
     leading: const Icon(Icons.favorite_border_outlined),
     setKey: SettingBoxKey.exemptFilterForFollowed,
     defaultVal: true,
-    onChanged: (value) {
-      RecommendFilter.exemptFilterForFollowed = value;
-    },
+    onChanged: (value) => RecommendFilter.exemptFilterForFollowed = value,
   ),
   SwitchModel(
     title: '过滤器也应用于相关视频',
@@ -114,8 +112,6 @@ List<SettingsModel> get recommendSettings => [
     leading: const Icon(Icons.explore_outlined),
     setKey: SettingBoxKey.applyFilterToRelatedVideos,
     defaultVal: true,
-    onChanged: (value) {
-      RecommendFilter.applyFilterToRelatedVideos = value;
-    },
+    onChanged: (value) => RecommendFilter.applyFilterToRelatedVideos = value,
   ),
 ];

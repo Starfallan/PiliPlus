@@ -132,6 +132,10 @@ class VideoDetailController extends GetxController
   String? audioUrl;
   Duration? defaultST;
   Duration? playedTime;
+  String get playedTimePos {
+    final pos = playedTime?.inMilliseconds;
+    return pos == null || pos == 0 ? '' : '?t=${pos / 1000}';
+  }
 
   // 亮度
   double? brightness;
@@ -1116,7 +1120,7 @@ class VideoDetailController extends GetxController
     playerInit();
   }
 
-  FutureOr<void> _initPlayerIfNeeded() {
+  Future<void>? _initPlayerIfNeeded() {
     if (autoPlay.value ||
         (plPlayerController.preInitPlayer && !plPlayerController.processing) &&
             (isFileSource
@@ -1124,6 +1128,7 @@ class VideoDetailController extends GetxController
                 : videoPlayerKey.currentState?.mounted == true)) {
       return playerInit();
     }
+    return null;
   }
 
   Future<void> playerInit({
@@ -1580,13 +1585,9 @@ class VideoDetailController extends GetxController
           response.viewPoints?.firstOrNull?.type == 2) {
         try {
           viewPointList.value = response.viewPoints!.map((item) {
-            double start = (item.to! / (data.timeLength! / 1000)).clamp(
-              0.0,
-              1.0,
-            );
+            final end = (item.to! / (data.timeLength! / 1000)).clamp(0.0, 1.0);
             return ViewPointSegment(
-              start: start,
-              end: start,
+              end: end,
               title: item.content,
               url: item.imgUrl,
               from: item.from,

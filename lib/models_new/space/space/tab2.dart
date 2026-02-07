@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show immutable;
+
 class SpaceTab2 {
   final String? title;
   final String? param;
@@ -72,6 +74,7 @@ class SpaceTab2SubItem {
       );
 }
 
+@immutable
 class SpaceTabFilter {
   final String? text;
   final String meta;

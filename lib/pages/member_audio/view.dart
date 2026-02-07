@@ -27,10 +27,16 @@ class MemberAudio extends StatefulWidget {
 
 class _MemberAudioState extends State<MemberAudio>
     with AutomaticKeepAliveClientMixin {
-  late final _controller = Get.put(
-    MemberAudioController(widget.mid),
-    tag: widget.heroTag,
-  );
+  late final MemberAudioController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      MemberAudioController(widget.mid),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

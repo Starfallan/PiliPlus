@@ -271,67 +271,65 @@ class _LoginPageState extends State<LoginPage> {
                 //https://passport.bilibili.com/passport/findPassword
                 showDialog(
                   context: context,
-                  builder: (context) {
-                    return SimpleDialog(
-                      clipBehavior: Clip.hardEdge,
-                      title: const Text('忘记密码？'),
-                      contentPadding: const EdgeInsets.fromLTRB(
-                        0.0,
-                        2.0,
-                        0.0,
-                        16.0,
+                  builder: (context) => SimpleDialog(
+                    clipBehavior: Clip.hardEdge,
+                    title: const Text('忘记密码？'),
+                    contentPadding: const EdgeInsets.fromLTRB(
+                      0.0,
+                      2.0,
+                      0.0,
+                      16.0,
+                    ),
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(25, 0, 25, 10),
+                        child: Text("试试扫码、手机号登录，或选择"),
                       ),
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(25, 0, 25, 10),
-                          child: Text("试试扫码、手机号登录，或选择"),
+                      ListTile(
+                        title: const Text(
+                          '找回密码（手机版）',
                         ),
-                        ListTile(
-                          title: const Text(
-                            '找回密码（手机版）',
-                          ),
-                          leading: const Icon(Icons.smartphone_outlined),
-                          subtitle: const Text(
-                            'https://passport.bilibili.com/h5-app/passport/login/findPassword',
-                          ),
-                          dense: false,
-                          onTap: () => Get
-                            ..back()
-                            ..toNamed(
-                              '/webview',
-                              parameters: {
-                                'url':
-                                    'https://passport.bilibili.com/h5-app/passport/login/findPassword',
-                                'type': 'url',
-                                'pageTitle': '忘记密码',
-                              },
-                            ),
+                        leading: const Icon(Icons.smartphone_outlined),
+                        subtitle: const Text(
+                          'https://passport.bilibili.com/h5-app/passport/login/findPassword',
                         ),
-                        ListTile(
-                          title: const Text(
-                            '找回密码（电脑版）',
+                        dense: false,
+                        onTap: () => Get
+                          ..back()
+                          ..toNamed(
+                            '/webview',
+                            parameters: {
+                              'url':
+                                  'https://passport.bilibili.com/h5-app/passport/login/findPassword',
+                              'type': 'url',
+                              'pageTitle': '忘记密码',
+                            },
                           ),
-                          leading: const Icon(Icons.desktop_windows_outlined),
-                          subtitle: const Text(
-                            'https://passport.bilibili.com/pc/passport/findPassword',
-                          ),
-                          dense: false,
-                          onTap: () => Get
-                            ..back()
-                            ..toNamed(
-                              '/webview',
-                              parameters: {
-                                'url':
-                                    'https://passport.bilibili.com/pc/passport/findPassword',
-                                'type': 'url',
-                                'pageTitle': '忘记密码',
-                                'uaType': 'pc',
-                              },
-                            ),
+                      ),
+                      ListTile(
+                        title: const Text(
+                          '找回密码（电脑版）',
                         ),
-                      ],
-                    );
-                  },
+                        leading: const Icon(Icons.desktop_windows_outlined),
+                        subtitle: const Text(
+                          'https://passport.bilibili.com/pc/passport/findPassword',
+                        ),
+                        dense: false,
+                        onTap: () => Get
+                          ..back()
+                          ..toNamed(
+                            '/webview',
+                            parameters: {
+                              'url':
+                                  'https://passport.bilibili.com/pc/passport/findPassword',
+                              'type': 'url',
+                              'pageTitle': '忘记密码',
+                              'uaType': 'pc',
+                            },
+                          ),
+                      ),
+                    ],
+                  ),
                 );
               },
               child: const Text('忘记密码'),

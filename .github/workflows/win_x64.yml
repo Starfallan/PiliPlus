@@ -26,6 +26,12 @@ jobs:
           channel: stable
           flutter-version-file: pubspec.yaml
 
+      - name: apply modal barrier patch
+        working-directory: ${{ env.FLUTTER_ROOT }}
+        run: git apply $env:GITHUB_WORKSPACE\lib\scripts\modal-barrier-patch.diff
+        shell: pwsh
+        continue-on-error: true
+
       - name: Add fastforge and Inno Setup
         run: |
           dart pub global activate fastforge

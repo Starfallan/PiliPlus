@@ -22,10 +22,16 @@ class WhisperLinkSettingPage extends StatefulWidget {
 }
 
 class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
-  late final WhisperLinkSettingController _controller = Get.put(
-    WhisperLinkSettingController(talkerUid: widget.talkerUid),
-    tag: Utils.generateRandomString(8),
-  );
+  late final WhisperLinkSettingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      WhisperLinkSettingController(talkerUid: widget.talkerUid),
+      tag: Utils.generateRandomString(8),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

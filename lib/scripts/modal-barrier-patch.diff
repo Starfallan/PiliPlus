@@ -1,0 +1,192 @@
+diff --git a/packages/flutter/lib/src/material/popup_menu.dart b/packages/flutter/lib/src/material/popup_menu.dart
+index 03a0ee2b8de..984e6ced68e 100644
+--- a/packages/flutter/lib/src/material/popup_menu.dart
++++ b/packages/flutter/lib/src/material/popup_menu.dart
+@@ -1014,6 +1014,9 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
+   @override
+   final String barrierLabel;
+ 
++  @override
++  bool get isMenu => true;
++
+   @override
+   Widget buildPage(
+     BuildContext context,
+diff --git a/packages/flutter/lib/src/widgets/modal_barrier.dart b/packages/flutter/lib/src/widgets/modal_barrier.dart
+index 7b83d9c42cb..3946aa4950a 100644
+--- a/packages/flutter/lib/src/widgets/modal_barrier.dart
++++ b/packages/flutter/lib/src/widgets/modal_barrier.dart
+@@ -131,6 +131,7 @@ class ModalBarrier extends StatelessWidget {
+     super.key,
+     this.color,
+     this.dismissible = true,
++    this.isMenu = false,
+     this.onDismiss,
+     this.semanticsLabel,
+     this.barrierSemanticsDismissible = true,
+@@ -159,6 +160,8 @@ class ModalBarrier extends StatelessWidget {
+   ///    [ModalBarrier] built by [ModalRoute] pages.
+   final bool dismissible;
+ 
++  final bool isMenu;
++
+   /// {@template flutter.widgets.ModalBarrier.onDismiss}
+   /// Called when the barrier is being dismissed.
+   ///
+@@ -264,7 +267,11 @@ class ModalBarrier extends StatelessWidget {
+     return BlockSemantics(
+       child: ExcludeSemantics(
+         excluding: excluding,
+-        child: _ModalBarrierGestureDetector(onDismiss: handleDismiss, child: barrier),
++        child: _ModalBarrierGestureDetector(
++          onAnyTapUp: isMenu ? null : handleDismiss,
++          onAnyTapDown: isMenu ? handleDismiss : null,
++          child: barrier,
++        ),
+       ),
+     );
+   }
+@@ -292,6 +299,7 @@ class AnimatedModalBarrier extends AnimatedWidget {
+     super.key,
+     required Animation<Color?> color,
+     this.dismissible = true,
++    this.isMenu = false,
+     this.semanticsLabel,
+     this.barrierSemanticsDismissible,
+     this.onDismiss,
+@@ -315,6 +323,8 @@ class AnimatedModalBarrier extends AnimatedWidget {
+   ///    [AnimatedModalBarrier] built by [ModalRoute] pages.
+   final bool dismissible;
+ 
++  final bool isMenu;
++
+   /// Semantics label used for the barrier if it is [dismissible].
+   ///
+   /// The semantics label is read out by accessibility tools (e.g. TalkBack
+@@ -359,6 +369,7 @@ class AnimatedModalBarrier extends AnimatedWidget {
+       onDismiss: onDismiss,
+       clipDetailsNotifier: clipDetailsNotifier,
+       semanticsOnTapHint: semanticsOnTapHint,
++      isMenu: isMenu,
+     );
+   }
+ }
+@@ -372,10 +383,12 @@ class _AnyTapGestureRecognizer extends BaseTapGestureRecognizer {
+ 
+   VoidCallback? onAnyTapUp;
+ 
++  VoidCallback? onAnyTapDown;
++
+   @protected
+   @override
+   bool isPointerAllowed(PointerDownEvent event) {
+-    if (onAnyTapUp == null) {
++    if (onAnyTapUp == null && onAnyTapDown == null) {
+       return false;
+     }
+     return super.isPointerAllowed(event);
+@@ -384,7 +397,9 @@ class _AnyTapGestureRecognizer extends BaseTapGestureRecognizer {
+   @protected
+   @override
+   void handleTapDown({PointerDownEvent? down}) {
+-    // Do nothing.
++    if (onAnyTapDown != null) {
++      invokeCallback('onAnyTapDown', onAnyTapDown!);
++    }
+   }
+ 
+   @protected
+@@ -401,28 +416,41 @@ class _AnyTapGestureRecognizer extends BaseTapGestureRecognizer {
+     // Do nothing.
+   }
+ 
++  // @override
++  // void handleEvent(PointerEvent event) {
++  //   assert(state != GestureRecognizerState.ready);
++  //   if (state == GestureRecognizerState.possible && event.pointer == primaryPointer) {
++  //     handlePrimaryPointer(event);
++  //   }
++  //   stopTrackingIfPointerNoLongerDown(event);
++  // }
++
+   @override
+   String get debugDescription => 'any tap';
+ }
+ 
+ class _AnyTapGestureRecognizerFactory extends GestureRecognizerFactory<_AnyTapGestureRecognizer> {
+-  const _AnyTapGestureRecognizerFactory({this.onAnyTapUp});
++  const _AnyTapGestureRecognizerFactory({this.onAnyTapUp, this.onAnyTapDown});
+ 
+   final VoidCallback? onAnyTapUp;
+ 
++  final VoidCallback? onAnyTapDown;
++
+   @override
+   _AnyTapGestureRecognizer constructor() => _AnyTapGestureRecognizer();
+ 
+   @override
+   void initializer(_AnyTapGestureRecognizer instance) {
+-    instance.onAnyTapUp = onAnyTapUp;
++    instance
++      ..onAnyTapUp = onAnyTapUp
++      ..onAnyTapDown = onAnyTapDown;
+   }
+ }
+ 
+ // A GestureDetector used by ModalBarrier. It only has one callback,
+ // [onAnyTapDown], which recognizes tap down unconditionally.
+ class _ModalBarrierGestureDetector extends StatelessWidget {
+-  const _ModalBarrierGestureDetector({required this.child, required this.onDismiss});
++  const _ModalBarrierGestureDetector({required this.child, this.onAnyTapUp, this.onAnyTapDown});
+ 
+   /// The widget below this widget in the tree.
+   /// See [RawGestureDetector.child].
+@@ -430,12 +458,17 @@ class _ModalBarrierGestureDetector extends StatelessWidget {
+ 
+   /// Immediately called when an event that should dismiss the modal barrier
+   /// has happened.
+-  final VoidCallback onDismiss;
++  final VoidCallback? onAnyTapUp;
++
++  final VoidCallback? onAnyTapDown;
+ 
+   @override
+   Widget build(BuildContext context) {
+     final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{
+-      _AnyTapGestureRecognizer: _AnyTapGestureRecognizerFactory(onAnyTapUp: onDismiss),
++      _AnyTapGestureRecognizer: _AnyTapGestureRecognizerFactory(
++        onAnyTapUp: onAnyTapUp,
++        onAnyTapDown: onAnyTapDown,
++      ),
+     };
+ 
+     return RawGestureDetector(gestures: gestures, behavior: HitTestBehavior.opaque, child: child);
+diff --git a/packages/flutter/lib/src/widgets/routes.dart b/packages/flutter/lib/src/widgets/routes.dart
+index 48927ea4ba5..25e9848b381 100644
+--- a/packages/flutter/lib/src/widgets/routes.dart
++++ b/packages/flutter/lib/src/widgets/routes.dart
+@@ -1715,6 +1715,8 @@ abstract class ModalRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T
+   /// {@endtemplate}
+   bool get barrierDismissible;
+ 
++  bool get isMenu => false;
++
+   /// Whether the semantics of the modal barrier are included in the
+   /// semantics tree.
+   ///
+@@ -2291,6 +2293,7 @@ abstract class ModalRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T
+             barrierDismissible, // changedInternalState is called if barrierDismissible updates
+         semanticsLabel: barrierLabel, // changedInternalState is called if barrierLabel updates
+         barrierSemanticsDismissible: semanticsDismissible,
++        isMenu: isMenu,
+       );
+     } else {
+       barrier = ModalBarrier(
+@@ -2298,6 +2301,7 @@ abstract class ModalRoute<T> extends TransitionRoute<T> with LocalHistoryRoute<T
+             barrierDismissible, // changedInternalState is called if barrierDismissible updates
+         semanticsLabel: barrierLabel, // changedInternalState is called if barrierLabel updates
+         barrierSemanticsDismissible: semanticsDismissible,
++        isMenu: isMenu,
+       );
+     }
+ 

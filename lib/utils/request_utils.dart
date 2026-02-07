@@ -16,11 +16,13 @@ import 'package:PiliPlus/http/validate.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/models/login/model.dart';
+import 'package:PiliPlus/models_new/fav/fav_detail/media.dart';
+import 'package:PiliPlus/models_new/later/list.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
-import 'package:PiliPlus/pages/common/multi_select/multi_select_controller.dart';
 import 'package:PiliPlus/pages/dynamics_tab/controller.dart';
+import 'package:PiliPlus/pages/fav_detail/controller.dart'
+    show BaseFavController;
 import 'package:PiliPlus/pages/group_panel/view.dart';
-import 'package:PiliPlus/pages/later/controller.dart';
 import 'package:PiliPlus/pages/login/geetest/geetest_webview_dialog.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
@@ -131,110 +133,108 @@ abstract final class RequestUtils {
       }
 
       if (context.mounted) {
+        bool isSpecialFollowed = followStatus!['special'] == 1;
+        String text = isSpecialFollowed ? '移除特别关注' : '加入特别关注';
         showDialog(
           context: context,
-          builder: (context) {
-            bool isSpecialFollowed = followStatus!['special'] == 1;
-            String text = isSpecialFollowed ? '移除特别关注' : '加入特别关注';
-            return AlertDialog(
-              clipBehavior: Clip.hardEdge,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    dense: true,
-                    onTap: () async {
-                      Get.back();
-                      final res = await MemberHttp.specialAction(
-                        fid: mid,
-                        isAdd: !isSpecialFollowed,
-                      );
-                      if (res.isSuccess) {
-                        SmartDialog.showToast('$text成功');
-                        afterMod?.call(isSpecialFollowed ? 2 : -10);
-                      } else {
-                        res.toast();
-                      }
-                    },
-                    title: Text(
-                      text,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+          builder: (context) => AlertDialog(
+            clipBehavior: Clip.hardEdge,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  dense: true,
+                  onTap: () async {
+                    Get.back();
+                    final res = await MemberHttp.specialAction(
+                      fid: mid,
+                      isAdd: !isSpecialFollowed,
+                    );
+                    if (res.isSuccess) {
+                      SmartDialog.showToast('$text成功');
+                      afterMod?.call(isSpecialFollowed ? 2 : -10);
+                    } else {
+                      res.toast();
+                    }
+                  },
+                  title: Text(
+                    text,
+                    style: const TextStyle(fontSize: 14),
                   ),
-                  ListTile(
-                    dense: true,
-                    onTap: () async {
-                      Get.back();
-                      final result = await showModalBottomSheet<Set<int>>(
-                        context: context,
-                        useSafeArea: true,
-                        isScrollControlled: true,
-                        constraints: BoxConstraints(
-                          maxWidth: min(640, context.mediaQueryShortestSide),
-                        ),
-                        builder: (BuildContext context) {
-                          final maxChildSize =
-                              PlatformUtils.isMobile &&
-                                  !context.mediaQuerySize.isPortrait
-                              ? 1.0
-                              : 0.7;
-                          return DraggableScrollableSheet(
-                            minChildSize: 0,
-                            maxChildSize: 1,
-                            snap: true,
-                            expand: false,
-                            snapSizes: [maxChildSize],
-                            initialChildSize: maxChildSize,
-                            builder:
-                                (
-                                  BuildContext context,
-                                  ScrollController scrollController,
-                                ) {
-                                  return GroupPanel(
-                                    mid: mid,
-                                    tags: followStatus!['tag'],
-                                    scrollController: scrollController,
-                                  );
-                                },
-                          );
-                        },
-                      );
-                      followStatus!['tag'] = result?.toList();
-                      if (result != null) {
-                        afterMod?.call(result.contains(-10) ? -10 : 2);
-                      }
-                    },
-                    title: const Text(
-                      '设置分组',
-                      style: TextStyle(fontSize: 14),
-                    ),
+                ),
+                ListTile(
+                  dense: true,
+                  onTap: () async {
+                    Get.back();
+                    final result = await showModalBottomSheet<Set<int>>(
+                      context: context,
+                      useSafeArea: true,
+                      isScrollControlled: true,
+                      constraints: BoxConstraints(
+                        maxWidth: min(640, context.mediaQueryShortestSide),
+                      ),
+                      builder: (BuildContext context) {
+                        final maxChildSize =
+                            PlatformUtils.isMobile &&
+                                !context.mediaQuerySize.isPortrait
+                            ? 1.0
+                            : 0.7;
+                        return DraggableScrollableSheet(
+                          minChildSize: 0,
+                          maxChildSize: 1,
+                          snap: true,
+                          expand: false,
+                          snapSizes: [maxChildSize],
+                          initialChildSize: maxChildSize,
+                          builder:
+                              (
+                                BuildContext context,
+                                ScrollController scrollController,
+                              ) {
+                                return GroupPanel(
+                                  mid: mid,
+                                  tags: followStatus!['tag'],
+                                  scrollController: scrollController,
+                                );
+                              },
+                        );
+                      },
+                    );
+                    followStatus!['tag'] = result?.toList();
+                    if (result != null) {
+                      afterMod?.call(result.contains(-10) ? -10 : 2);
+                    }
+                  },
+                  title: const Text(
+                    '设置分组',
+                    style: TextStyle(fontSize: 14),
                   ),
-                  ListTile(
-                    dense: true,
-                    onTap: () async {
-                      Get.back();
-                      final res = await VideoHttp.relationMod(
-                        mid: mid,
-                        act: 2,
-                        reSrc: 11,
-                      );
-                      if (res.isSuccess) {
-                        SmartDialog.showToast('取消关注成功');
-                        afterMod?.call(0);
-                      } else {
-                        res.toast();
-                      }
-                    },
-                    title: const Text(
-                      '取消关注',
-                      style: TextStyle(fontSize: 14),
-                    ),
+                ),
+                ListTile(
+                  dense: true,
+                  onTap: () async {
+                    Get.back();
+                    final res = await VideoHttp.relationMod(
+                      mid: mid,
+                      act: 2,
+                      reSrc: 11,
+                    );
+                    if (res.isSuccess) {
+                      SmartDialog.showToast('取消关注成功');
+                      afterMod?.call(0);
+                    } else {
+                      res.toast();
+                    }
+                  },
+                  title: const Text(
+                    '取消关注',
+                    style: TextStyle(fontSize: 14),
                   ),
-                ],
-              ),
-            );
-          },
+                ),
+              ],
+            ),
+          ),
         );
       }
     }
@@ -389,10 +389,10 @@ abstract final class RequestUtils {
     }
   }
 
-  static void onCopyOrMove<R, T extends MultiSelectData>({
+  static void onCopyOrMove<T extends MultiSelectData>({
     required BuildContext context,
     required bool isCopy,
-    required MultiSelectController<R, T> ctr,
+    required CommonMultiSelectMixin<T> ctr,
     required dynamic mediaId,
     required dynamic mid,
   }) {
@@ -439,18 +439,20 @@ abstract final class RequestUtils {
                 TextButton(
                   onPressed: () {
                     if (checkedId != null) {
-                      Set removeList = ctr.allChecked.toSet();
+                      final removeList = ctr.allChecked.toSet();
                       SmartDialog.showLoading();
                       FavHttp.copyOrMoveFav(
                         isCopy: isCopy,
-                        isFav: ctr is! LaterController,
+                        isFav: ctr is BaseFavController,
                         srcMediaId: mediaId,
                         tarMediaId: checkedId,
                         resources: removeList
                             .map(
-                              (item) => ctr is LaterController
-                                  ? item.aid
-                                  : '${item.id}:${item.type}',
+                              (e) => switch (e) {
+                                LaterItemModel _ => e.aid,
+                                FavDetailItemModel _ => '${e.id}:${e.type}',
+                                _ => throw UnsupportedError(e.toString()),
+                              },
                             )
                             .join(','),
                         mid: isCopy ? mid : null,

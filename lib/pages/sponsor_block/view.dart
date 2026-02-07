@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/init.dart';
@@ -17,6 +15,7 @@ import 'package:PiliPlus/utils/utils.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FilteringTextInputFormatter;
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -80,45 +79,42 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           _textController.text = _blockLimit.toString();
           showDialog(
             context: context,
-            builder: (_) {
-              return AlertDialog(
-                title: Text('最短片段时长', style: titleStyle),
-                content: TextFormField(
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  controller: _textController,
-                  autofocus: true,
-                  decoration: const InputDecoration(suffixText: 's'),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
-                  ],
+            builder: (_) => AlertDialog(
+              title: Text('最短片段时长', style: titleStyle),
+              content: TextFormField(
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: Get.back,
-                    child: Text(
-                      '取消',
-                      style: TextStyle(
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
+                controller: _textController,
+                autofocus: true,
+                decoration: const InputDecoration(suffixText: 's'),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: Get.back,
+                  child: Text(
+                    '取消',
+                    style: TextStyle(color: theme.colorScheme.outline),
                   ),
-                  TextButton(
-                    onPressed: () {
+                ),
+                TextButton(
+                  onPressed: () {
+                    try {
+                      _blockLimit = double.parse(_textController.text);
                       Get.back();
-                      _blockLimit = max(
-                        0.0,
-                        double.tryParse(_textController.text) ?? 0.0,
-                      );
                       setting.put(SettingBoxKey.blockLimit, _blockLimit);
                       (context as Element).markNeedsBuild();
-                    },
-                    child: const Text('确定'),
-                  ),
-                ],
-              );
-            },
+                    } catch (e) {
+                      SmartDialog.showToast(e.toString());
+                    }
+                  },
+                  child: const Text('确定'),
+                ),
+              ],
+            ),
           );
         },
         title: Text('最短片段时长', style: titleStyle),
@@ -322,49 +318,47 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           _textController.text = _blockServer;
           showDialog(
             context: context,
-            builder: (_) {
-              return AlertDialog(
-                title: Text('服务器地址', style: titleStyle),
-                content: TextFormField(
-                  keyboardType: TextInputType.url,
-                  controller: _textController,
-                  autofocus: true,
+            builder: (_) => AlertDialog(
+              title: Text('服务器地址', style: titleStyle),
+              content: TextFormField(
+                keyboardType: TextInputType.url,
+                controller: _textController,
+                autofocus: true,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Get.back();
+                    _blockServer = HttpString.sponsorBlockBaseUrl;
+                    setting.put(SettingBoxKey.blockServer, _blockServer);
+                    Request.accountManager.blockServer = _blockServer;
+                    (context as Element).markNeedsBuild();
+                  },
+                  child: const Text('重置'),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Get.back();
-                      _blockServer = HttpString.sponsorBlockBaseUrl;
-                      setting.put(SettingBoxKey.blockServer, _blockServer);
-                      Request.accountManager.blockServer = _blockServer;
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: const Text('重置'),
-                  ),
-                  TextButton(
-                    onPressed: Get.back,
-                    child: Text(
-                      '取消',
-                      style: TextStyle(
-                        color: theme.colorScheme.outline,
-                      ),
+                TextButton(
+                  onPressed: Get.back,
+                  child: Text(
+                    '取消',
+                    style: TextStyle(
+                      color: theme.colorScheme.outline,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Get.back();
-                      _blockServer = _textController.text;
-                      setting.put(SettingBoxKey.blockServer, _blockServer);
-                      Request.accountManager.blockServer = _blockServer;
-                      _checkServerStatus();
-                      _getUserInfo();
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: const Text('确定'),
-                  ),
-                ],
-              );
-            },
+                ),
+                TextButton(
+                  onPressed: () {
+                    Get.back();
+                    _blockServer = _textController.text;
+                    setting.put(SettingBoxKey.blockServer, _blockServer);
+                    Request.accountManager.blockServer = _blockServer;
+                    _checkServerStatus();
+                    _getUserInfo();
+                    (context as Element).markNeedsBuild();
+                  },
+                  child: const Text('确定'),
+                ),
+              ],
+            ),
           );
         },
         title: Text(

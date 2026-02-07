@@ -148,7 +148,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                   onPressed: () {
                     feedBack();
                     _videoReplyController.onReply(
-                      context,
+                      null,
                       oid: _videoReplyController.aid,
                       replyType: _videoReplyController.videoType.replyType,
                     );
@@ -204,10 +204,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                       replyItem: response[index],
                       replyLevel: widget.replyLevel,
                       replyReply: replyReply,
-                      onReply: (replyItem) => _videoReplyController.onReply(
-                        context,
-                        replyItem: replyItem,
-                      ),
+                      onReply: _videoReplyController.onReply,
                       onDelete: (item, subIndex) =>
                           _videoReplyController.onRemove(index, item, subIndex),
                       upMid: _videoReplyController.upMid,
@@ -249,7 +246,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
           id: id,
           oid: oid,
           rpid: rpid,
-          firstFloor: replyItem,
+          firstFloor: replyItem.replyControl.isNote ? null : replyItem,
           replyType: _videoReplyController.videoType.replyType,
           isVideoDetail: true,
           isNested: widget.isNested,

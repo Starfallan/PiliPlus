@@ -475,65 +475,44 @@ class AudioController extends GetxController
   }
 
   void actionShareVideo(BuildContext context) {
+    final audioUrl = isVideo
+        ? '${HttpString.baseUrl}/video/${IdUtils.av2bv(oid.toInt())}'
+        : '${HttpString.baseUrl}/audio/au$oid';
     showDialog(
       context: context,
-      builder: (_) {
-        final audioUrl = isVideo
-            ? '${HttpString.baseUrl}/video/${IdUtils.av2bv(oid.toInt())}'
-            : '${HttpString.baseUrl}/audio/au$oid';
-        return AlertDialog(
-          clipBehavior: Clip.hardEdge,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                dense: true,
-                title: const Text(
-                  '复制链接',
-                  style: TextStyle(fontSize: 14),
-                ),
-                onTap: () {
-                  Get.back();
-                  Utils.copyText(audioUrl);
-                },
+      builder: (_) => AlertDialog(
+        clipBehavior: Clip.hardEdge,
+        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              dense: true,
+              title: const Text(
+                '复制链接',
+                style: TextStyle(fontSize: 14),
               ),
-              ListTile(
-                dense: true,
-                title: const Text(
-                  '其它app打开',
-                  style: TextStyle(fontSize: 14),
-                ),
-                onTap: () {
-                  Get.back();
-                  PageUtils.launchURL(audioUrl);
-                },
+              onTap: () {
+                Get.back();
+                Utils.copyText(audioUrl);
+              },
+            ),
+            ListTile(
+              dense: true,
+              title: const Text(
+                '其它app打开',
+                style: TextStyle(fontSize: 14),
               ),
-              if (PlatformUtils.isMobile)
-                ListTile(
-                  dense: true,
-                  title: const Text(
-                    '分享视频',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  onTap: () {
-                    Get.back();
-                    if (audioItem.value case DetailItem(
-                      :final arc,
-                      :final owner,
-                    )) {
-                      Utils.shareText(
-                        '${arc.title} '
-                        'UP主: ${owner.name}'
-                        ' - $audioUrl',
-                      );
-                    }
-                  },
-                ),
+              onTap: () {
+                Get.back();
+                PageUtils.launchURL(audioUrl);
+              },
+            ),
+            if (PlatformUtils.isMobile)
               ListTile(
                 dense: true,
                 title: const Text(
-                  '分享至动态',
+                  '分享视频',
                   style: TextStyle(fontSize: 14),
                 ),
                 onTap: () {
@@ -542,57 +521,76 @@ class AudioController extends GetxController
                     :final arc,
                     :final owner,
                   )) {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) => RepostPanel(
-                        rid: oid.toInt(),
-                        dynType: isVideo ? 8 : 256,
-                        pic: arc.cover,
-                        title: arc.title,
-                        uname: owner.name,
-                      ),
+                    Utils.shareText(
+                      '${arc.title} '
+                      'UP主: ${owner.name}'
+                      ' - $audioUrl',
                     );
                   }
                 },
               ),
-              if (isVideo)
-                ListTile(
-                  dense: true,
-                  title: const Text(
-                    '分享至消息',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  onTap: () {
-                    Get.back();
-                    if (audioItem.value case DetailItem(
-                      :final arc,
-                      :final owner,
-                    )) {
-                      try {
-                        PageUtils.pmShare(
-                          context,
-                          content: {
-                            "id": oid.toString(),
-                            "title": arc.title,
-                            "headline": arc.title,
-                            "source": 5,
-                            "thumb": arc.cover,
-                            "author": owner.name,
-                            "author_id": owner.mid.toString(),
-                          },
-                        );
-                      } catch (e) {
-                        SmartDialog.showToast(e.toString());
-                      }
-                    }
-                  },
+            ListTile(
+              dense: true,
+              title: const Text(
+                '分享至动态',
+                style: TextStyle(fontSize: 14),
+              ),
+              onTap: () {
+                Get.back();
+                if (audioItem.value case DetailItem(
+                  :final arc,
+                  :final owner,
+                )) {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    builder: (context) => RepostPanel(
+                      rid: oid.toInt(),
+                      dynType: isVideo ? 8 : 256,
+                      pic: arc.cover,
+                      title: arc.title,
+                      uname: owner.name,
+                    ),
+                  );
+                }
+              },
+            ),
+            if (isVideo)
+              ListTile(
+                dense: true,
+                title: const Text(
+                  '分享至消息',
+                  style: TextStyle(fontSize: 14),
                 ),
-            ],
-          ),
-        );
-      },
+                onTap: () {
+                  Get.back();
+                  if (audioItem.value case DetailItem(
+                    :final arc,
+                    :final owner,
+                  )) {
+                    try {
+                      PageUtils.pmShare(
+                        context,
+                        content: {
+                          "id": oid.toString(),
+                          "title": arc.title,
+                          "headline": arc.title,
+                          "source": 5,
+                          "thumb": arc.cover,
+                          "author": owner.name,
+                          "author_id": owner.mid.toString(),
+                        },
+                      );
+                    } catch (e) {
+                      SmartDialog.showToast(e.toString());
+                    }
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 

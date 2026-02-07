@@ -18,11 +18,17 @@ class CreateReservePage extends StatefulWidget {
 }
 
 class _CreateReservePageState extends State<CreateReservePage> {
-  late final _controller = Get.put(
-    CreateReserveController(widget.sid),
-    tag: Utils.generateRandomString(6),
-  );
+  late final CreateReserveController _controller;
   late TextStyle _leadingStyle;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      CreateReserveController(widget.sid),
+      tag: Utils.generateRandomString(6),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

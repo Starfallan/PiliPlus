@@ -29,10 +29,16 @@ class _MemberFavoriteState extends State<MemberFavorite>
   @override
   bool get wantKeepAlive => true;
 
-  late final _controller = Get.put(
-    MemberFavoriteCtr(mid: widget.mid),
-    tag: widget.heroTag,
-  );
+  late final MemberFavoriteCtr _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      MemberFavoriteCtr(mid: widget.mid),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +160,6 @@ class _MemberFavoriteState extends State<MemberFavorite>
                 },
               ),
             ),
-            bgColor: null,
           ),
         ),
         Obx(() {

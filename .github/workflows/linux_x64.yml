@@ -51,6 +51,11 @@ jobs:
         shell: pwsh
         run: lib/scripts/build.ps1
 
+      - name: apply modal barrier patch
+        working-directory: ${{ env.FLUTTER_ROOT }}
+        run: git apply $GITHUB_WORKSPACE/lib/scripts/modal-barrier-patch.diff
+        continue-on-error: true
+
         #TODO: deb and rpm packages need to be build
       - name: Build Linux
         run: flutter build linux --release -v --pub --dart-define-from-file=pili_release.json

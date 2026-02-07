@@ -31,7 +31,9 @@ Future<TimeOfDay?> showTimePicker({
   assert(debugCheckHasMaterialLocalizations(context));
 
   final Widget dialog = DialogTheme(
-    data: const DialogThemeData(constraints: BoxConstraints(minWidth: 280.0)),
+    data: DialogTheme.of(
+      context,
+    ).copyWith(constraints: const BoxConstraints(minWidth: 280.0)),
     child: TimePickerDialog(
       initialTime: initialTime,
       initialEntryMode: initialEntryMode,

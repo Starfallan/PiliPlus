@@ -20,7 +20,7 @@ class MusicRecommendPage extends StatefulWidget {
 
 class _MusicRecommendPageState extends State<MusicRecommendPage>
     with GridMixin {
-  late final MusicRecommendController _controller = Get.putOrFind(
+  final MusicRecommendController _controller = Get.putOrFind(
     MusicRecommendController.new,
     tag: (Get.arguments as MusicRecommendArgs).id,
   );

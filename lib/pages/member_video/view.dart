@@ -44,18 +44,7 @@ class _MemberVideoState extends State<MemberVideo>
   @override
   bool get wantKeepAlive => true;
 
-  late final _controller = Get.put(
-    MemberVideoCtr(
-      type: widget.type,
-      mid: widget.mid,
-      seasonId: widget.seasonId,
-      seriesId: widget.seriesId,
-      username: Get.find<MemberController>(tag: widget.heroTag).username,
-      title: widget.title,
-    ),
-    tag:
-        '${widget.heroTag}${widget.type.name}${widget.seasonId}${widget.seriesId}',
-  );
+  late final MemberVideoCtr _controller;
 
   int? _index;
   late ExtendedNestedScrollController _scrollController;
@@ -72,6 +61,23 @@ class _MemberVideoState extends State<MemberVideo>
       _scrollController.jumpTo(scrollOffset);
       if (kDebugMode) debugPrint('jump error: $e');
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      MemberVideoCtr(
+        type: widget.type,
+        mid: widget.mid,
+        seasonId: widget.seasonId,
+        seriesId: widget.seriesId,
+        username: Get.find<MemberController>(tag: widget.heroTag).username,
+        title: widget.title,
+      ),
+      tag:
+          '${widget.heroTag}${widget.type.name}${widget.seasonId}${widget.seriesId}',
+    );
   }
 
   @override

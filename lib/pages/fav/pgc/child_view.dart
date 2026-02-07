@@ -27,10 +27,16 @@ class FavPgcChildPage extends StatefulWidget {
 
 class _FavPgcChildPageState extends State<FavPgcChildPage>
     with AutomaticKeepAliveClientMixin, GridMixin {
-  late final FavPgcController _favPgcController = Get.put(
-    FavPgcController(widget.type, widget.followStatus),
-    tag: '${widget.type}${widget.followStatus}',
-  );
+  late final FavPgcController _favPgcController;
+
+  @override
+  void initState() {
+    super.initState();
+    _favPgcController = Get.put(
+      FavPgcController(widget.type, widget.followStatus),
+      tag: '${widget.type}${widget.followStatus}',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

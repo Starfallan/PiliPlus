@@ -56,64 +56,60 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
 
   // 添加自定义倍速
   void onAddSpeed() {
-    double? customSpeed;
+    String initialValue = '';
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('添加倍速'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              TextField(
-                autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: '自定义倍速',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(6)),
-                  ),
-                ),
-                onChanged: (value) {
-                  customSpeed = double.tryParse(value);
-                },
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
-                ],
+      builder: (context) => AlertDialog(
+        title: const Text('添加倍速'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            TextFormField(
+              autofocus: true,
+              initialValue: initialValue,
+              keyboardType: const .numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: '自定义倍速',
+                border: OutlineInputBorder(borderRadius: .all(.circular(6))),
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text(
-                '取消',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
-              ),
+              onChanged: (value) => initialValue = value,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
+              ],
             ),
-            TextButton(
-              onPressed: () {
-                if (customSpeed == null) {
-                  SmartDialog.showToast('输入倍数不合法');
-                } else if (speedList.contains(customSpeed)) {
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: Get.back,
+            child: Text(
+              '取消',
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              try {
+                final val = double.parse(initialValue);
+                if (speedList.contains(val)) {
                   SmartDialog.showToast('该倍速已存在');
                 } else {
                   Get.back();
                   speedList
-                    ..add(customSpeed!)
+                    ..add(val)
                     ..sort();
                   video.put(VideoBoxKey.speedsList, speedList);
                   setState(() {});
                 }
-              },
-              child: const Text('确认'),
-            ),
-          ],
-        );
-      },
+              } catch (e) {
+                SmartDialog.showToast(e.toString());
+              }
+            },
+            child: const Text('确认'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -269,6 +265,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
                 children: List.generate(
                   speedList.length,
                   (index) => FilledButton.tonal(
+                    style: FilledButton.styleFrom(tapTargetSize: .padded),
                     onPressed: () => showBottomSheet(theme, index),
                     child: Text(speedList[index].toString()),
                   ),

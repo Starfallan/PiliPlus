@@ -28,10 +28,16 @@ class LiveAreaChildPage extends StatefulWidget {
 
 class _LiveAreaChildPageState extends State<LiveAreaChildPage>
     with AutomaticKeepAliveClientMixin {
-  late final _controller = Get.put(
-    LiveAreaChildController(widget.areaId, widget.parentAreaId),
-    tag: '${widget.areaId}${widget.parentAreaId}',
-  );
+  late final LiveAreaChildController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      LiveAreaChildController(widget.areaId, widget.parentAreaId),
+      tag: '${widget.areaId}${widget.parentAreaId}',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -24,10 +24,16 @@ class MemberComic extends StatefulWidget {
 
 class _MemberComicState extends State<MemberComic>
     with AutomaticKeepAliveClientMixin, GridMixin {
-  late final _controller = Get.put(
-    MemberComicController(widget.mid),
-    tag: widget.heroTag,
-  );
+  late final MemberComicController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      MemberComicController(widget.mid),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

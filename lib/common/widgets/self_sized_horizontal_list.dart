@@ -23,22 +23,17 @@ class SelfSizedHorizontalList extends StatefulWidget {
 }
 
 class _SelfSizedHorizontalListState extends State<SelfSizedHorizontalList> {
-  final _key = GlobalKey();
   double? _height;
 
   @override
   Widget build(BuildContext context) {
     if (_height == null) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) {
-          _height = (_key.currentContext!.findRenderObject() as RenderBox)
-              .size
-              .height;
+      return OnlyLayoutWidget(
+        onPerformLayout: (Size size) {
+          if (!mounted) return;
+          _height = size.height;
           setState(() {});
         },
-      );
-      return OnlyLayoutWidget(
-        key: _key,
         child: Padding(
           padding: widget.padding ?? .zero,
           child: widget.itemBuilder(context, 0),

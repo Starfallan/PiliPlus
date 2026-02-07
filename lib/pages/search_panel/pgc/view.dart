@@ -29,14 +29,21 @@ class _SearchPgcPanelState
           SearchPgcItemModel
         > {
   @override
-  late final controller = Get.put(
-    SearchPanelController<SearchPgcData, SearchPgcItemModel>(
-      keyword: widget.keyword,
-      searchType: widget.searchType,
-      tag: widget.tag,
-    ),
-    tag: widget.searchType.name + widget.tag,
-  );
+  late final SearchPanelController<SearchPgcData, SearchPgcItemModel>
+  controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(
+      SearchPanelController<SearchPgcData, SearchPgcItemModel>(
+        keyword: widget.keyword,
+        searchType: widget.searchType,
+        tag: widget.tag,
+      ),
+      tag: widget.searchType.name + widget.tag,
+    );
+  }
 
   late final gridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
     maxCrossAxisExtent: Grid.smallCardWidth * 2,

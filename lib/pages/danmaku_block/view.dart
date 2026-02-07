@@ -150,59 +150,57 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
     final isUid = type == DmBlockType.uid;
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('${itemId != null ? "编辑" : "添加新的"}${type.label}规则'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(hintText),
-              TextFormField(
-                autofocus: true,
-                initialValue: filter,
-                onChanged: (value) => filter = value,
-                keyboardType: isUid ? TextInputType.number : null,
-                inputFormatters: isUid
-                    ? [FilteringTextInputFormatter.digitsOnly]
-                    : null,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text(
-                '取消',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
-              ),
-            ),
-            TextButton(
-              child: const Text('确定'),
-              onPressed: () async {
-                if (filter != initFilter) {
-                  Get.back();
-                  if (itemId != null) {
-                    await _controller.danmakuFilterDel(
-                      type.index,
-                      itemIndex!,
-                      itemId,
-                    );
-                  }
-                  await _controller.danmakuFilterAdd(
-                    filter: filter,
-                    type: type.index,
-                  );
-                } else {
-                  SmartDialog.showToast(
-                    '输入内容${filter.isEmpty ? "不能为空" : "与上次相同"}',
-                  );
-                }
-              },
+      builder: (context) => AlertDialog(
+        title: Text('${itemId != null ? "编辑" : "添加新的"}${type.label}规则'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(hintText),
+            TextFormField(
+              autofocus: true,
+              initialValue: filter,
+              onChanged: (value) => filter = value,
+              keyboardType: isUid ? TextInputType.number : null,
+              inputFormatters: isUid
+                  ? [FilteringTextInputFormatter.digitsOnly]
+                  : null,
             ),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: Get.back,
+            child: Text(
+              '取消',
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            ),
+          ),
+          TextButton(
+            child: const Text('确定'),
+            onPressed: () async {
+              if (filter != initFilter) {
+                Get.back();
+                if (itemId != null) {
+                  await _controller.danmakuFilterDel(
+                    type.index,
+                    itemIndex!,
+                    itemId,
+                  );
+                }
+                await _controller.danmakuFilterAdd(
+                  filter: filter,
+                  type: type.index,
+                );
+              } else {
+                SmartDialog.showToast(
+                  '输入内容${filter.isEmpty ? "不能为空" : "与上次相同"}',
+                );
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 }

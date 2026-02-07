@@ -29,14 +29,20 @@ class _SearchUserPanelState
           SearchUserItemModel
         > {
   @override
-  late final SearchUserController controller = Get.put(
-    SearchUserController(
-      keyword: widget.keyword,
-      searchType: widget.searchType,
-      tag: widget.tag,
-    ),
-    tag: widget.searchType.name + widget.tag,
-  );
+  late final SearchUserController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(
+      SearchUserController(
+        keyword: widget.keyword,
+        searchType: widget.searchType,
+        tag: widget.tag,
+      ),
+      tag: widget.searchType.name + widget.tag,
+    );
+  }
 
   @override
   Widget buildHeader(ThemeData theme) {

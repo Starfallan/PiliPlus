@@ -29,10 +29,16 @@ class LiveEmotePanel extends StatefulWidget {
 
 class _LiveEmotePanelState extends State<LiveEmotePanel>
     with AutomaticKeepAliveClientMixin {
-  late final LiveEmotePanelController _emotePanelController = Get.put(
-    LiveEmotePanelController(widget.roomId),
-    tag: widget.roomId.toString(),
-  );
+  late final LiveEmotePanelController _emotePanelController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emotePanelController = Get.put(
+      LiveEmotePanelController(widget.roomId),
+      tag: widget.roomId.toString(),
+    );
+  }
 
   @override
   bool get wantKeepAlive => true;

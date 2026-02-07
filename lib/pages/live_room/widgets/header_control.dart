@@ -58,8 +58,8 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
     final liveController = widget.liveController;
     Widget child;
     child = Obx(
+      key: titleKey,
       () => MarqueeText(
-        key: titleKey,
         liveController.title.value,
         spacing: 30,
         velocity: 30,
@@ -162,9 +162,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                   return;
                 }
                 if (await Floating().isPipAvailable) {
-                  plPlayerController
-                    ..showControls.value = false
-                    ..enterPip();
+                  plPlayerController.enterPip();
                 }
               },
               icon: const Icon(

@@ -30,14 +30,20 @@ class _SearchVideoPanelState
         >
     with GridMixin {
   @override
-  late final SearchVideoController controller = Get.put(
-    SearchVideoController(
-      keyword: widget.keyword,
-      searchType: widget.searchType,
-      tag: widget.tag,
-    ),
-    tag: widget.searchType.name + widget.tag,
-  );
+  late final SearchVideoController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(
+      SearchVideoController(
+        keyword: widget.keyword,
+        searchType: widget.searchType,
+        tag: widget.tag,
+      ),
+      tag: widget.searchType.name + widget.tag,
+    );
+  }
 
   @override
   Widget buildHeader(ThemeData theme) {

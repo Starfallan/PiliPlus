@@ -1,3 +1,4 @@
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/material.dart';
 
 class RadioWidget<T> extends StatefulWidget {
@@ -61,17 +62,13 @@ class RadioWidgetState<T> extends State<RadioWidget<T>> with RadioClient<T> {
     final child = Row(
       mainAxisSize: widget.mainAxisSize,
       children: [
-        Focus(
-          parentNode: focusNode,
-          canRequestFocus: false,
-          skipTraversal: true,
-          includeSemantics: true,
-          descendantsAreFocusable: false,
-          descendantsAreTraversable: false,
+        ExcludeFocus(
           child: Radio<T>(
             value: radioValue,
             groupRegistry: _radioRegistry,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            materialTapTargetSize: PlatformUtils.isDesktop
+                ? .padded
+                : .shrinkWrap,
           ),
         ),
         Text(widget.title),

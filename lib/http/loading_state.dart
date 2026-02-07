@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 sealed class LoadingState<T> {
@@ -29,6 +30,7 @@ class Loading extends LoadingState<Never> {
   }
 }
 
+@immutable
 class Success<T> extends LoadingState<T> {
   final T response;
   const Success(this.response);
@@ -48,6 +50,7 @@ class Success<T> extends LoadingState<T> {
   int get hashCode => response.hashCode;
 }
 
+@immutable
 class Error extends LoadingState<Never> {
   final int? code;
   final String? errMsg;

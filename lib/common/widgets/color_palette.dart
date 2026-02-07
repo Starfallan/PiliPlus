@@ -55,18 +55,19 @@ class ColorPalette extends StatelessWidget {
         ],
       );
     }
-    return Container(
-      width: 50,
-      height: 50,
-      padding: const EdgeInsets.all(6),
-      decoration: showBgColor
-          ? BoxDecoration(
-              color: colorScheme.onInverseSurface,
-              borderRadius: StyleString.mdRadius,
-            )
-          : null,
-      child: child,
-    );
+    if (showBgColor) {
+      return Container(
+        width: 50,
+        height: 50,
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: colorScheme.onInverseSurface,
+          borderRadius: StyleString.mdRadius,
+        ),
+        child: child,
+      );
+    }
+    return child;
   }
 
   static Widget _coloredBox(Color color) => Expanded(

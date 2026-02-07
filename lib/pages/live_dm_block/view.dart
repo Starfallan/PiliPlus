@@ -107,7 +107,6 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
                             delegate: CustomSliverPersistentHeaderDelegate(
                               extent: 48,
                               child: tabBar,
-                              bgColor: null,
                             ),
                           ),
                         ),

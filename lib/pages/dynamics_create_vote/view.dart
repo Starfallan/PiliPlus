@@ -26,13 +26,19 @@ class CreateVotePage extends StatefulWidget {
 }
 
 class _CreateVotePageState extends State<CreateVotePage> {
-  late final _controller = Get.put(
-    CreateVoteController(widget.voteId),
-    tag: Utils.generateRandomString(8),
-  );
+  late final CreateVoteController _controller;
   late final imagePicker = ImagePicker();
 
   late TextStyle _leadingStyle;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      CreateVoteController(widget.voteId),
+      tag: Utils.generateRandomString(8),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

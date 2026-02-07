@@ -33,6 +33,12 @@ abstract class CommonSearchPanelState<
   bool get wantKeepAlive => true;
 
   @override
+  void dispose() {
+    controller.cancelListener();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);

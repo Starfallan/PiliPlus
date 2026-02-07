@@ -38,10 +38,16 @@ class NoteListPage extends CommonSlidePage {
 
 class _NoteListPageState extends State<NoteListPage>
     with SingleTickerProviderStateMixin, CommonSlideMixin {
-  late final _controller = Get.put(
-    NoteListPageCtr(oid: widget.oid),
-    tag: widget.heroTag,
-  );
+  late final NoteListPageCtr _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      NoteListPageCtr(oid: widget.oid),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   void dispose() {

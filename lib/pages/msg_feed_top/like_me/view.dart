@@ -26,7 +26,7 @@ class LikeMePage extends StatefulWidget {
 }
 
 class _LikeMePageState extends State<LikeMePage> {
-  late final LikeMeController _likeMeController = Get.put(LikeMeController());
+  final LikeMeController _likeMeController = Get.put(LikeMeController());
 
   @override
   Widget build(BuildContext context) {

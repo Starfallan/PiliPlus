@@ -335,6 +335,7 @@ class ListTile extends StatelessWidget {
     this.contentPadding,
     this.enabled = true,
     this.onTap,
+    this.onTapUp,
     this.onLongPress,
     this.onSecondaryTap,
     this.onSecondaryTapUp,
@@ -562,6 +563,8 @@ class ListTile extends StatelessWidget {
   ///
   /// Inoperative if [enabled] is false.
   final GestureTapCallback? onTap;
+
+  final GestureTapUpCallback? onTapUp;
 
   /// Called when the user long-presses on this list tile.
   ///
@@ -913,7 +916,12 @@ class ListTile extends StatelessWidget {
 
     // Show basic cursor when ListTile isn't enabled or gesture callbacks are null.
     final Set<WidgetState> mouseStates = <WidgetState>{
-      if (!enabled || (onTap == null && onLongPress == null))
+      if (!enabled ||
+          (onTap == null &&
+              onTapUp == null &&
+              onLongPress == null &&
+              onSecondaryTap == null &&
+              onSecondaryTapUp == null))
         WidgetState.disabled,
     };
     final MouseCursor effectiveMouseCursor =
@@ -984,6 +992,7 @@ class ListTile extends StatelessWidget {
     return InkWell(
       customBorder: shape ?? tileTheme.shape,
       onTap: enabled ? onTap : null,
+      onTapUp: enabled ? onTapUp : null,
       onLongPress: enabled ? onLongPress : null,
       onSecondaryTap: enabled ? onSecondaryTap : null,
       onSecondaryTapUp: enabled ? onSecondaryTapUp : null,

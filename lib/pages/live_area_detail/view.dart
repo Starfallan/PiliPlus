@@ -28,9 +28,15 @@ class LiveAreaDetailPage extends StatefulWidget {
 }
 
 class _LiveAreaDetailPageState extends State<LiveAreaDetailPage> {
-  late final _controller = Get.put(
-    LiveAreaDetailController(widget.areaId?.toString(), widget.parentAreaId),
-  );
+  late final LiveAreaDetailController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      LiveAreaDetailController(widget.areaId?.toString(), widget.parentAreaId),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

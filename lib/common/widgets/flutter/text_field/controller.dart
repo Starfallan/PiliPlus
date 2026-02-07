@@ -85,11 +85,9 @@ class RichTextEditingDeltaInsertion extends TextEditingDeltaInsertion
     this.emote,
     this.id,
     this.rawText,
-  }) {
-    this.type =
-        type ??
-        (composing.isValid ? RichTextType.composing : RichTextType.text);
-  }
+  }) : type =
+           type ??
+           (composing.isValid ? RichTextType.composing : RichTextType.text);
 
   @override
   late final RichTextType type;
@@ -116,11 +114,9 @@ class RichTextEditingDeltaReplacement extends TextEditingDeltaReplacement
     this.emote,
     this.id,
     this.rawText,
-  }) {
-    this.type =
-        type ??
-        (composing.isValid ? RichTextType.composing : RichTextType.text);
-  }
+  }) : type =
+           type ??
+           (composing.isValid ? RichTextType.composing : RichTextType.text);
 
   @override
   late final RichTextType type;
@@ -158,9 +154,7 @@ class RichTextItem {
     required this.range,
     this.emote,
     this.id,
-  }) {
-    _rawText = rawText;
-  }
+  }) : _rawText = rawText;
 
   RichTextItem.fromStart(
     this.text, {
@@ -168,10 +162,8 @@ class RichTextItem {
     this.type = RichTextType.text,
     this.emote,
     this.id,
-  }) {
-    range = TextRange(start: 0, end: text.length);
-    _rawText = rawText;
-  }
+  }) : range = TextRange(start: 0, end: text.length),
+       _rawText = rawText;
 
   List<RichTextItem>? onInsert(
     TextEditingDeltaInsertion delta,

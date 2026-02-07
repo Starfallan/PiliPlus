@@ -27,10 +27,16 @@ class _MemberArticleState extends State<MemberArticle>
   @override
   bool get wantKeepAlive => true;
 
-  late final _controller = Get.put(
-    MemberArticleCtr(mid: widget.mid),
-    tag: widget.heroTag,
-  );
+  late final MemberArticleCtr _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      MemberArticleCtr(mid: widget.mid),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

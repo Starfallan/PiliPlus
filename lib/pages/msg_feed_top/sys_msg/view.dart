@@ -23,8 +23,9 @@ class SysMsgPage extends StatefulWidget {
 }
 
 class _SysMsgPageState extends State<SysMsgPage> {
-  late final _sysMsgController = Get.put(SysMsgController());
-  late final RegExp urlRegExp = RegExp(
+  final _sysMsgController = Get.put(SysMsgController());
+
+  static final RegExp _urlRegExp = RegExp(
     r'#\{([^}]*)\}\{([^}]*)\}|https?:\/\/[^\s/\$.?#].[^\s]*|www\.[^\s/\$.?#].[^\s]*|【(.*?)】|（(\d+)）',
   );
 
@@ -135,7 +136,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
   InlineSpan _buildContent(ThemeData theme, String content) {
     final List<InlineSpan> spanChildren = <InlineSpan>[];
     content.splitMapJoin(
-      urlRegExp,
+      _urlRegExp,
       onMatch: (Match match) {
         final matchStr = match[0]!;
         if (matchStr.startsWith('#')) {

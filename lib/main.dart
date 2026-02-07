@@ -94,7 +94,7 @@ void main() async {
     if (kDebugMode) debugPrint('GStorage init error: $e');
     exit(0);
   }
-  ScaledWidgetsFlutterBinding.instance.setScaleFactor(Pref.uiScale);
+  ScaledWidgetsFlutterBinding.instance.scaleFactor = Pref.uiScale;
   await Future.wait([_initDownPath(), _initTmpPath()]);
   Get
     ..lazyPut(AccountService.new)

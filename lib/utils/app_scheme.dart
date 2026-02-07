@@ -14,7 +14,6 @@ import 'package:PiliPlus/pages/live/view.dart';
 import 'package:PiliPlus/pages/rank/view.dart';
 import 'package:PiliPlus/pages/subscription_detail/view.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
-import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
@@ -39,6 +38,18 @@ abstract final class PiliScheme {
 
     listener?.cancel();
     listener = appLinks.uriLinkStream.listen(routePush);
+  }
+
+  static int? _videoProgress(Map<String, String> queryParameters) {
+    if ((queryParameters['start_progress'] ?? queryParameters['dm_progress'])
+        case final p?) {
+      return int.tryParse(p);
+    } else if (queryParameters['t'] case final t0?) {
+      if (double.tryParse(t0) case final t1?) {
+        return (t1 * 1000).toInt();
+      }
+    }
+    return null;
   }
 
   static Future<bool> routePushFromUrl(
@@ -99,7 +110,7 @@ abstract final class PiliScheme {
               PageUtils.viewPgc(
                 seasonId: isEp ? null : id,
                 epId: isEp ? id : null,
-                progress: uri.queryParameters['start_progress'],
+                progress: _videoProgress(uri.queryParameters),
               );
               return true;
             }
@@ -121,7 +132,6 @@ abstract final class PiliScheme {
             // bilibili://video/{aid}/?comment_root_id=***&comment_secondary_id=***
             final queryParameters = uri.queryParameters;
             if (queryParameters['comment_root_id'] != null) {
-              // to check
               // to video reply
               String? oid = uriDigitRegExp.firstMatch(path)?.group(1);
               int? rpid = int.tryParse(queryParameters['comment_root_id']!);
@@ -146,11 +156,10 @@ abstract final class PiliScheme {
               final cid = queryParameters['cid'];
               if (cid != null) {
                 bvid ??= IdUtils.av2bv(int.parse(aid!));
-                final progress = queryParameters['dm_progress'];
                 PageUtils.toVideoPage(
                   bvid: bvid,
                   cid: int.parse(cid),
-                  progress: progress == null ? null : int.parse(progress),
+                  progress: _videoProgress(queryParameters),
                   off: off,
                 );
               } else {
@@ -158,7 +167,7 @@ abstract final class PiliScheme {
                   aid != null ? int.parse(aid) : null,
                   bvid,
                   off: off,
-                  progress: queryParameters['dm_progress'],
+                  progress: _videoProgress(queryParameters),
                 );
               }
               return true;
@@ -569,7 +578,7 @@ abstract final class PiliScheme {
     }
     final first = pathSegments.first;
     final String? area = const ['mobile', 'h5', 'v'].contains(first)
-        ? pathSegments.getOrNull(1)
+        ? pathSegments.elementAtOrNull(1)
         : first;
     // if (kDebugMode) debugPrint('area: $area');
     switch (area) {
@@ -629,12 +638,9 @@ abstract final class PiliScheme {
       case 'bangumi':
         // www.bilibili.com/bangumi/play/ep{eid}?start_progress={offset}&thumb_up_dm_id={dmid}
         // if (kDebugMode) debugPrint('番剧');
-        final queryParameters = uri.queryParameters;
         bool hasMatch = PageUtils.viewPgcFromUri(
           path,
-          progress:
-              queryParameters['start_progress'] ??
-              queryParameters['dm_progress'],
+          progress: _videoProgress(uri.queryParameters),
         );
         if (hasMatch) {
           return true;
@@ -662,7 +668,7 @@ abstract final class PiliScheme {
             res.av,
             res.bv,
             off: off,
-            progress: queryParameters['dm_progress'],
+            progress: _videoProgress(queryParameters),
             part: part,
           );
           return true;
@@ -850,7 +856,7 @@ abstract final class PiliScheme {
     String? bvid, {
     bool showDialog = true,
     bool off = false,
-    String? progress,
+    int? progress, // milliseconds
     String? part,
   }) async {
     try {
@@ -872,7 +878,7 @@ abstract final class PiliScheme {
           aid: aid,
           bvid: bvid,
           cid: cid,
-          progress: progress == null ? null : int.parse(progress),
+          progress: progress,
           off: off,
         );
       }

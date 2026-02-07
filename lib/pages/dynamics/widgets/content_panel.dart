@@ -78,6 +78,8 @@ Widget content(
                   style: isSave
                       ? const TextStyle(fontSize: 15)
                       : const TextStyle(fontSize: 16),
+                  contextMenuBuilder: (_, state) =>
+                      _contextMenuBuilder(state, moduleDynamic),
                 )
               : custom_text.Text.rich(
                   style: floor == 1
@@ -104,6 +106,40 @@ Widget content(
             fullScreen: true,
           ),
       ],
+    ),
+  );
+}
+
+Widget _contextMenuBuilder(
+  EditableTextState state,
+  ModuleDynamicModel? moduleDynamic,
+) {
+  return AdaptiveTextSelectionToolbar.buttonItems(
+    buttonItems: state.contextMenuButtonItems
+      ..add(
+        ContextMenuButtonItem(
+          label: '文本',
+          onPressed: () => _onCopyText(moduleDynamic),
+        ),
+      ),
+    anchors: state.contextMenuAnchors,
+  );
+}
+
+void _onCopyText(ModuleDynamicModel? moduleDynamic) {
+  final text =
+      moduleDynamic?.desc?.text ?? moduleDynamic?.major?.opus?.summary?.text;
+  if (text == null || text.isEmpty) return;
+  showDialog(
+    context: Get.context!,
+    builder: (context) => Dialog(
+      child: Padding(
+        padding: const .symmetric(horizontal: 20, vertical: 16),
+        child: SelectableText(
+          text,
+          style: const TextStyle(fontSize: 15, height: 1.7),
+        ),
+      ),
     ),
   );
 }

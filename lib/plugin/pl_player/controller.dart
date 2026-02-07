@@ -76,7 +76,7 @@ class PlPlayerController {
   final playerStatus = PlPlayerStatus(PlayerStatus.playing);
 
   ///
-  final PlPlayerDataStatus dataStatus = PlPlayerDataStatus();
+  final Rx<DataStatus> dataStatus = Rx(DataStatus.none);
 
   // bool controlsEnabled = false;
 
@@ -230,6 +230,7 @@ class PlPlayerController {
   late bool isDesktopPip = false;
   late Rect _lastWindowBounds;
 
+  late final showWindowTitleBar = Pref.showWindowTitleBar;
   late final RxBool isAlwaysOnTop = false.obs;
   Future<void> setAlwaysOnTop(bool value) {
     isAlwaysOnTop.value = value;
@@ -239,7 +240,8 @@ class PlPlayerController {
   Future<void> exitDesktopPip() {
     isDesktopPip = false;
     return Future.wait([
-      windowManager.setTitleBarStyle(TitleBarStyle.normal),
+      if (showWindowTitleBar)
+        windowManager.setTitleBarStyle(TitleBarStyle.normal),
       windowManager.setMinimumSize(const Size(400, 700)),
       windowManager.setBounds(_lastWindowBounds),
       setAlwaysOnTop(false),
@@ -254,7 +256,9 @@ class PlPlayerController {
 
     _lastWindowBounds = await windowManager.getBounds();
 
-    windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    if (showWindowTitleBar) {
+      windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    }
 
     late final Size size;
     final state = videoController!.player.state;
@@ -284,7 +288,11 @@ class PlPlayerController {
   late bool _shouldSetPip = false;
 
   bool get _isCurrVideoPage {
-    final currentRoute = Get.currentRoute;
+    final routing = Get.routing;
+    if (routing.route is! GetPageRoute) {
+      return false;
+    }
+    final currentRoute = routing.current;
     return currentRoute.startsWith('/video') ||
         currentRoute.startsWith('/liveRoom');
   }
@@ -297,6 +305,7 @@ class PlPlayerController {
 
   void enterPip({bool isAuto = false}) {
     if (videoController != null) {
+      controls = false;
       final state = videoController!.player.state;
       PageUtils.enterPip(
         isAuto: isAuto,
@@ -546,7 +555,7 @@ class PlPlayerController {
 
     if (Platform.isAndroid && autoPiP) {
       Utils.sdkInt.then((sdkInt) {
-        if (sdkInt < 31) {
+        if (sdkInt < 36) {
           Utils.channel.setMethodCallHandler((call) async {
             if (call.method == 'onUserLeaveHint') {
               if (playerStatus.playing && _isCurrVideoPage) {
@@ -626,7 +635,7 @@ class PlPlayerController {
       // 初始化视频倍速
       // _playbackSpeed.value = speed;
       // 初始化数据加载状态
-      dataStatus.status.value = DataStatus.loading;
+      dataStatus.value = DataStatus.loading;
       // 初始化全屏方向
       _isVertical = isVertical ?? false;
       _aid = aid;
@@ -664,14 +673,14 @@ class PlPlayerController {
       updateSliderPositionSecond();
       updateBufferedSecond();
       // 数据加载完成
-      dataStatus.status.value = DataStatus.loaded;
+      dataStatus.value = DataStatus.loaded;
 
       // listen the video player events
       startListeners();
       await _initializePlayer();
       onInit?.call();
     } catch (err, stackTrace) {
-      dataStatus.status.value = DataStatus.error;
+      dataStatus.value = DataStatus.error;
       if (kDebugMode) {
         debugPrint(stackTrace.toString());
         debugPrint('plPlayer err:  $err');
@@ -793,13 +802,17 @@ class PlPlayerController {
       if (isAnim) {
         setShader(superResolutionType.value, pp);
       }
-      await pp.setProperty("af", "scaletempo2=max-speed=8");
+      // await pp.setProperty('audio-pitch-correction', 'yes'); // default yes
       if (Platform.isAndroid) {
         await pp.setProperty("volume-max", "100");
         await pp.setProperty("ao", Pref.audioOutput);
       }
       // video-sync=display-resample
       await pp.setProperty("video-sync", Pref.videoSync);
+      final autosync = Pref.autosync;
+      if (autosync != '0') {
+        await pp.setProperty("autosync", autosync);
+      }
       // vo=gpu-next & gpu-context=android & gpu-api=opengl
       // await pp.setProperty("vo", "gpu-next");
       // await pp.setProperty("gpu-context", "android");
@@ -971,9 +984,9 @@ class PlPlayerController {
   Future<void>? autoEnterFullscreen() {
     if (enableAutoEnter) {
       return Future.delayed(const Duration(milliseconds: 500), () {
-        if (dataStatus.status.value != DataStatus.loaded) {
+        if (!dataStatus.loaded) {
           _stopListenerForEnterFullScreen();
-          _dataListenerForEnterFullScreen = dataStatus.status.listen((status) {
+          _dataListenerForEnterFullScreen = dataStatus.listen((status) {
             if (status == DataStatus.loaded) {
               _stopListenerForEnterFullScreen();
               triggerFullScreen(status: true);
@@ -1373,7 +1386,7 @@ class PlPlayerController {
       if (buffered.value == Duration.zero) {
         attr = VideoFitType.contain;
         _stopListenerForVideoFit();
-        _dataListenerForVideoFit = dataStatus.status.listen((status) {
+        _dataListenerForVideoFit = dataStatus.listen((status) {
           if (status == DataStatus.loaded) {
             _stopListenerForVideoFit();
             final attr = VideoFitType.values[fitValue];
@@ -1718,7 +1731,7 @@ class PlPlayerController {
     // _controlsLock.close();
 
     // playerStatus.close();
-    // dataStatus.status.close();
+    // dataStatus.close();
 
     if (PlatformUtils.isDesktop && isAlwaysOnTop.value) {
       windowManager.setAlwaysOnTop(false);

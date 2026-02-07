@@ -1,11 +1,11 @@
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 
 class MentionItem with MultiSelectData {
-  String? face;
-  int? fans;
-  String? name;
-  int? officialVerifyType;
-  String? uid;
+  final String? face;
+  final int? fans;
+  final String? name;
+  final int? officialVerifyType;
+  final String? uid;
 
   MentionItem({
     this.face,

@@ -40,10 +40,16 @@ class PgcPage extends StatefulWidget {
 class _PgcPageState extends CommonPageState<PgcPage, PgcController>
     with AutomaticKeepAliveClientMixin {
   @override
-  late PgcController controller = Get.put(
-    PgcController(tabType: widget.tabType),
-    tag: widget.tabType.name,
-  );
+  late final PgcController controller;
+
+  @override
+  void initState() {
+    controller = Get.put(
+      PgcController(tabType: widget.tabType),
+      tag: widget.tabType.name,
+    );
+    super.initState();
+  }
 
   @override
   bool get wantKeepAlive => true;

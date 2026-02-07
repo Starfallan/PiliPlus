@@ -18,7 +18,7 @@ class ScaledWidgetsFlutterBinding extends WidgetsFlutterBinding {
   double _scaleFactor;
 
   /// Update scaleFactor callback, then rebuild layout
-  void setScaleFactor(double scaleFactor) {
+  set scaleFactor(double scaleFactor) {
     if (_scaleFactor == scaleFactor) return;
     _scaleFactor = scaleFactor;
     handleMetricsChanged();

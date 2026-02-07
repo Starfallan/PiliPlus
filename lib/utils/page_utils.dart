@@ -130,11 +130,11 @@ abstract final class PageUtils {
         builder: (_, setState) {
           void onTap(int choice) {
             if (choice == -1) {
+              String duration = '';
               showDialog(
                 context: context,
                 builder: (context) {
-                  final ThemeData theme = Theme.of(context);
-                  String duration = '';
+                  final theme = Theme.of(context);
                   return AlertDialog(
                     title: const Text('自定义时长'),
                     content: TextField(
@@ -154,12 +154,16 @@ abstract final class PageUtils {
                       ),
                       TextButton(
                         onPressed: () {
-                          Get.back();
-                          int choice = int.tryParse(duration) ?? 0;
-                          shutdownTimerService
-                            ..scheduledExitInMinutes = choice
-                            ..startShutdownTimer();
-                          setState(() {});
+                          try {
+                            final choice = int.parse(duration);
+                            Get.back();
+                            shutdownTimerService
+                              ..scheduledExitInMinutes = choice
+                              ..startShutdownTimer();
+                            setState(() {});
+                          } catch (e) {
+                            SmartDialog.showToast(e.toString());
+                          }
                         },
                         child: const Text('确定'),
                       ),
@@ -575,17 +579,15 @@ abstract final class PageUtils {
       vsync: state,
       duration: Duration.zero,
       reverseDuration: Duration.zero,
-    )..forward();
+    );
     state.showBottomSheet(
       constraints: const BoxConstraints(),
-      (context) {
-        return InteractiveviewerGallery(
-          sources: imgList,
-          initIndex: index,
-          quality: GlobalData().imgQuality,
-          onClose: animController.dispose,
-        );
-      },
+      (context) => InteractiveviewerGallery(
+        sources: imgList,
+        initIndex: index,
+        quality: GlobalData().imgQuality,
+        onClose: animController.dispose,
+      ),
       enableDrag: false,
       elevation: 0.0,
       backgroundColor: Colors.transparent,
@@ -736,7 +738,7 @@ abstract final class PageUtils {
     int? pgcType,
     String? cover,
     String? title,
-    int? progress,
+    int? progress, // milliseconds
     Map? extraArguments,
     bool off = false,
   }) {
@@ -773,7 +775,7 @@ abstract final class PageUtils {
   static bool viewPgcFromUri(
     String uri, {
     bool isPgc = true,
-    String? progress,
+    int? progress, // milliseconds
     int? aid,
   }) {
     RegExpMatch? match = _pgcRegex.firstMatch(uri);
@@ -817,7 +819,7 @@ abstract final class PageUtils {
   static Future<void> viewPgc({
     dynamic seasonId,
     dynamic epId,
-    String? progress,
+    int? progress, // milliseconds
   }) async {
     try {
       SmartDialog.showLoading(msg: '资源获取中');
@@ -837,7 +839,7 @@ abstract final class PageUtils {
             seasonId: response.seasonId,
             epId: episode.epId,
             cover: episode.cover,
-            progress: progress == null ? null : int.tryParse(progress),
+            progress: progress,
             extraArguments: {
               'pgcApi': true,
               'pgcItem': response,
@@ -886,7 +888,7 @@ abstract final class PageUtils {
             epId: episode.epId,
             pgcType: response.type,
             cover: episode.cover,
-            progress: progress == null ? null : int.tryParse(progress),
+            progress: progress,
             extraArguments: {
               'pgcItem': response,
             },

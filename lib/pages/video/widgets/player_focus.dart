@@ -22,6 +22,7 @@ class PlayerFocus extends StatelessWidget {
     required this.onSendDanmaku,
     this.canPlay,
     this.onSkipSegment,
+    this.onRefresh,
   });
 
   final Widget child;
@@ -30,6 +31,7 @@ class PlayerFocus extends StatelessWidget {
   final VoidCallback onSendDanmaku;
   final ValueGetter<bool>? canPlay;
   final ValueGetter<bool>? onSkipSegment;
+  final VoidCallback? onRefresh;
 
   static bool _shouldHandle(LogicalKeyboardKey logicalKey) {
     return logicalKey == LogicalKeyboardKey.tab ||
@@ -93,12 +95,14 @@ class PlayerFocus extends StatelessWidget {
       if (HardwareKeyboard.instance.isMetaPressed) {
         return true;
       }
-      if (!plPlayerController.isLive) {
-        if (event is KeyDownEvent) {
+      if (event is KeyDownEvent) {
+        if (plPlayerController.isLive) {
+          onRefresh?.call();
+        } else {
           introController!.onStartTriple();
-        } else if (event is KeyUpEvent) {
-          introController!.onCancelTriple(isKeyQ);
         }
+      } else if (event is KeyUpEvent && !plPlayerController.isLive) {
+        introController!.onCancelTriple(isKeyQ);
       }
       return true;
     }

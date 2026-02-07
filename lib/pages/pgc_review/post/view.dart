@@ -46,7 +46,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
   }
 
   void _onScore(double dx) {
-    int index = (dx / 50).toInt().clamp(0, 4);
+    int index = (dx ~/ 50).clamp(0, 4);
     _enablePost.value = true;
     _score.value = index + 1;
   }

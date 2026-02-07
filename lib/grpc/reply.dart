@@ -54,11 +54,12 @@ abstract final class ReplyGrpc {
         oid: Int64(oid),
         type: Int64(type),
         rpid: Int64.ZERO,
-        cursor: CursorReq(
-          mode: mode,
-          next: cursorNext,
-        ),
-        // pagination: FeedPagination(offset: offset ?? ''),
+        // cursor: CursorReq(
+        //   mode: mode,
+        //   next: cursorNext,
+        // ),
+        mode: mode,
+        pagination: offset == null ? null : FeedPagination(offset: offset),
       ),
       MainListReply.fromBuffer,
     );
@@ -119,7 +120,7 @@ abstract final class ReplyGrpc {
         type: Int64(type),
         root: Int64(root),
         dialog: Int64(dialog),
-        pagination: FeedPagination(offset: offset ?? ''),
+        pagination: offset == null ? null : FeedPagination(offset: offset),
       ),
       DialogListReply.fromBuffer,
     );

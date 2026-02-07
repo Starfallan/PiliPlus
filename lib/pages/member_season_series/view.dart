@@ -27,10 +27,16 @@ class SeasonSeriesPage extends StatefulWidget {
 
 class _SeasonSeriesPageState extends State<SeasonSeriesPage>
     with AutomaticKeepAliveClientMixin, GridMixin {
-  late final _controller = Get.put(
-    SeasonSeriesController(widget.mid),
-    tag: widget.heroTag,
-  );
+  late final SeasonSeriesController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      SeasonSeriesController(widget.mid),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   bool get wantKeepAlive => true;

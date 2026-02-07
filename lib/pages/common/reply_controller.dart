@@ -12,7 +12,6 @@ import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/reply_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:PiliPlus/utils/utils.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -123,9 +122,8 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
   }
 
   void onReply(
-    BuildContext context, {
+    ReplyInfo? replyItem, {
     int? oid,
-    ReplyInfo? replyItem,
     int? replyType,
   }) {
     if (loadingState.value case Error(:final errMsg, :final code)) {
@@ -143,7 +141,7 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
     }
 
     final key = oid ?? replyItem!.oid + replyItem.id;
-    Navigator.of(context)
+    Get.key.currentState!
         .push(
           PublishRoute(
             pageBuilder: (buildContext, animation, secondaryAnimation) {
@@ -167,10 +165,7 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
                 },
               );
             },
-            settings: RouteSettings(
-              arguments: Get.arguments,
-              name: '${Get.currentRoute}-copy-${Utils.generateRandomString(3)}',
-            ),
+            settings: RouteSettings(arguments: Get.arguments),
           ),
         )
         .then(

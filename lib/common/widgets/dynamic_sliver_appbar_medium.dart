@@ -43,10 +43,10 @@ class DynamicSliverAppBarMedium extends StatefulWidget {
     this.forceMaterialTransparency = false,
     this.clipBehavior,
     this.appBarClipper,
-    this.afterCalc,
+    this.onPerformLayout,
   });
 
-  final ValueChanged<double>? afterCalc;
+  final ValueChanged<double>? onPerformLayout;
   final Widget? flexibleSpace;
   final Widget? leading;
   final bool automaticallyImplyLeading;
@@ -93,7 +93,6 @@ class DynamicSliverAppBarMedium extends StatefulWidget {
 }
 
 class _DynamicSliverAppBarMediumState extends State<DynamicSliverAppBarMedium> {
-  final GlobalKey _key = GlobalKey();
   double? _height;
   double? _width;
   late double _topPadding;
@@ -112,18 +111,17 @@ class _DynamicSliverAppBarMediumState extends State<DynamicSliverAppBarMedium> {
   @override
   Widget build(BuildContext context) {
     if (_height == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _height =
-            (_key.currentContext!.findRenderObject() as RenderBox).size.height;
-        widget.afterCalc?.call(_height!);
-        setState(() {});
-      });
       return SliverToBoxAdapter(
         child: OnlyLayoutWidget(
+          onPerformLayout: (Size size) {
+            if (!mounted) return;
+            _height = size.height;
+            widget.onPerformLayout?.call(_height!);
+            setState(() {});
+          },
           child: UnconstrainedBox(
             alignment: Alignment.topLeft,
             child: SizedBox(
-              key: _key,
               width: _width,
               child: widget.flexibleSpace,
             ),

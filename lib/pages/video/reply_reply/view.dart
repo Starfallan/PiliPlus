@@ -224,11 +224,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
             replyItem: firstFloor,
             replyLevel: 2,
             needDivider: false,
-            onReply: (replyItem) => _controller.onReply(
-              context,
-              replyItem: replyItem,
-              index: -1,
-            ),
+            onReply: (replyItem) => _controller.onReply(replyItem, index: -1),
             upMid: _controller.upMid,
             onCheckReply: (item) =>
                 _controller.onCheckReply(item, isManual: true),
@@ -366,8 +362,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
     return ReplyItemGrpc(
       replyItem: replyItem,
       replyLevel: isDialogue ? 3 : 2,
-      onReply: (replyItem) =>
-          _controller.onReply(this.context, replyItem: replyItem, index: index),
+      onReply: (replyItem) => _controller.onReply(replyItem, index: index),
       onDelete: (item, subIndex) => _controller.onRemove(index, item, null),
       upMid: _controller.upMid,
       showDialogue: () => Scaffold.of(context).showBottomSheet(

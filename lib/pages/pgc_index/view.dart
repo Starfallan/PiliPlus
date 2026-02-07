@@ -25,10 +25,16 @@ class PgcIndexPage extends StatefulWidget {
 
 class _PgcIndexPageState extends State<PgcIndexPage>
     with AutomaticKeepAliveClientMixin {
-  late final _ctr = Get.put(
-    PgcIndexController(widget.indexType),
-    tag: '${widget.indexType}',
-  );
+  late final PgcIndexController _ctr;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctr = Get.put(
+      PgcIndexController(widget.indexType),
+      tag: widget.indexType.toString(),
+    );
+  }
 
   @override
   bool get wantKeepAlive => widget.indexType != null;
@@ -141,7 +147,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
           ..onReload(),
       );
     }
-    throw UnsupportedError(item.runtimeType.toString());
+    throw UnsupportedError(item.toString());
   }
 
   Widget _buildSortsWidget(

@@ -29,14 +29,20 @@ class SearchAllPanel extends CommonSearchPanel {
 class _SearchAllPanelState
     extends CommonSearchPanelState<SearchAllPanel, SearchAllData, dynamic> {
   @override
-  late final SearchAllController controller = Get.put(
-    SearchAllController(
-      keyword: widget.keyword,
-      searchType: widget.searchType,
-      tag: widget.tag,
-    ),
-    tag: widget.searchType.name + widget.tag,
-  );
+  late final SearchAllController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.put(
+      SearchAllController(
+        keyword: widget.keyword,
+        searchType: widget.searchType,
+        tag: widget.tag,
+      ),
+      tag: widget.searchType.name + widget.tag,
+    );
+  }
 
   @override
   Widget buildList(ThemeData theme, List<dynamic> list) {

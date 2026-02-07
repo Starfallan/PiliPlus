@@ -180,10 +180,7 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
                       replyLevel: 1,
                       replyReply: (replyItem, id) =>
                           replyReply(context, replyItem, id, theme),
-                      onReply: (replyItem) => controller.onReply(
-                        context,
-                        replyItem: replyItem,
-                      ),
+                      onReply: controller.onReply,
                       onDelete: (item, subIndex) =>
                           controller.onRemove(index, item, subIndex),
                       upMid: controller.upMid,
@@ -323,7 +320,7 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
       try {
         feedBack();
         controller.onReply(
-          context,
+          null,
           oid: controller.oid,
           replyType: controller.replyType,
         );

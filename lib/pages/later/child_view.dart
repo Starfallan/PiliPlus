@@ -27,11 +27,17 @@ class LaterViewChildPage extends StatefulWidget {
 
 class _LaterViewChildPageState extends State<LaterViewChildPage>
     with AutomaticKeepAliveClientMixin, GridMixin {
-  late final LaterController _laterController = Get.put(
-    LaterController(widget.laterViewType),
-    tag: widget.laterViewType.type.toString(),
-  );
+  late final LaterController _laterController;
   late final _baseCtr = Get.putOrFind(LaterBaseController.new);
+
+  @override
+  void initState() {
+    super.initState();
+    _laterController = Get.put(
+      LaterController(widget.laterViewType),
+      tag: widget.laterViewType.type.toString(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

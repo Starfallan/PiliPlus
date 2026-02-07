@@ -410,7 +410,7 @@ class LiveRoomController extends GetxController {
   }
 
   // 修改画质
-  FutureOr<void> changeQn(int qn) {
+  Future<void>? changeQn(int qn) {
     if (currentQn == qn) {
       return null;
     }

@@ -52,21 +52,19 @@ class ShutdownTimerService with WidgetsBindingObserver {
 
   void _showTimeUpButPauseDialog() {
     SmartDialog.show(
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('定时关闭'),
-          content: const Text('时间到啦！'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('确认'),
-              onPressed: () {
-                cancelShutdownTimer();
-                SmartDialog.dismiss();
-              },
-            ),
-          ],
-        );
-      },
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('定时关闭'),
+        content: const Text('时间到啦！'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('确认'),
+            onPressed: () {
+              cancelShutdownTimer();
+              SmartDialog.dismiss();
+            },
+          ),
+        ],
+      ),
     );
   }
 

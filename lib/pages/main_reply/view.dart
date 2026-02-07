@@ -95,7 +95,7 @@ class _MainReplyPageState extends State<MainReplyPage> {
             try {
               feedBack();
               _controller.onReply(
-                context,
+                null,
                 oid: _controller.oid,
                 replyType: _controller.replyType,
               );
@@ -143,10 +143,7 @@ class _MainReplyPageState extends State<MainReplyPage> {
                       replyLevel: 1,
                       replyReply: (replyItem, id) =>
                           replyReply(context, replyItem, id, colorScheme),
-                      onReply: (replyItem) => _controller.onReply(
-                        context,
-                        replyItem: replyItem,
-                      ),
+                      onReply: _controller.onReply,
                       onDelete: (item, subIndex) =>
                           _controller.onRemove(index, item, subIndex),
                       upMid: _controller.upMid,

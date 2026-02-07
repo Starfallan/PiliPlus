@@ -35,10 +35,16 @@ class SubDetailPage extends StatefulWidget {
 }
 
 class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
-  late final SubDetailController _subDetailController = Get.put(
-    SubDetailController(),
-    tag: Utils.makeHeroTag(Get.parameters['id']),
-  );
+  late final SubDetailController _subDetailController;
+
+  @override
+  void initState() {
+    super.initState();
+    _subDetailController = Get.put(
+      SubDetailController(),
+      tag: Utils.makeHeroTag(Get.parameters['id']),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

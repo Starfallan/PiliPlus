@@ -156,9 +156,8 @@ class VideoReplyReplyController extends ReplyController
 
   @override
   void onReply(
-    BuildContext context, {
+    ReplyInfo? replyItem, {
     int? oid,
-    ReplyInfo? replyItem,
     int? replyType,
     int? index,
   }) {
@@ -173,7 +172,7 @@ class VideoReplyReplyController extends ReplyController
     final root = replyItem.id.toInt();
     final key = oid + root;
 
-    Navigator.of(context)
+    Get.key.currentState!
         .push(
           PublishRoute(
             pageBuilder: (buildContext, animation, secondaryAnimation) {

@@ -127,50 +127,44 @@ class _PopularSeriesPageState extends State<PopularSeriesPage> with GridMixin {
         );
         showDialog(
           context: context,
-          builder: (context) {
-            return Dialog(
-              clipBehavior: Clip.hardEdge,
-              child: SizedBox(
-                width: width,
-                height: width,
-                child: ListView.builder(
-                  controller: controller,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  itemCount: seriesList.length,
-                  itemExtent: 44,
-                  itemBuilder: (context, index) {
-                    final item = seriesList[index];
-                    final isCurr = index == currIndex;
-                    return ListTile(
-                      dense: true,
-                      minTileHeight: 44,
-                      tileColor: isCurr
-                          ? Theme.of(context).highlightColor
-                          : null,
-                      onTap: () {
-                        Get.back();
-                        if (!isCurr) {
-                          _controller
-                            ..number = item.number!
-                            ..onReload();
-                        }
-                      },
-                      title: Text(
-                        item.name!,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      trailing: isCurr
-                          ? const Icon(Icons.check, size: 18)
-                          : null,
-                      contentPadding: const EdgeInsetsGeometry.symmetric(
-                        horizontal: 16,
-                      ),
-                    );
-                  },
-                ),
+          builder: (context) => Dialog(
+            clipBehavior: Clip.hardEdge,
+            child: SizedBox(
+              width: width,
+              height: width,
+              child: ListView.builder(
+                controller: controller,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemCount: seriesList.length,
+                itemExtent: 44,
+                itemBuilder: (context, index) {
+                  final item = seriesList[index];
+                  final isCurr = index == currIndex;
+                  return ListTile(
+                    dense: true,
+                    minTileHeight: 44,
+                    tileColor: isCurr ? Theme.of(context).highlightColor : null,
+                    onTap: () {
+                      Get.back();
+                      if (!isCurr) {
+                        _controller
+                          ..number = item.number!
+                          ..onReload();
+                      }
+                    },
+                    title: Text(
+                      item.name!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    trailing: isCurr ? const Icon(Icons.check, size: 18) : null,
+                    contentPadding: const EdgeInsetsGeometry.symmetric(
+                      horizontal: 16,
+                    ),
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ),
         ).whenComplete(controller.dispose);
       },
       child: Text.rich(

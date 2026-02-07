@@ -24,10 +24,16 @@ class WhisperSecPage extends StatefulWidget {
 }
 
 class _WhisperSecPageState extends State<WhisperSecPage> {
-  late final WhisperSecController _controller = Get.put(
-    WhisperSecController(sessionPageType: widget.sessionPageType),
-    tag: widget.sessionPageType.name,
-  );
+  late final WhisperSecController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      WhisperSecController(sessionPageType: widget.sessionPageType),
+      tag: widget.sessionPageType.name,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
