@@ -49,6 +49,7 @@ import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
+import 'package:PiliPlus/services/live_pip_overlay_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -87,6 +88,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   // 标志位：是否正在进入 PiP 模式（用于防止 dispose/didPushNext 时清理播放器状态）
   bool _isEnteringPipMode = false;
+  
+  // 标志位：是否刚从 PiP 返回（用于触发 UI 重建）
+  bool _justReturnedFromPip = false;
 
   // intro ctr
   late final CommonIntroController introController =
@@ -145,6 +149,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   void initState() {
     super.initState();
     final bool fromPip = Get.arguments['fromPip'] ?? false;
+    
+    // 如果有直播间 PiP 在运行，关闭它
+    if (LivePipOverlayService.isInPipMode && !fromPip) {
+      LivePipOverlayService.stopLivePip(callOnClose: true);
+    }
     
     PlPlayerController.setPlayCallBack(playCallBack);
     
@@ -210,7 +219,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       if (savedIntroController != null && savedIntroController is UgcIntroController) {
         ugcIntroController = savedIntroController;
         Get.put(ugcIntroController, tag: heroTag);
-        _logSponsorBlock('Restored UgcIntroController from PiP');
+        _logSponsorBlock('Restored UgcIntroController from PiP, videoDetail.bvid: ${ugcIntroController.videoDetail.value.bvid}');
       } else {
         ugcIntroController = Get.put(UgcIntroController(), tag: heroTag);
       }
@@ -225,6 +234,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
 
     if (fromPip) {
+      _justReturnedFromPip = true;
+      
       plPlayerController = videoDetailController.plPlayerController;
       plPlayerController!
         ..addStatusLister(playerListener)
@@ -240,16 +251,69 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
       _logSponsorBlock('Returning from PiP, segmentList.length: ${videoDetailController.segmentList.length}');
 
-      // 不重新查询，直接设置为成功状态
+      // 设置为成功状态，跳过重新查询
       videoDetailController.videoState.value = const Success(null);
       
-      // 确保 SponsorBlock 监听器正常工作
-      if (videoDetailController.plPlayerController.enableSponsorBlock && 
-          videoDetailController.segmentList.isNotEmpty) {
+      // 强制更新所有可观察对象以触发 UI 重建
+      // 使用双重 postFrameCallback 确保 widget 树已经完全构建
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          videoDetailController.initSkip();
-          _logSponsorBlock('Re-initialized SponsorBlock after PiP return, segmentList.length: ${videoDetailController.segmentList.length}');
+          if (!mounted) return;
+          
+          videoDetailController.videoState.refresh();
+          videoDetailController.cid.refresh();
+          videoDetailController.cover.refresh();
+          
+          // 确保 IntroController 的数据被 UI 识别
+          if (videoDetailController.isUgc && savedIntroController is UgcIntroController) {
+            savedIntroController.videoDetail.refresh();
+            savedIntroController.status.refresh();
+            // 强制更新控制器以触发所有 GetBuilder 组件
+            savedIntroController.update();
+            _logSponsorBlock('Forced UI refresh for UgcIntroController, status: ${savedIntroController.status.value}');
+          } else if (!videoDetailController.isUgc && !videoDetailController.isFileSource && savedIntroController is PgcIntroController) {
+            savedIntroController.videoDetail.refresh();
+            savedIntroController.update();
+          }
+          
+          // 同样刷新 ReplyController
+          if (videoDetailController.showReply) {
+            try {
+              final replyController = Get.find<VideoReplyController>(tag: heroTag);
+              replyController.update();
+              _logSponsorBlock('Forced UI refresh for VideoReplyController');
+            } catch (e) {
+              _logSponsorBlock('Failed to refresh VideoReplyController: $e');
+            }
+          }
+          
+          // 强制 VideoDetailController 也更新
+          videoDetailController.update();
+          
+          // 调用 setState 强制重建整个 widget 树
+          setState(() {
+            _justReturnedFromPip = false;
+          });
+          
+          _logSponsorBlock('Completed double postFrameCallback UI refresh with setState');
         });
+      });
+      
+      // 确保 SponsorBlock 监听器正常工作
+      // 从 PiP 返回时，position subscription 应该已经存在并在工作
+      // 只有在 subscription 为 null 的情况下才重新创建
+      if (videoDetailController.plPlayerController.enableSponsorBlock && 
+          videoDetailController.segmentList.isNotEmpty &&
+          videoDetailController.positionSubscription == null) {
+        _logSponsorBlock('Position subscription is null, re-initializing');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !videoDetailController.isClosed) {
+            videoDetailController.initSkip();
+            _logSponsorBlock('Re-initialized SponsorBlock after PiP return, segmentList.length: ${videoDetailController.segmentList.length}');
+          }
+        });
+      } else if (videoDetailController.positionSubscription != null) {
+        _logSponsorBlock('Position subscription already exists, no need to re-initialize');
       }
     } else {
       videoSourceInit();
@@ -2396,6 +2460,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         _handleInAppPipCloseCleanup();
       },
       onTapToReturn: () {
+        // 不取消 position subscription，让它在新页面继续工作
+        _logSponsorBlock('Returning from PiP, positionSubscription will be preserved');
         final currentPosition = plPlayerController?.position.value;
         final args = Map<String, dynamic>.from(videoDetailController.args);
         final progress =

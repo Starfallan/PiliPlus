@@ -78,9 +78,15 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     final args = Get.arguments;
     final bool fromPip = args is Map && args['fromPip'] == true;
     
-    // 总是创建/获取控制器，但 onInit 会检测 PiP 状态
+    // 如果有任何直播间 PiP 在运行，先关闭它（除非是从当前直播间 PiP 返回）
+    if (LivePipOverlayService.isInPipMode && !fromPip) {
+      // 关闭任何运行中的直播间 PiP
+      LivePipOverlayService.stopLivePip(callOnClose: true);
+    }
+    
+    // 总是创建/获取控制器，传入 fromPip 标志
     _liveRoomController = Get.put(
-      LiveRoomController(heroTag),
+      LiveRoomController(heroTag, fromPip: fromPip),
       tag: heroTag,
     );
     
@@ -102,7 +108,9 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         ..startLiveMsg();
       plPlayerController.addStatusLister(playerListener);
     } else {
+      // 非 PiP 进入，确保播放器处于干净状态
       plPlayerController
+        ..isLive = true
         ..autoEnterFullscreen()
         ..addStatusLister(playerListener);
     }
@@ -224,23 +232,30 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      if (!plPlayerController.showDanmaku) {
-        _liveRoomController.startLiveTimer();
-        plPlayerController.showDanmaku = true;
-        if (isFullScreen && Platform.isIOS) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!_liveRoomController.isPortrait.value) {
-              landscape();
-            }
-          });
+    // 添加空检查，防止在控制器未初始化时访问
+    if (!mounted) return;
+    
+    try {
+      if (state == AppLifecycleState.resumed) {
+        if (!plPlayerController.showDanmaku) {
+          _liveRoomController.startLiveTimer();
+          plPlayerController.showDanmaku = true;
+          if (isFullScreen && Platform.isIOS) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!_liveRoomController.isPortrait.value) {
+                landscape();
+              }
+            });
+          }
         }
+      } else if (state == AppLifecycleState.paused) {
+        _liveRoomController.cancelLiveTimer();
+        plPlayerController
+          ..showDanmaku = false
+          ..danmakuController?.clear();
       }
-    } else if (state == AppLifecycleState.paused) {
-      _liveRoomController.cancelLiveTimer();
-      plPlayerController
-        ..showDanmaku = false
-        ..danmakuController?.clear();
+    } catch (e) {
+      // 忽略错误，防止崩溃
     }
   }
 
@@ -445,27 +460,36 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     // 继续播放直播消息
     _liveRoomController.startLiveMsg();
 
-    LivePipOverlayService.startLivePip(
-      context: context,
-      heroTag: heroTag,
-      roomId: _liveRoomController.roomId,
-      plPlayerController: plPlayerController,
-      controller: _liveRoomController,
-      onClose: () {
-        _isEnteringPipMode = false;
-        _handleLivePipCloseCleanup();
-      },
-      onReturn: () {
-        _isEnteringPipMode = false;
-        Get.toNamed(
-          '/liveRoom',
-          arguments: {
-            'roomId': _liveRoomController.roomId,
-            'fromPip': true,
-          },
-        );
-      },
-    );
+    try {
+      LivePipOverlayService.startLivePip(
+        context: context,
+        heroTag: heroTag,
+        roomId: _liveRoomController.roomId,
+        plPlayerController: plPlayerController,
+        controller: _liveRoomController,
+        onClose: () {
+          _isEnteringPipMode = false;
+          _liveRoomController.isInPipMode.value = false;
+          _handleLivePipCloseCleanup();
+        },
+        onReturn: () {
+          _isEnteringPipMode = false;
+          Get.toNamed(
+            '/liveRoom',
+            arguments: {
+              'roomId': _liveRoomController.roomId,
+              'fromPip': true,
+            },
+          );
+        },
+      );
+    } catch (e) {
+      // PiP 启动失败，重置状态
+      _isEnteringPipMode = false;
+      _liveRoomController.isInPipMode.value = false;
+      logger.e('Failed to start live PiP: $e');
+      }
+    }
   }
 
   void _handleLivePipCloseCleanup() {

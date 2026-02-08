@@ -45,10 +45,11 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class LiveRoomController extends GetxController {
-  LiveRoomController(this.heroTag);
+  LiveRoomController(this.heroTag, {this.fromPip = false});
   final String heroTag;
+  final bool fromPip;
 
-  int roomId = Get.arguments;
+  late int roomId;
   bool isReturningFromPip = false;
   int? ruid;
   DanmakuController<DanmakuExtra>? danmakuController;
@@ -186,13 +187,22 @@ class LiveRoomController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    
+    // 从参数中提取 roomId（支持 int 或 Map 格式）
+    final args = Get.arguments;
+    if (args is Map) {
+      roomId = (args['roomId'] as int?) ?? (args['id'] as int? ?? 0);
+    } else {
+      roomId = args as int;
+    }
+    
     scrollController = ScrollController()..addListener(listener);
     final account = Accounts.heartbeat;
     isLogin = account.isLogin;
     mid = account.mid;
     
-    // 检查是否从 PiP 返回
-    isReturningFromPip = LivePipOverlayService.isCurrentLiveRoom(roomId);
+    // 使用构造函数传入的 fromPip 标志
+    isReturningFromPip = fromPip && LivePipOverlayService.isCurrentLiveRoom(roomId);
     
     if (!isReturningFromPip) {
       // 正常流程：查询直播流地址
@@ -220,6 +230,10 @@ class LiveRoomController extends GetxController {
     if (isReturningFromPip) {
       return null;
     }
+    
+    // 确保播放器处于直播模式
+    plPlayerController.isLive = true;
+    
     return plPlayerController.setDataSource(
       DataSource(
         videoSource: videoUrl,

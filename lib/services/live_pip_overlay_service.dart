@@ -18,6 +18,7 @@ class LivePipOverlayService {
   
   // 保存控制器引用，防止被 GC
   static dynamic _savedController;
+  static PlPlayerController? _savedPlayerController;
 
   static bool get isInPipMode => _isInPipMode;
 
@@ -44,6 +45,7 @@ class LivePipOverlayService {
     _onCloseCallback = onClose;
     _onReturnCallback = onReturn;
     _savedController = controller;
+    _savedPlayerController = plPlayerController;
 
     _overlayEntry = OverlayEntry(
       builder: (context) => LivePipWidget(
@@ -77,9 +79,21 @@ class LivePipOverlayService {
         final overlayContext = Get.overlayContext ?? context;
         Overlay.of(overlayContext).insert(_overlayEntry!);
       } catch (e) {
-        SmartDialog.showToast('Overlay insert failed: $e');
+        if (kDebugMode) {
+          debugPrint('Error inserting live pip overlay: $e');
+        }
+        SmartDialog.showToast('小窗启动失败: $e');
+        
+        // 完整清理所有状态
         _isInPipMode = false;
+        _currentLiveHeroTag = null;
+        _currentRoomId = null;
         _overlayEntry = null;
+        _savedController = null;
+        _savedPlayerController = null;
+        
+        // 通知调用者失败
+        onClose?.call();
       }
     });
   }
@@ -94,9 +108,12 @@ class LivePipOverlayService {
     _currentRoomId = null;
 
     final closeCallback = callOnClose ? _onCloseCallback : null;
+    final playerController = _savedPlayerController;
+    
     _onCloseCallback = null;
     _onReturnCallback = null;
     _savedController = null;
+    _savedPlayerController = null;
 
     final overlayToRemove = _overlayEntry;
     _overlayEntry = null;
@@ -106,6 +123,18 @@ class LivePipOverlayService {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error removing live pip overlay: $e');
+      }
+    }
+
+    // 如果需要清理，先停止播放器
+    if (callOnClose && playerController != null) {
+      try {
+        // 停止播放但不 dispose，因为其他地方可能还在使用
+        playerController.pause();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error pausing player: $e');
+        }
       }
     }
 

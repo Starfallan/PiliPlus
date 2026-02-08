@@ -882,6 +882,13 @@ class VideoDetailController extends GetxController
     if (isClosed) return;
     if (segmentList.isNotEmpty) {
       _logSponsorBlock('initSkip() called, segmentList.length: ${segmentList.length}');
+      
+      // 记录当前 hasSkipped 状态
+      for (int i = 0; i < segmentList.length; i++) {
+        final seg = segmentList[i];
+        _logSponsorBlock('Segment $i: ${seg.segment.first}ms -> ${seg.segment.second}ms, hasSkipped: ${seg.hasSkipped}, skipType: ${seg.skipType.name}');
+      }
+      
       positionSubscription?.cancel();
       positionSubscription = plPlayerController
           .videoPlayerController
@@ -892,6 +899,12 @@ class VideoDetailController extends GetxController
             if (currentPos != _lastPos) {
               _lastPos = currentPos;
               final msPos = currentPos * 1000;
+              
+              // 每 5 秒打印一次位置，确认 stream 在工作
+              if (currentPos % 5 == 0) {
+                _logSponsorBlock('Position update: ${currentPos}s (${msPos}ms)');
+              }
+              
               for (SegmentModel item in segmentList) {
                 // if (kDebugMode) {
                 //   debugPrint(
