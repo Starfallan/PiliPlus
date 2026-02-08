@@ -31,6 +31,9 @@ class PipOverlayService {
 
   static VoidCallback? _onCloseCallback;
   static VoidCallback? _onTapToReturnCallback;
+  
+  // 保存控制器引用，防止被 GC
+  static dynamic _savedController;
 
   static void startPip({
     required BuildContext context,
