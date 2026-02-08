@@ -289,31 +289,27 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           
           // 强制 VideoDetailController 也更新
           videoDetailController.update();
-          
-          // 调用 setState 强制重建整个 widget 树
-          setState(() {
-            _justReturnedFromPip = false;
-          });
-          
-          _logSponsorBlock('Completed double postFrameCallback UI refresh with setState');
+          _logSponsorBlock('Completed double postFrameCallback UI refresh');
         });
+        
+        // 在外层再调用一次 setState，确保 widget 树重建
+        setState(() {
+          _justReturnedFromPip = false;
+        });
+        _logSponsorBlock('Called setState to force widget tree rebuild');
       });
       
       // 确保 SponsorBlock 监听器正常工作
-      // 从 PiP 返回时，position subscription 应该已经存在并在工作
-      // 只有在 subscription 为 null 的情况下才重新创建
+      // 从 PiP 返回时，必须重新创建 positionSubscription，因为是新页面实例
       if (videoDetailController.plPlayerController.enableSponsorBlock && 
-          videoDetailController.segmentList.isNotEmpty &&
-          videoDetailController.positionSubscription == null) {
-        _logSponsorBlock('Position subscription is null, re-initializing');
+          videoDetailController.segmentList.isNotEmpty) {
+        _logSponsorBlock('Re-creating position subscription for new page instance');
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && !videoDetailController.isClosed) {
             videoDetailController.initSkip();
             _logSponsorBlock('Re-initialized SponsorBlock after PiP return, segmentList.length: ${videoDetailController.segmentList.length}');
           }
         });
-      } else if (videoDetailController.positionSubscription != null) {
-        _logSponsorBlock('Position subscription already exists, no need to re-initialize');
       }
     } else {
       videoSourceInit();
@@ -2480,14 +2476,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       },
     );
 
-    // 在小窗启动后，重新初始化 SponsorBlock 监听器（如果启用）
-    if (videoDetailController.plPlayerController.enableBlock &&
-        videoDetailController.segmentList.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _logSponsorBlock('Re-initializing skip after PiP start');
-        videoDetailController.initSkip();
-      });
-    }
+    // 不需要重新初始化 SponsorBlock，因为 positionSubscription 已经存在并在工作
+    // 重新调用 initSkip() 会取消并重新创建 subscription，可能导致失效
+    _logSponsorBlock('PiP started, positionSubscription preserved');
   }
 
   void _handleInAppPipCloseCleanup() {
