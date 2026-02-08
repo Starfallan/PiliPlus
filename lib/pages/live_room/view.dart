@@ -488,9 +488,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       // PiP 启动失败，重置状态
       _isEnteringPipMode = false;
       _liveRoomController.isInPipMode.value = false;
-      if (1) {
-        logger.e('Failed to start live PiP: $e');
-      }
+      logger.e('Failed to start live PiP: $e');
     }
   }
 

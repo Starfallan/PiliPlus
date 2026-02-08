@@ -149,4 +149,5 @@ dist
 test.dart
 
 
-docs/*.dart
+docs/*
+.devcontainer/*
