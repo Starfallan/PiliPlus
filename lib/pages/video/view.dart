@@ -100,8 +100,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   late final LocalIntroController localIntroController;
 
   void _logSponsorBlock(String message) {
-    if (kDebugMode) {
-      logger.e('[SponsorBlock] $message', error: Exception(message));
+    try {
+      throw Exception('[SponsorBlock] $message');
+    } catch (e, s) {
+      logger.e('[SponsorBlock] $message', error: e, stackTrace: s);
     }
   }
 
