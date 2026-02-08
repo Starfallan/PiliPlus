@@ -55,6 +55,7 @@ import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/heart_beat_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
+import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -721,6 +722,12 @@ class VideoDetailController extends GetxController
     );
   }
 
+  void _logSponsorBlock(String message) {
+    if (kDebugMode) {
+      logger.e('[SponsorBlock] $message', error: Exception(message));
+    }
+  }
+
   Future<void> _querySponsorBlock() async {
     positionSubscription?.cancel();
     positionSubscription = null;
@@ -728,18 +735,23 @@ class VideoDetailController extends GetxController
     segmentList.clear();
     segmentProgressList.clear();
 
+    _logSponsorBlock('Querying SponsorBlock data for bvid: $bvid, cid: ${cid.value}');
+
     final result = await SponsorBlock.getSkipSegments(
       bvid: bvid,
       cid: cid.value,
     );
     switch (result) {
       case Success<List<SegmentItemModel>>(:final response):
+        _logSponsorBlock('Received ${response.length} segments');
         handleSBData(response);
       case Error(:final code) when code != 404:
+        _logSponsorBlock('Error code: $code');
         if (kDebugMode) {
           result.toast();
         }
       default:
+        _logSponsorBlock('No segments found (404)');
     }
   }
 
@@ -866,6 +878,7 @@ class VideoDetailController extends GetxController
   void initSkip() {
     if (isClosed) return;
     if (segmentList.isNotEmpty) {
+      _logSponsorBlock('initSkip() called, segmentList.length: ${segmentList.length}');
       positionSubscription?.cancel();
       positionSubscription = plPlayerController
           .videoPlayerController
@@ -885,11 +898,13 @@ class VideoDetailController extends GetxController
                     item.segment.first <= msPos + 1000) {
                   switch (item.skipType) {
                     case SkipType.alwaysSkip:
+                      _logSponsorBlock('Auto-skipping segment at ${item.segment.first}ms');
                       onSkip(item, isSeek: false);
                       break;
                     case SkipType.skipOnce:
                       if (!item.hasSkipped) {
                         item.hasSkipped = true;
+                        _logSponsorBlock('Skip-once segment at ${item.segment.first}ms');
                         onSkip(item, isSeek: false);
                       }
                       break;
@@ -904,6 +919,9 @@ class VideoDetailController extends GetxController
               }
             }
           });
+      _logSponsorBlock('Position subscription created successfully');
+    } else {
+      _logSponsorBlock('initSkip() called but segmentList is empty');
     }
   }
 
@@ -1734,14 +1752,17 @@ class VideoDetailController extends GetxController
         viewPointList.clear();
       }
 
-      // sponsor block
-      if (plPlayerController.enableBlock) {
+      // sponsor block - 只在非 PiP 模式时清理
+      if (plPlayerController.enableBlock && !PipOverlayService.isInPipMode) {
+        _logSponsorBlock('onReset() clearing SponsorBlock data (not in PiP mode)');
         _lastPos = null;
         positionSubscription?.cancel();
         positionSubscription = null;
         videoLabel.value = '';
         segmentList.clear();
         segmentProgressList.clear();
+      } else if (plPlayerController.enableBlock && PipOverlayService.isInPipMode) {
+        _logSponsorBlock('onReset() skipping cleanup (in PiP mode), segmentList.length: ${segmentList.length}');
       }
 
       // interactive video

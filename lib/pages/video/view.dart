@@ -47,6 +47,7 @@ import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/plugin/pl_player/view.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart';
+import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -84,6 +85,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   late final VideoReplyController _videoReplyController;
   PlPlayerController? plPlayerController;
 
+  // 标志位：是否正在进入 PiP 模式（用于防止 dispose/didPushNext 时清理播放器状态）
+  bool _isEnteringPipMode = false;
+
   // intro ctr
   late final CommonIntroController introController =
       videoDetailController.isFileSource
@@ -94,6 +98,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   late final UgcIntroController ugcIntroController;
   late final PgcIntroController pgcIntroController;
   late final LocalIntroController localIntroController;
+
+  void _logSponsorBlock(String message) {
+    if (kDebugMode) {
+      logger.e('[SponsorBlock] $message', error: Exception(message));
+    }
+  }
 
   bool get autoExitFullscreen =>
       videoDetailController.plPlayerController.autoExitFullscreen;
@@ -176,6 +186,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       }
       plPlayerController!.controls = true;
 
+      _logSponsorBlock('Returning from PiP, segmentList.length: ${videoDetailController.segmentList.length}');
+
       videoDetailController.videoState.value = LoadingState.loading();
       videoDetailController
           .queryVideoUrl(
@@ -187,6 +199,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             if (videoDetailController.videoState.value is! Error) {
               videoDetailController.videoState.value = const Success(null);
             }
+            _logSponsorBlock('After queryVideoUrl, segmentList.length: ${videoDetailController.segmentList.length}');
           })
           .catchError((e) {
             videoDetailController.videoState.value = Error(e.toString());
@@ -428,7 +441,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
 
-    videoDetailController.positionSubscription?.cancel();
+    // 只在非 PiP 模式时取消 positionSubscription
+    if (!_isEnteringPipMode && !PipOverlayService.isInPipMode) {
+      _logSponsorBlock('didPushNext() cancelling positionSubscription (not entering PiP)');
+      videoDetailController.positionSubscription?.cancel();
+    } else {
+      _logSponsorBlock('didPushNext() preserving positionSubscription (entering PiP or in PiP mode)');
+    }
 
     introController.cancelTimer();
 
@@ -446,7 +465,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           !plPlayerController!.isFullScreen.value) {
         _startInAppPipIfNeeded();
       } else {
-        plPlayerController!.pause();
+        // 只在非 PiP 模式时暂停
+        if (!_isEnteringPipMode && !PipOverlayService.isInPipMode) {
+          plPlayerController!.pause();
+        }
       }
     }
     isShowing = false;
@@ -2285,6 +2307,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (!_shouldStartInAppPip()) {
       return;
     }
+
+    // 设置标志，防止 didPushNext 清理 SponsorBlock 数据
+    _isEnteringPipMode = true;
+    _logSponsorBlock('Starting PiP mode, segmentList.length: ${videoDetailController.segmentList.length}');
+
     PipOverlayService.startPip(
       context: context,
       videoPlayerBuilder: (_) => plPlayer(
@@ -2293,6 +2320,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         isPipMode: true,
       ),
       onClose: () {
+        _isEnteringPipMode = false;
+        _logSponsorBlock('PiP closed by user');
         _handleInAppPipCloseCleanup();
       },
       onTapToReturn: () {
@@ -2305,6 +2334,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           args['progress'] = progress;
         }
         args['fromPip'] = true;
+        
+        // 重置标志
+        _isEnteringPipMode = false;
+        _logSponsorBlock('Tap to return from PiP, segmentList.length: ${videoDetailController.segmentList.length}');
+        
         Get.toNamed('/videoV', arguments: args);
       },
     );
@@ -2313,6 +2347,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (videoDetailController.plPlayerController.enableBlock &&
         videoDetailController.segmentList.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        _logSponsorBlock('Re-initializing skip after PiP start');
         videoDetailController.initSkip();
       });
     }
