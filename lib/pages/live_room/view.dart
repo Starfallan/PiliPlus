@@ -63,6 +63,9 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   late final PlPlayerController plPlayerController;
   bool get isFullScreen => plPlayerController.isFullScreen.value;
 
+  // 标志位：是否正在进入 PiP 模式
+  bool _isEnteringPipMode = false;
+
   late final GlobalKey pageKey = GlobalKey();
   late final GlobalKey chatKey = GlobalKey();
   late final GlobalKey scKey = GlobalKey();
@@ -196,19 +199,21 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   void dispose() {
     final isInLivePip =
         LivePipOverlayService.isCurrentLiveRoom(_liveRoomController.roomId);
-    if (!isInLivePip) {
+    if (!isInLivePip && !_isEnteringPipMode) {
       videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
     }
     WidgetsBinding.instance.removeObserver(this);
     if (Platform.isAndroid && !plPlayerController.setSystemBrightness) {
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
-    if (!isInLivePip) {
+    if (!isInLivePip && !_isEnteringPipMode) {
       PlPlayerController.setPlayCallBack(null);
     }
     plPlayerController.removeStatusLister(playerListener);
-    if (!isInLivePip) {
+    if (!isInLivePip && !_isEnteringPipMode) {
       plPlayerController.dispose();
+      // 彻底清理控制器
+      Get.delete<LiveRoomController>(tag: heroTag, force: true);
     }
     PageUtils.routeObserver.unsubscribe(this);
     for (final e in LiveContributionRankType.values) {
@@ -438,8 +443,12 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     }
     // 设置小窗模式标志
     _liveRoomController.isInPipMode.value = true;
+    _isEnteringPipMode = true;
     // 继续播放直播消息
     _liveRoomController.startLiveMsg();
+
+    // 提升为永久控制器
+    Get.put(_liveRoomController, tag: heroTag, permanent: true);
 
     LivePipOverlayService.startLivePip(
       context: context,
@@ -447,9 +456,11 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       roomId: _liveRoomController.roomId,
       plPlayerController: plPlayerController,
       onClose: () {
+        _isEnteringPipMode = false;
         _handleLivePipCloseCleanup();
       },
       onReturn: () {
+        _isEnteringPipMode = false;
         Get.toNamed(
           '/liveRoom',
           arguments: {
@@ -473,6 +484,9 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     PlPlayerController.setPlayCallBack(null);
     plPlayerController.removeStatusLister(playerListener);
     plPlayerController.dispose();
+
+    // 彻底清理永久控制器
+    Get.delete<LiveRoomController>(tag: heroTag, force: true);
   }
 
   Widget get childWhenDisabled {

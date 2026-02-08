@@ -101,7 +101,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   void _logSponsorBlock(String message) {
     try {
-      throw Exception('[SponsorBlock] $message');
+      final logMsg = '[${videoDetailController.hashCode}] [SponsorBlock] $message';
+      throw Exception(logMsg);
     } catch (e, s) {
       logger.e('[SponsorBlock] $message', error: e, stackTrace: s);
     }
@@ -409,7 +410,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
     shutdownTimerService.handleWaitingFinished();
     if (!videoDetailController.plPlayerController.isCloseAll) {
-      if (isInAppPip) {
+      if (isInAppPip || _isEnteringPipMode) {
         videoDetailController.makeHeartBeat();
       } else {
         videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
@@ -419,6 +420,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         } else {
           PlPlayerController.updatePlayCount();
         }
+        // 如果没有进入 PiP 模式，彻底清理控制器（由于它现在可能是 permanent 的）
+        Get.delete<VideoDetailController>(tag: heroTag, force: true);
       }
     }
     PageUtils.routeObserver.unsubscribe(this);
@@ -2314,6 +2317,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     _isEnteringPipMode = true;
     _logSponsorBlock('Starting PiP mode, segmentList.length: ${videoDetailController.segmentList.length}');
 
+    // 将控制器设为永久，防止页面销毁时被回收
+    Get.put(videoDetailController, tag: heroTag, permanent: true);
+
     PipOverlayService.startPip(
       context: context,
       videoPlayerBuilder: (_) => plPlayer(
@@ -2371,6 +2377,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     } else {
       PlPlayerController.updatePlayCount();
     }
+    // 彻底清理永久控制器
+    Get.delete<VideoDetailController>(tag: heroTag, force: true);
   }
 
   void onShowMemberPage(int? mid) {

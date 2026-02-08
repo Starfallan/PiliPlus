@@ -724,7 +724,8 @@ class VideoDetailController extends GetxController
 
   void _logSponsorBlock(String message) {
     try {
-      throw Exception('[SponsorBlock] $message');
+      final logMsg = '[$hashCode] [SponsorBlock] $message';
+      throw Exception(logMsg);
     } catch (e, s) {
       logger.e('[SponsorBlock] $message', error: e, stackTrace: s);
     }
