@@ -24,6 +24,7 @@ import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
+import 'package:PiliPlus/services/live_pip_overlay_service.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/tcp/live.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -127,9 +128,6 @@ class LiveRoomController extends GetxController {
 
   final superChatType = Pref.superChatType;
   late final showSuperChat = superChatType != SuperChatType.disable;
-
-  // 小窗相关状态
-  final RxBool isInPipMode = false.obs;
 
   final headerKey = GlobalKey<TimeBatteryMixin>();
 
