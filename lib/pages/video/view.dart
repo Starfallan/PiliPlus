@@ -254,49 +254,54 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       // 设置为成功状态，跳过重新查询
       videoDetailController.videoState.value = const Success(null);
       
-      // 强制更新所有可观察对象以触发 UI 重建
-      // 使用双重 postFrameCallback 确保 widget 树已经完全构建
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          
-          videoDetailController.videoState.refresh();
-          videoDetailController.cid.refresh();
-          videoDetailController.cover.refresh();
-          
-          // 确保 IntroController 的数据被 UI 识别
-          if (videoDetailController.isUgc && savedIntroController is UgcIntroController) {
-            savedIntroController.videoDetail.refresh();
-            savedIntroController.status.refresh();
-            // 强制更新控制器以触发所有 GetBuilder 组件
-            savedIntroController.update();
-            _logSponsorBlock('Forced UI refresh for UgcIntroController, status: ${savedIntroController.status.value}');
-          } else if (!videoDetailController.isUgc && !videoDetailController.isFileSource && savedIntroController is PgcIntroController) {
-            savedIntroController.videoDetail.refresh();
-            savedIntroController.update();
-          }
-          
-          // 同样刷新 ReplyController
-          if (videoDetailController.showReply) {
-            try {
-              final replyController = Get.find<VideoReplyController>(tag: heroTag);
-              replyController.update();
-              _logSponsorBlock('Forced UI refresh for VideoReplyController');
-            } catch (e) {
-              _logSponsorBlock('Failed to refresh VideoReplyController: $e');
-            }
-          }
-          
-          // 强制 VideoDetailController 也更新
-          videoDetailController.update();
-          _logSponsorBlock('Completed double postFrameCallback UI refresh');
-        });
-        
-        // 在外层再调用一次 setState，确保 widget 树重建
+      // 立即调用 setState 触发 build
+      if (mounted) {
         setState(() {
           _justReturnedFromPip = false;
         });
-        _logSponsorBlock('Called setState to force widget tree rebuild');
+        _logSponsorBlock('Called setState to trigger rebuild');
+      }
+      
+      // 然后在下一帧刷新所有 observable
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        
+        _logSponsorBlock('First postFrameCallback executing');
+        
+        videoDetailController.videoState.refresh();
+        videoDetailController.cid.refresh();
+        videoDetailController.cover.refresh();
+        
+        // 确保 IntroController 的数据被 UI 识别
+        if (videoDetailController.isUgc && savedIntroController is UgcIntroController) {
+          savedIntroController.videoDetail.refresh();
+          savedIntroController.status.refresh();
+          savedIntroController.update();
+          _logSponsorBlock('Forced UI refresh for UgcIntroController, status: ${savedIntroController.status.value}');
+        } else if (!videoDetailController.isUgc && !videoDetailController.isFileSource && savedIntroController is PgcIntroController) {
+          savedIntroController.videoDetail.refresh();
+          savedIntroController.update();
+          _logSponsorBlock('Forced UI refresh for PgcIntroController');
+        } else if (videoDetailController.isFileSource && savedIntroController is LocalIntroController) {
+          savedIntroController.videoDetail.refresh();
+          savedIntroController.update();
+          _logSponsorBlock('Forced UI refresh for LocalIntroController');
+        }
+        
+        // 同样刷新 ReplyController
+        if (videoDetailController.showReply) {
+          try {
+            final replyController = Get.find<VideoReplyController>(tag: heroTag);
+            replyController.update();
+            _logSponsorBlock('Forced UI refresh for VideoReplyController');
+          } catch (e) {
+            _logSponsorBlock('Failed to refresh VideoReplyController: $e');
+          }
+        }
+        
+        // 强制 VideoDetailController 也更新
+        videoDetailController.update();
+        _logSponsorBlock('Completed postFrameCallback UI refresh');
       });
       
       // 确保 SponsorBlock 监听器正常工作

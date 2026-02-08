@@ -1040,12 +1040,17 @@ class VideoDetailController extends GetxController
     bool isSeek = true,
   }) async {
     try {
-      _logSponsorBlock('Attempting to skip segment: ${item.segment.first}ms -> ${item.segment.second}ms');
+      _logSponsorBlock('onSkip() called: segment ${item.segment.first}ms -> ${item.segment.second}ms, isSkip: $isSkip, isSeek: $isSeek');
+      _logSponsorBlock('Before seekTo(), current position: ${plPlayerController.position.value.inMilliseconds}ms');
+      
       await plPlayerController.seekTo(
         Duration(milliseconds: item.segment.second),
         isSeek: isSeek,
       );
+      
+      _logSponsorBlock('After seekTo(), new position: ${plPlayerController.position.value.inMilliseconds}ms');
       _logSponsorBlock('Successfully skipped to ${item.segment.second}ms');
+      
       if (isSkip) {
         if (autoPlay.value && Pref.blockToast) {
           _showBlockToast('已跳过${item.segmentType.shortTitle}片段');
@@ -1057,8 +1062,8 @@ class VideoDetailController extends GetxController
         _showBlockToast('已跳至${item.segmentType.shortTitle}');
       }
     } catch (e, s) {
-      _logSponsorBlock('Failed to skip: $e');
-      if (kDebugMode) debugPrint('failed to skip: $e');
+      _logSponsorBlock('Failed to skip: $e\nStack: $s');
+      if (kDebugMode) debugPrint('failed to skip: $e\n$s');
       if (isSkip) {
         _showBlockToast('${item.segmentType.shortTitle}片段跳过失败');
       } else {
