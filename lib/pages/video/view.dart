@@ -2435,6 +2435,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   }
 
   bool _shouldStartInAppPip() {
+    if (!GStorage.setting.get(SettingBoxKey.enableInAppPip, defaultValue: true)) {
+      _logSponsorBlock('Reject PiP: in-app PiP is disabled in settings');
+      return false;
+    }
     if (PipOverlayService.isInPipMode) {
       _logSponsorBlock('Reject PiP: already in PiP mode');
       return false;
