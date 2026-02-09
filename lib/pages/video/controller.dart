@@ -1724,13 +1724,15 @@ class VideoDetailController extends GetxController
   @override
   void onClose() {
     _logSponsorBlock('onClose() called, isEnteringPip: $isEnteringPip');
+    // 无论是否进入小窗，页面关闭即减少计数
+    VideoStackManager.decrement();
+    
     if (isEnteringPip) {
       // 正在进入小窗，保留资源
-      _logSponsorBlock('onClose() skipping cleanup because isEnteringPip is true');
+      _logSponsorBlock('onClose() skipping resource cleanup because isEnteringPip is true');
       return;
     }
     _logSponsorBlock('onClose() proceeding with cleanup');
-    VideoStackManager.decrement();
     cancelSkipTimer();
     positionSubscription?.cancel();
     positionSubscription = null;

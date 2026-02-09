@@ -166,6 +166,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         videoDetailController.isEnteringPip = false; // 重置标志
         Get.put(savedController, tag: heroTag);
         
+        // 恢复页面计数
+        VideoStackManager.increment();
+        
         // 强制重置一些可能在 dispose 时被清理但我们需要的东西
         if (videoDetailController.tabCtr.index < 0) { // 检查是否已销毁
            // 这里很难检测 TabController 是否已销毁，但可以通过 length 触发重新创建
