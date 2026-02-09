@@ -111,7 +111,7 @@ class LivePipOverlayService {
     });
   }
 
-  static void stopLivePip({bool callOnClose = true}) {
+  static void stopLivePip({bool callOnClose = true, bool immediate = false}) {
     if (!_isInPipMode && _overlayEntry == null) {
       return;
     }
@@ -132,12 +132,21 @@ class LivePipOverlayService {
     final overlayToRemove = _overlayEntry;
     _overlayEntry = null;
 
-    try {
-      overlayToRemove?.remove();
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Error removing live pip overlay: $e');
+    void removeAndCallback() {
+      try {
+        overlayToRemove?.remove();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error removing live pip overlay: $e');
+        }
       }
+      closeCallback?.call();
+    }
+
+    if (immediate) {
+      removeAndCallback();
+    } else {
+      Future.delayed(const Duration(milliseconds: 300), removeAndCallback);
     }
 
     // 如果需要清理，先停止播放器

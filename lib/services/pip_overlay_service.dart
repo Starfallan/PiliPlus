@@ -248,7 +248,7 @@ class _PipWidgetState extends State<PipWidget> {
         PipOverlayService.getSavedController<VideoDetailController>();
     final plController = controller?.plPlayerController;
     if (plController != null) {
-      if (plController.playerStatus.status.value == PlayerStatus.playing) {
+      if (plController.playerStatus.value == PlayerStatus.playing) {
         plController.pause();
       } else {
         plController.play();
@@ -396,7 +396,7 @@ class _PipWidgetState extends State<PipWidget> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          // 后退15秒
+                          // 后退10秒
                           GestureDetector(
                             onTap: () {
                               _resetHideTimer();
@@ -406,12 +406,12 @@ class _PipWidgetState extends State<PipWidget> {
                               if (plController != null) {
                                 final current = plController.position.value;
                                 plController.seekTo(
-                                  current - const Duration(seconds: 15),
+                                  current - const Duration(seconds: 10),
                                 );
                               }
                             },
                             child: const Icon(
-                              Icons.replay_15,
+                              Icons.replay_10,
                               color: Colors.white,
                               size: 22,
                             ),
@@ -422,7 +422,7 @@ class _PipWidgetState extends State<PipWidget> {
                                 .getSavedController<VideoDetailController>();
                             final plController = controller?.plPlayerController;
                             final isPlaying = plController
-                                    ?.playerStatus.status.value ==
+                                    ?.playerStatus.value ==
                                 PlayerStatus.playing;
                             return GestureDetector(
                               onTap: () {
@@ -440,7 +440,7 @@ class _PipWidgetState extends State<PipWidget> {
                               ),
                             );
                           }),
-                          // 前进15秒
+                          // 前进10秒
                           GestureDetector(
                             onTap: () {
                               _resetHideTimer();
@@ -450,12 +450,12 @@ class _PipWidgetState extends State<PipWidget> {
                               if (plController != null) {
                                 final current = plController.position.value;
                                 plController.seekTo(
-                                  current + const Duration(seconds: 15),
+                                  current + const Duration(seconds: 10),
                                 );
                               }
                             },
                             child: const Icon(
-                              Icons.forward_15,
+                              Icons.forward_10,
                               color: Colors.white,
                               size: 22,
                             ),
@@ -471,7 +471,5 @@ class _PipWidgetState extends State<PipWidget> {
         ),
       );
     });
-  }
-}
   }
 }
