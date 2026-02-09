@@ -189,9 +189,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         videoDetailController = Get.put(VideoDetailController(), tag: heroTag);
       }
     } else {
-      // 非 PiP 返回，正常流程
+      // 非 PiP 返回，正常流程（包括原页面还留在栈中或由于某些原因被销毁重构）
       if (PipOverlayService.isInPipMode) {
-        PipOverlayService.stopPip(callOnClose: false);
+        final savedController =
+            PipOverlayService.getSavedController<VideoDetailController>();
+        // 如果小窗内的控制器正是我们要打开的这个（aid 匹配），则立即关闭小窗
+        // 这里如果是同一个 aid，Get.put 会自动找回之前的控制器实例，因此我们只需确保 Overlay 关闭
+        PipOverlayService.stopPip(callOnClose: false, immediate: true);
       }
       videoDetailController = Get.put(VideoDetailController(), tag: heroTag);
     }
@@ -580,12 +584,23 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
 
-    // 只在非 PiP 模式时取消 positionSubscription
-    if (!_isEnteringPipMode && !PipOverlayService.isInPipMode) {
-      _logSponsorBlock('didPushNext() cancelling positionSubscription (not entering PiP)');
+    // 判断是否即将开启应用内小窗
+    final bool willStartPip =
+        plPlayerController != null &&
+        plPlayerController!.playerStatus.playing &&
+        !plPlayerController!.isFullScreen.value &&
+        _shouldStartInAppPip();
+
+    // 只在非 PiP 模式且即将不开启小窗时取消 positionSubscription
+    if (!_isEnteringPipMode && !PipOverlayService.isInPipMode && !willStartPip) {
+      _logSponsorBlock(
+        'didPushNext() cancelling positionSubscription (not entering PiP)',
+      );
       videoDetailController.positionSubscription?.cancel();
     } else {
-      _logSponsorBlock('didPushNext() preserving positionSubscription (entering PiP or in PiP mode)');
+      _logSponsorBlock(
+        'didPushNext() preserving positionSubscription (entering PiP or in PiP mode)',
+      );
     }
 
     introController.cancelTimer();
@@ -599,13 +614,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         ..removeStatusLister(playerListener)
         ..removePositionListener(positionListener);
 
-      // 如果正在播放且不是全屏，启动小窗
-      if (plPlayerController!.playerStatus.playing &&
-          !plPlayerController!.isFullScreen.value) {
+      // 如果满足开启小窗条件
+      if (willStartPip) {
         _startInAppPipIfNeeded();
       } else {
         // 只在非 PiP 模式时暂停
-        if (!_isEnteringPipMode && !PipOverlayService.isInPipMode) {
+        if (!_isEnteringPipMode && !PipOverlayService.isInPipMode && !willStartPip) {
           plPlayerController!.pause();
         }
       }
@@ -630,19 +644,34 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     plPlayerController?.isLive = false;
 
-    // 如果是从小窗返回，播放器已在运行，跳过恢复逻辑
-    final bool fromPip = Get.arguments['fromPip'] ?? false;
+    // 如果是从应用内小窗返回（例如从子页面 Pop 回来，或者手动点击展开）
+    if (PipOverlayService.isInPipMode) {
+      final savedController =
+          PipOverlayService.getSavedController<VideoDetailController>();
+      if (savedController == videoDetailController) {
+        _logSponsorBlock(
+          'Returning to video page with matching active PiP, closing PiP overlay',
+        );
+        PipOverlayService.stopPip(callOnClose: false, immediate: true);
+        videoDetailController.isEnteringPip = false;
+        // 小窗模式下控制栏可能被隐藏了，恢复它
+        plPlayerController?.controls = true;
+      }
+    }
+
+    // 如果是从开启新页面方式（Get.toNamed）从小窗手动返回，播放器应已在运行，跳过部分重置逻辑
+    final bool fromPip = Get.arguments?['fromPip'] ?? false;
     if (fromPip) {
       isShowing = true;
       PlPlayerController.setPlayCallBack(playCallBack);
       introController.startTimer();
-      
+
       // 重新恢复 SponsorBlock
-      if (videoDetailController.plPlayerController.enableSponsorBlock && 
+      if (videoDetailController.plPlayerController.enableSponsorBlock &&
           videoDetailController.segmentList.isNotEmpty) {
         videoDetailController.initSkip();
       }
-      
+
       super.didPopNext();
       return;
     }

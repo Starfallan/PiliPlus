@@ -140,6 +140,14 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   @override
   Future<void> didPopNext() async {
     WidgetsBinding.instance.addObserver(this);
+
+    // 如果返回当前页面时应用内小窗正在运行，且房间号匹配，说明是从正在小窗播放的页面返回
+    if (LivePipOverlayService.isInPipMode) {
+      if (LivePipOverlayService.currentRoomId == _liveRoomController.roomId) {
+        LivePipOverlayService.stopLivePip(callOnClose: false, immediate: true);
+      }
+    }
+
     plPlayerController
       ..isLive = true
       ..danmakuController = _liveRoomController.danmakuController;
