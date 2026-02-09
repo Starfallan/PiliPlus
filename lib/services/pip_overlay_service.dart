@@ -20,6 +20,8 @@ class VideoStackManager {
     }
   }
 
+  static int getCount() => _videoPageCount;
+
   static bool isReturningToVideo() {
     final result = _videoPageCount > 1;
     if (result) {
@@ -158,8 +160,10 @@ class PipWidget extends StatefulWidget {
 class _PipWidgetState extends State<PipWidget> {
   double? _left;
   double? _top;
-  final double _width = PipOverlayService.pipWidth;
-  final double _height = PipOverlayService.pipHeight;
+  double _scale = 1.0;
+
+  double get _width => PipOverlayService.pipWidth * _scale;
+  double get _height => PipOverlayService.pipHeight * _scale;
 
   bool _showControls = true;
   Timer? _hideTimer;
@@ -205,6 +209,24 @@ class _PipWidgetState extends State<PipWidget> {
     }
   }
 
+  void _onDoubleTap() {
+    setState(() {
+      if (_scale < 1.1) {
+        _scale = 1.5;
+      } else if (_scale < 1.6) {
+        _scale = 2.0;
+      } else {
+        _scale = 1.0;
+      }
+
+      // 缩放后立即计算并约束位置，防止按钮或部分窗口超出屏幕
+      final screenSize = MediaQuery.of(context).size;
+      _left = (_left ?? 0).clamp(0.0, max(0.0, screenSize.width - _width));
+      _top = (_top ?? 0).clamp(0.0, max(0.0, screenSize.height - _height));
+    });
+    _startHideTimer();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isClosing) {
@@ -221,6 +243,7 @@ class _PipWidgetState extends State<PipWidget> {
       top: _top!,
       child: GestureDetector(
         onTap: _onTap,
+        onDoubleTap: _onDoubleTap,
         onPanStart: (_) {
           _hideTimer?.cancel();
         },
@@ -228,11 +251,11 @@ class _PipWidgetState extends State<PipWidget> {
           setState(() {
             _left = (_left! + details.delta.dx).clamp(
               0.0,
-              screenSize.width - _width,
+              max(0.0, screenSize.width - _width),
             );
             _top = (_top! + details.delta.dy).clamp(
               0.0,
-              screenSize.height - _height,
+              max(0.0, screenSize.height - _height),
             );
           });
         },
@@ -241,7 +264,9 @@ class _PipWidgetState extends State<PipWidget> {
             _startHideTimer();
           }
         },
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOutCubic,
           width: _width,
           height: _height,
           decoration: BoxDecoration(
@@ -256,6 +281,80 @@ class _PipWidgetState extends State<PipWidget> {
             ],
           ),
           child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: AbsorbPointer(
+                    child: _videoPlayerWidget,
+                  ),
+                ),
+                if (_showControls) ...[
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: () {
+                        _hideTimer?.cancel();
+                        setState(() {
+                          _isClosing = true;
+                        });
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          widget.onClose();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        _hideTimer?.cancel();
+                        setState(() {
+                          _isClosing = true;
+                        });
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          widget.onTapToReturn();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.open_in_full,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
             borderRadius: BorderRadius.circular(8),
             child: Stack(
               children: [

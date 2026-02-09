@@ -30,6 +30,7 @@ import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/plugin/pl_player/view.dart';
 import 'package:PiliPlus/services/live_pip_overlay_service.dart';
+import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
@@ -83,6 +84,11 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (LivePipOverlayService.isInPipMode && !fromPip) {
       // 关闭任何运行中的直播间 PiP
       LivePipOverlayService.stopLivePip(callOnClose: true);
+    }
+
+    // 如果有视频小窗在运行，关闭它
+    if (PipOverlayService.isInPipMode) {
+      PipOverlayService.stopPip(callOnClose: true);
     }
     
     // 总是创建/获取控制器，传入 fromPip 标志

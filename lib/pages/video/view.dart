@@ -2435,6 +2435,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   }
 
   bool _shouldStartInAppPip() {
+    _logSponsorBlock('Checking PiP: count=${VideoStackManager.getCount()}, previousRoute=${Get.previousRoute}');
     if (!GStorage.setting.get(SettingBoxKey.enableInAppPip, defaultValue: true)) {
       _logSponsorBlock('Reject PiP: in-app PiP is disabled in settings');
       return false;
@@ -2457,9 +2458,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       _logSponsorBlock('Reject PiP: autoPlay is false');
       return false;
     }
+    final prevRoute = Get.previousRoute;
     if (VideoStackManager.isReturningToVideo()) {
-      _logSponsorBlock('Reject PiP: isReturningToVideo is true (Stack Count > 1)');
-      return false;
+      // 如果返回的页面不是视频或直播详情页，允许开启小窗
+      if (!prevRoute.startsWith('/video') && !prevRoute.startsWith('/liveRoom')) {
+        _logSponsorBlock('Allowing PiP: Returning to non-video page ($prevRoute)');
+      } else {
+        _logSponsorBlock('Reject PiP: isReturningToVideo is true (Stack Count = ${VideoStackManager.getCount()}, Previous = $prevRoute)');
+        return false;
+      }
     }
     return true;
   }
