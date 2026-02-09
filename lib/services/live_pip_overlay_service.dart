@@ -300,47 +300,43 @@ class _LivePipWidgetState extends State<LivePipWidget> {
                   if (!isNative && _showControls) ...[
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withValues(alpha: 0.3),
+                        color: Colors.black.withValues(alpha: 0.4),
                       ),
                     ),
+                    // 左上角关闭
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: GestureDetector(
+                        onTap: () {
+                          _hideTimer?.cancel();
+                          widget.onClose();
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // 右上角放大/还原
                     Positioned(
                       top: 4,
                       right: 4,
                       child: GestureDetector(
                         onTap: () {
                           _hideTimer?.cancel();
-                          widget.onClose();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          _hideTimer?.cancel();
                           widget.onReturn();
                         },
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(
                             Icons.open_in_full,
                             color: Colors.white,
-                            size: 28,
+                            size: 20,
                           ),
                         ),
                       ),

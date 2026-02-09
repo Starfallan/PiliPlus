@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:math' show max;
 
+import 'package:PiliPlus/pages/video/controller.dart';
+import 'package:PiliPlus/plugin/pl_player/controller.dart';
+import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -211,6 +214,12 @@ class _PipWidgetState extends State<PipWidget> {
     });
   }
 
+  void _resetHideTimer() {
+    if (_showControls) {
+      _startHideTimer();
+    }
+  }
+
   void _onTap() {
     setState(() {
       _showControls = !_showControls;
@@ -221,21 +230,17 @@ class _PipWidgetState extends State<PipWidget> {
   }
 
   void _onDoubleTap() {
-    setState(() {
-      if (_scale < 1.1) {
-        _scale = 1.5;
-      } else if (_scale < 1.6) {
-        _scale = 2.0;
+    final controller =
+        PipOverlayService.getSavedController<VideoDetailController>();
+    final plController = controller?.plPlayerController;
+    if (plController != null) {
+      if (plController.playerStatus.status.value == PlayerStatus.playing) {
+        plController.pause();
       } else {
-        _scale = 1.0;
+        plController.play();
       }
-
-      // 缩放后立即计算并约束位置，防止按钮或部分窗口超出屏幕
-      final screenSize = MediaQuery.of(context).size;
-      _left = (_left ?? 0.0).clamp(0.0, max(0.0, screenSize.width - _width)).toDouble();
-      _top = (_top ?? 0.0).clamp(0.0, max(0.0, screenSize.height - _height)).toDouble();
-    });
-    _startHideTimer();
+      _resetHideTimer();
+    }
   }
 
   @override
@@ -318,12 +323,13 @@ class _PipWidgetState extends State<PipWidget> {
                   if (!isNative && _showControls) ...[
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withValues(alpha: 0.3),
+                        color: Colors.black.withValues(alpha: 0.4),
                       ),
                     ),
+                    // 左上角关闭
                     Positioned(
                       top: 4,
-                      right: 4,
+                      left: 4,
                       child: GestureDetector(
                         onTap: () {
                           _hideTimer?.cancel();
@@ -334,21 +340,20 @@ class _PipWidgetState extends State<PipWidget> {
                             widget.onClose();
                           });
                         },
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(
                             Icons.close,
                             color: Colors.white,
-                            size: 18,
+                            size: 20,
                           ),
                         ),
                       ),
                     ),
-                    Center(
+                    // 右上角还原
+                    Positioned(
+                      top: 4,
+                      right: 4,
                       child: GestureDetector(
                         onTap: () {
                           _hideTimer?.cancel();
@@ -359,18 +364,89 @@ class _PipWidgetState extends State<PipWidget> {
                             widget.onTapToReturn();
                           });
                         },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(
                             Icons.open_in_full,
                             color: Colors.white,
-                            size: 24,
+                            size: 20,
                           ),
                         ),
+                      ),
+                    ),
+                    // 底部控制栏
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 8,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // 后退15秒
+                          GestureDetector(
+                            onTap: () {
+                              _resetHideTimer();
+                              final controller = PipOverlayService
+                                  .getSavedController<VideoDetailController>();
+                              final plController = controller?.plPlayerController;
+                              if (plController != null) {
+                                final current = plController.position.value;
+                                plController.seekTo(
+                                  current - const Duration(seconds: 15),
+                                );
+                              }
+                            },
+                            child: const Icon(
+                              Icons.replay_15,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                          // 播放/暂停
+                          Obx(() {
+                            final controller = PipOverlayService
+                                .getSavedController<VideoDetailController>();
+                            final plController = controller?.plPlayerController;
+                            final isPlaying = plController
+                                    ?.playerStatus.status.value ==
+                                PlayerStatus.playing;
+                            return GestureDetector(
+                              onTap: () {
+                                _resetHideTimer();
+                                if (isPlaying) {
+                                  plController?.pause();
+                                } else {
+                                  plController?.play();
+                                }
+                              },
+                              child: Icon(
+                                isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            );
+                          }),
+                          // 前进15秒
+                          GestureDetector(
+                            onTap: () {
+                              _resetHideTimer();
+                              final controller = PipOverlayService
+                                  .getSavedController<VideoDetailController>();
+                              final plController = controller?.plPlayerController;
+                              if (plController != null) {
+                                final current = plController.position.value;
+                                plController.seekTo(
+                                  current + const Duration(seconds: 15),
+                                );
+                              }
+                            },
+                            child: const Icon(
+                              Icons.forward_15,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -381,5 +457,7 @@ class _PipWidgetState extends State<PipWidget> {
         ),
       );
     });
+  }
+}
   }
 }
