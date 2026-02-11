@@ -37,6 +37,7 @@ abstract final class SettingBoxKey {
       CDNService = 'CDNService',
       disableAudioCDN = 'disableAudioCDN',
       autoPiP = 'autoPiP',
+      enableInAppPip = 'enableInAppPip',
       enableAutoLongPressSpeed = 'enableAutoLongPressSpeed',
       useRelativeSlide = 'useRelativeSlide',
       sliderDuration = 'sliderOffset',

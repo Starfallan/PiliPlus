@@ -142,12 +142,13 @@ class VideoPopupMenu extends StatelessWidget {
                     return;
                   }
                   final blockedMids = Pref.recommendBlockedMids;
-                  blockedMids.add(mid);
+                  final name = videoItem.owner.name ?? 'UID:$mid';
+                  blockedMids[mid] = name; // 存储UID和用户名的映射
                   Pref.recommendBlockedMids = blockedMids;
                   GlobalData().recommendBlockedMids = blockedMids;
                   RecommendFilter.recommendBlockedMids = blockedMids;
                   SmartDialog.showToast(
-                    '已屏蔽${videoItem.owner.name}(${mid})，可在推荐流设置中管理',
+                    '已屏蔽${name}(${mid})，可在推荐流设置中管理',
                   );
                   onRemove?.call();
                 },

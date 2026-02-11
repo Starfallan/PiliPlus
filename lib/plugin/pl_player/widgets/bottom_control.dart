@@ -17,6 +17,7 @@ class BottomControl extends StatelessWidget {
     required this.controller,
     required this.buildBottomControl,
     required this.videoDetailController,
+    this.isPipMode = false,
   });
 
   final double maxWidth;
@@ -24,26 +25,27 @@ class BottomControl extends StatelessWidget {
   final PlPlayerController controller;
   final ValueGetter<Widget> buildBottomControl;
   final VideoDetailController videoDetailController;
+  final bool isPipMode;
 
   void onDragStart(ThumbDragDetails duration) {
     feedBack();
     controller.onChangedSliderStart(duration.timeStamp);
   }
 
-  void onDragUpdate(ThumbDragDetails duration, int max) {
+  void onDragUpdate(ThumbDragDetails duration) {
     if (!controller.isFileSource && controller.showSeekPreview) {
       controller.updatePreviewIndex(duration.timeStamp.inSeconds);
     }
     controller.onUpdatedSliderProgress(duration.timeStamp);
   }
 
-  void onSeek(Duration duration, int max) {
+  void onSeek(Duration duration) {
     if (controller.showSeekPreview) {
       controller.showPreview.value = false;
     }
     controller
       ..onChangedSliderEnd()
-      ..onChangedSlider(duration.inSeconds.toDouble())
+      ..onChangedSlider(duration.inSeconds)
       ..seekTo(Duration(seconds: duration.inSeconds), isSeek: false);
   }
 
@@ -72,8 +74,7 @@ class BottomControl extends StatelessWidget {
                   children: [
                     Obx(() {
                       final int value = controller.sliderPositionSeconds.value;
-                      final int max =
-                          controller.durationSeconds.value.inSeconds;
+                      final int max = controller.duration.value.inSeconds;
                       return ProgressBar(
                         progress: Duration(seconds: value),
                         buffered: Duration(
@@ -89,8 +90,8 @@ class BottomControl extends StatelessWidget {
                         thumbRadius: 7,
                         thumbGlowRadius: 25,
                         onDragStart: onDragStart,
-                        onDragUpdate: (e) => onDragUpdate(e, max),
-                        onSeek: (e) => onSeek(e, max),
+                        onDragUpdate: onDragUpdate,
+                        onSeek: onSeek,
                       );
                     }),
                     if (controller.enableBlock &&
@@ -103,11 +104,12 @@ class BottomControl extends StatelessWidget {
                           segments: videoDetailController.segmentProgressList,
                         ),
                       ),
-                    if (controller.showViewPoints &&
+                    if (!isPipMode &&
+                        controller.showViewPoints &&
                         videoDetailController.viewPointList.isNotEmpty &&
                         videoDetailController.showVP.value)
                       Padding(
-                        padding: const .only(bottom: 8.75),
+                        padding: const EdgeInsets.only(bottom: 8.75),
                         child: ViewPointSegmentProgressBar(
                           segments: videoDetailController.viewPointList,
                           onSeek: PlatformUtils.isDesktop
@@ -116,7 +118,7 @@ class BottomControl extends StatelessWidget {
                               : null,
                         ),
                       ),
-                    if (videoDetailController.showDmTrendChart.value)
+                    if (!isPipMode && videoDetailController.showDmTrendChart.value)
                       if (videoDetailController.dmTrend.value?.dataOrNull
                           case final list?)
                         buildDmChart(primary, list, videoDetailController, 4.5),

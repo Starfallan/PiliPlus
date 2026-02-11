@@ -90,6 +90,7 @@ class PLVideoPlayer extends StatefulWidget {
     this.danmuWidget,
     this.showEpisodes,
     this.showViewPoints,
+    this.isPipMode = false,
     this.fill = Colors.black,
     this.alignment = Alignment.center,
     super.key,
@@ -113,6 +114,7 @@ class PLVideoPlayer extends StatefulWidget {
   ])?
   showEpisodes;
   final VoidCallback? showViewPoints;
+  final bool isPipMode;
   final Color fill;
   final Alignment alignment;
 
@@ -400,7 +402,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           Obx(
             () => Text(
               DurationUtils.formatDuration(
-                plPlayerController.durationSeconds.value.inSeconds,
+                plPlayerController.duration.value.inSeconds,
               ),
               style: const TextStyle(
                 color: Color(0xFFD0D0D0),
@@ -1016,15 +1018,12 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       if (plPlayerController.isLive) return;
 
       final int curSliderPosition =
-          plPlayerController.sliderPosition.value.inMilliseconds;
+          plPlayerController.sliderPosition.inMilliseconds;
       final int newPos =
           (curSliderPosition +
                   (plPlayerController.sliderScale * delta.dx / maxWidth)
                       .round())
-              .clamp(
-                0,
-                plPlayerController.duration.value.inMilliseconds,
-              );
+              .clamp(0, plPlayerController.duration.value.inMilliseconds);
       final Duration result = Duration(milliseconds: newPos);
       final height = maxHeight * 0.125;
       if (details.localFocalPoint.dy <= height &&
@@ -1133,11 +1132,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     if (plPlayerController.isSliderMoving.value) {
       if (plPlayerController.cancelSeek == true) {
         plPlayerController.onUpdatedSliderProgress(
-          plPlayerController.position.value,
+          plPlayerController.position,
         );
       } else {
         plPlayerController.seekTo(
-          plPlayerController.sliderPosition.value,
+          plPlayerController.sliderPosition,
           isSeek: false,
         );
       }
@@ -1308,15 +1307,12 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
       Offset delta = event.localPanDelta;
       final int curSliderPosition =
-          plPlayerController.sliderPosition.value.inMilliseconds;
+          plPlayerController.sliderPosition.inMilliseconds;
       final int newPos =
           (curSliderPosition +
                   (plPlayerController.sliderScale * delta.dx / maxWidth)
                       .round())
-              .clamp(
-                0,
-                plPlayerController.duration.value.inMilliseconds,
-              );
+              .clamp(0, plPlayerController.duration.value.inMilliseconds);
       final Duration result = Duration(milliseconds: newPos);
       if (plPlayerController.cancelSeek == true) {
         plPlayerController
@@ -1504,10 +1500,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                             () {
                               return Text(
                                 DurationUtils.formatDuration(
-                                  plPlayerController
-                                      .durationSeconds
-                                      .value
-                                      .inSeconds,
+                                  plPlayerController.duration.value.inSeconds,
                                 ),
                                 style: textStyle,
                               );
@@ -1650,6 +1643,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       BottomControl(
                         maxWidth: maxWidth,
                         isFullScreen: isFullScreen,
+                        isPipMode: widget.isPipMode,
                         controller: plPlayerController,
                         videoDetailController: videoDetailController,
                         buildBottomControl: () => buildBottomControl(
@@ -1754,7 +1748,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         final int value =
                             plPlayerController.sliderPositionSeconds.value;
                         final int max =
-                            plPlayerController.durationSeconds.value.inSeconds;
+                            plPlayerController.duration.value.inSeconds;
                         final int buffer =
                             plPlayerController.bufferedSeconds.value;
                         return ProgressBar(
@@ -1780,11 +1774,12 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                             segments: videoDetailController.segmentProgressList,
                           ),
                         ),
-                      if (plPlayerController.showViewPoints &&
+                      if (!widget.isPipMode &&
+                          plPlayerController.showViewPoints &&
                           videoDetailController.viewPointList.isNotEmpty &&
                           videoDetailController.showVP.value)
                         Padding(
-                          padding: const .only(bottom: 4.25),
+                          padding: const EdgeInsets.only(bottom: 4.25),
                           child: ViewPointSegmentProgressBar(
                             segments: videoDetailController.viewPointList,
                             onSeek: PlatformUtils.isMobile
@@ -1795,7 +1790,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                                 : null,
                           ),
                         ),
-                      if (plPlayerController.showDmChart &&
+                      if (!widget.isPipMode &&
+                          plPlayerController.showDmChart &&
                           videoDetailController.showDmTrendChart.value)
                         if (videoDetailController.dmTrend.value?.dataOrNull
                             case final list?)
@@ -1899,7 +1895,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         Obx(() {
           if (plPlayerController.dataStatus.loading ||
               (plPlayerController.isBuffering.value &&
-                  plPlayerController.playerStatus.playing)) {
+                  plPlayerController.playerStatus.isPlaying)) {
             return Center(
               child: GestureDetector(
                 onTap: plPlayerController.refreshPlayer,
@@ -1923,8 +1919,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       ),
                       if (plPlayerController.isBuffering.value)
                         Obx(() {
-                          if (plPlayerController.buffered.value ==
-                              Duration.zero) {
+                          if (plPlayerController.bufferedSeconds.value == 0) {
                             return const Text(
                               '加载中...',
                               style: TextStyle(
@@ -2088,8 +2083,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   late final segment = Pair(
-    first: plPlayerController.position.value.inMilliseconds / 1000.0,
-    second: plPlayerController.position.value.inMilliseconds / 1000.0,
+    first: plPlayerController.position.inMilliseconds / 1000.0,
+    second: plPlayerController.position.inMilliseconds / 1000.0,
   );
 
   Future<void> screenshotWebp() async {
@@ -2103,14 +2098,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
     final ctr = plPlayerController;
     final theme = Theme.of(context);
-    final currentPos = ctr.position.value.inMilliseconds / 1000.0;
-    final duration = ctr.durationSeconds.value.inMilliseconds / 1000.0;
+    final currentPos = ctr.position.inMilliseconds / 1000.0;
+    final duration = ctr.duration.value.inMilliseconds / 1000.0;
     final model = PostSegmentModel(
       segment: segment,
       category: SegmentType.sponsor,
       actionType: ActionType.skip,
     );
-    final isPlay = ctr.playerStatus.playing;
+    final isPlay = ctr.playerStatus.isPlaying;
     if (isPlay) ctr.pause();
 
     WebpPreset preset = WebpPreset.def;
