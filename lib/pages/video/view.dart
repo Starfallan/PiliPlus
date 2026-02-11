@@ -46,7 +46,8 @@ import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/plugin/pl_player/view.dart';
 import 'package:PiliPlus/services/service_locator.dart';
-import 'package:PiliPlus/services/shutdown_timer_service.dart';
+import 'package:PiliPlus/services/shutdown_timer_service.dart'
+    show ShutdownTimerService;
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/services/live_pip_overlay_service.dart';
