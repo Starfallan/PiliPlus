@@ -471,6 +471,10 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (!plPlayerController.isLive) {
       return false;
     }
+    // 如果即将进入听视频界面，不开启小窗(没啥用，直播间没有相关入口，但还是留着吧？)
+    if (Get.currentRoute == '/audio') {
+      return false;
+    }
     return true;
   }
 

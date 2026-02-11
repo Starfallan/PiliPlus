@@ -2491,6 +2491,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       _logSponsorBlock('Reject PiP: autoPlay is false');
       return false;
     }
+
+    // 如果即将进入听视频界面，不开启小窗
+    if (Get.currentRoute == '/audio') {
+      _logSponsorBlock('Reject PiP: Navigating to audio page');
+      return false;
+    }
+
     final prevRoute = Get.previousRoute;
     if (VideoStackManager.isReturningToVideo()) {
       // 如果返回的页面不是视频或直播详情页，允许开启小窗
