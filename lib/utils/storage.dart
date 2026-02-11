@@ -62,9 +62,27 @@ abstract final class GStorage {
   }
 
   static String exportAllSettings() {
+    // 导出需要保存的 localCache 数据，排除临时数据
+    final localCacheData = <String, dynamic>{};
+    const exportableKeys = [
+      'historyPause',
+      'blackMids',
+      'dynamicsBlockedMids',
+      'recommendBlockedMids',
+      'danmakuFilterRules',
+    ];
+    
+    for (final key in exportableKeys) {
+      final value = localCache.get(key);
+      if (value != null) {
+        localCacheData[key] = value;
+      }
+    }
+    
     return Utils.jsonEncoder.convert({
       setting.name: setting.toMap(),
       video.name: video.toMap(),
+      localCache.name: localCacheData,
     });
   }
 
@@ -72,10 +90,20 @@ abstract final class GStorage {
       importAllJsonSettings(jsonDecode(data));
 
   static Future<bool> importAllJsonSettings(Map<String, dynamic> map) async {
-    await Future.wait([
+    final futures = <Future>[
       setting.clear().then((_) => setting.putAll(map[setting.name])),
       video.clear().then((_) => video.putAll(map[video.name])),
-    ]);
+    ];
+    
+    // 导入 localCache 数据（如果存在）
+    if (map.containsKey(localCache.name)) {
+      final localCacheMap = map[localCache.name] as Map<String, dynamic>;
+      for (final entry in localCacheMap.entries) {
+        futures.add(localCache.put(entry.key, entry.value));
+      }
+    }
+    
+    await Future.wait(futures);
     return true;
   }
 

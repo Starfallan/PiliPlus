@@ -59,14 +59,34 @@ abstract final class Pref {
     ),
   );
 
-  static Set<int> get blackMids =>
-      _localCache.get(LocalCacheKey.blackMids, defaultValue: <int>{});
+  static Set<int> get blackMids {
+    final data = _localCache.get(LocalCacheKey.blackMids, defaultValue: <int>{});
+    // 处理 JSON 导入时可能为 List 的情况
+    if (data is List) {
+      final set = data.whereType<int>().toSet();
+      if (set.isNotEmpty) {
+        _localCache.put(LocalCacheKey.blackMids, set);
+      }
+      return set;
+    }
+    return data is Set<int> ? data : <int>{};
+  }
 
   static set blackMids(Set<int> blackMidsSet) =>
       _localCache.put(LocalCacheKey.blackMids, blackMidsSet);
 
-  static Set<int> get dynamicsBlockedMids =>
-      _localCache.get(LocalCacheKey.dynamicsBlockedMids, defaultValue: <int>{});
+  static Set<int> get dynamicsBlockedMids {
+    final data = _localCache.get(LocalCacheKey.dynamicsBlockedMids, defaultValue: <int>{});
+    // 处理 JSON 导入时可能为 List 的情况
+    if (data is List) {
+      final set = data.whereType<int>().toSet();
+      if (set.isNotEmpty) {
+        _localCache.put(LocalCacheKey.dynamicsBlockedMids, set);
+      }
+      return set;
+    }
+    return data is Set<int> ? data : <int>{};
+  }
 
   static set dynamicsBlockedMids(Set<int> blockedMidsSet) {
     _localCache.put(LocalCacheKey.dynamicsBlockedMids, blockedMidsSet);
@@ -88,9 +108,33 @@ abstract final class Pref {
       return map;
     }
     
-    // 如果是新格式 Map，直接返回
+    // 如果是新格式 Map，需要处理 key 可能是 String 的情况（JSON 导入）
     if (data is Map) {
-      return Map<int, String>.from(data);
+      final map = <int, String>{};
+      for (final entry in data.entries) {
+        final key = entry.key;
+        final value = entry.value;
+        
+        // 处理 key：可能是 int 或 String（JSON 导入时）
+        int? uid;
+        if (key is int) {
+          uid = key;
+        } else if (key is String) {
+          uid = int.tryParse(key);
+        }
+        
+        // 处理 value：确保是 String
+        if (uid != null && value is String) {
+          map[uid] = value;
+        }
+      }
+      
+      // 如果经过转换，保存标准格式
+      if (map.isNotEmpty && data.keys.first is! int) {
+        _localCache.put(LocalCacheKey.recommendBlockedMids, map);
+      }
+      
+      return map;
     }
     
     // 默认返回空 Map
