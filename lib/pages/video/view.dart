@@ -47,7 +47,7 @@ import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/plugin/pl_player/view.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
-    show ShutdownTimerService;
+    show ShutdownTimerService, shutdownTimerService;
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/services/live_pip_overlay_service.dart';
@@ -2487,7 +2487,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       _logSponsorBlock('Reject PiP: isDesktopPip=${controller.isDesktopPip}, isPipMode=${controller.isPipMode}');
       return false;
     }
-    if (!videoDetailController.autoPlay.value) {
+    if (!videoDetailController.autoPlay) {
       _logSponsorBlock('Reject PiP: autoPlay is false');
       return false;
     }

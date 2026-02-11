@@ -1278,7 +1278,6 @@ class VideoDetailController extends GetxController
       if (blockConfig.enableBlock && !PipOverlayService.isInPipMode) {
         resetBlock();
       }
-      }
 
       // interactive video
       if (!isStein) {
@@ -1544,6 +1543,8 @@ class VideoDetailController extends GetxController
       ),
     );
   }
+
+  ThemeData get theme => Get.theme;
 
   @pragma('vm:notify-debugger-on-exception')
   Future<void> onCast() async {

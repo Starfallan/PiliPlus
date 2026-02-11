@@ -435,7 +435,7 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                                   .getSavedController<VideoDetailController>();
                               final plController = controller?.plPlayerController;
                               if (plController != null) {
-                                final current = plController.position.value;
+                                final current = plController.position;
                                 plController.seekTo(
                                   current - const Duration(seconds: 10),
                                 );
@@ -479,7 +479,7 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                                   .getSavedController<VideoDetailController>();
                               final plController = controller?.plPlayerController;
                               if (plController != null) {
-                                final current = plController.position.value;
+                                final current = plController.position;
                                 plController.seekTo(
                                   current + const Duration(seconds: 10),
                                 );
