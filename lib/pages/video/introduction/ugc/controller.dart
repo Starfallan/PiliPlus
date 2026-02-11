@@ -788,14 +788,4 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
       videoDetail.value.owner?.mid,
     );
   }
-
-  @override
-  void onClose() {
-    if (id.toInt() != 0 && !isEnteringPip) {
-      videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
-    }
-    if (isEnteringPip) return;
-    expandableCtr.dispose();
-    super.onClose();
-  }
 }
