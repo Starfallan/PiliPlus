@@ -351,7 +351,7 @@ class PlPlayerController with BlockConfigMixin {
       final bounds = PipOverlayService.currentBounds ??
           LivePipOverlayService.currentBounds;
       if (bounds != null) {
-        final dpr = Get.context?.devicePixelRatio ?? 1.0;
+        final dpr = MediaQuery.maybeDevicePixelRatioOf(Get.context!) ?? 1.0;
         sourceRectHint = [
           (bounds.left * dpr).round(),
           (bounds.top * dpr).round(),
