@@ -223,6 +223,7 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
 
   bool _isClosing = false;
   final GlobalKey _videoKey = GlobalKey();
+  final GlobalKey _playerKey = GlobalKey();
 
   @override
   void initState() {
@@ -242,13 +243,28 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  void _updateSourceRect() {
+    if (!mounted || !Pref.enableInAppToNativePip) return;
+    final RenderBox? renderBox =
+        _playerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      final offset = renderBox.localToGlobal(Offset.zero);
+      final size = renderBox.size;
+      PipOverlayService.updateBounds(
+          Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height));
+    } else {
+      PipOverlayService.updateBounds(
+          Rect.fromLTWH(_left ?? 0, _top ?? 0, _width, _height));
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!PipOverlayService.isInPipMode) return;
 
     if (state == AppLifecycleState.resumed) {
-      // 从系统画中画返回应用，恢复应用内小窗
-      PipOverlayService.isNativePip = false;
+      // 这里的逻辑已移至 PlPlayerController 统一处理系统回调
+      // PipOverlayService.isNativePip = false;
     }
   }
 
@@ -311,39 +327,20 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
     _left ??= screenSize.width - _width - 16;
     _top ??= screenSize.height - _height - 100;
 
-    // 更新当前位置信息给 Service，以便原生端同步 sourceRectHint
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final RenderBox? renderBox =
-          _videoKey.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox != null) {
-        final offset = renderBox.localToGlobal(Offset.zero);
-        final size = renderBox.size;
-        PipOverlayService.updateBounds(
-            Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height));
-      } else {
-        PipOverlayService.updateBounds(
-            Rect.fromLTWH(_left!, _top!, _width, _height));
-      }
-    });
+    // 每一帧渲染后都上报最新位置，确保 sourceRectHint 实时准确
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateSourceRect());
 
     return Obx(() {
-      final bool isNative = PipOverlayService.isNativePip;
-      final double currentWidth = isNative ? screenSize.width : _width;
-      final double currentHeight = isNative ? screenSize.height : _height;
-      final double currentLeft = isNative ? 0 : _left!;
-      final double currentTop = isNative ? 0 : _top!;
-
       return Positioned(
-        left: currentLeft,
-        top: currentTop,
+        left: _left!,
+        top: _top!,
         child: GestureDetector(
-          onTap: isNative ? null : _onTap,
-          onDoubleTap: isNative ? null : _onDoubleTap,
-          onPanStart: isNative ? null : (_) {
+          onTap: _onTap,
+          onDoubleTap: _onDoubleTap,
+          onPanStart: (_) {
             _hideTimer?.cancel();
           },
-          onPanUpdate: isNative ? null : (details) {
+          onPanUpdate: (details) {
             setState(() {
               _left = (_left! + details.delta.dx)
                   .clamp(
@@ -358,8 +355,10 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                   )
                   .toDouble();
             });
+            // 拖动过程中立即尝试同步，不要等下一帧，提高原生 PiP 动画跟随度
+            _updateSourceRect();
           },
-          onPanEnd: isNative ? null : (_) {
+          onPanEnd: (_) {
             if (_showControls) {
               _startHideTimer();
             }
@@ -368,12 +367,12 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
             key: _videoKey,
             duration: const Duration(milliseconds: 150),
             curve: Curves.easeOutCubic,
-            width: currentWidth,
-            height: currentHeight,
+            width: _width,
+            height: _height,
             decoration: BoxDecoration(
               color: Colors.black,
-              borderRadius: isNative ? BorderRadius.zero : BorderRadius.circular(8),
-              boxShadow: isNative ? [] : [
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.5),
                   blurRadius: 10,
@@ -382,19 +381,20 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
               ],
             ),
             child: ClipRRect(
-              borderRadius: isNative ? BorderRadius.zero : BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
               child: Stack(
                 children: [
                   Positioned.fill(
+                    key: _playerKey,
                     child: AbsorbPointer(
                       child: widget.videoPlayerBuilder(
-                        isNative,
-                        currentWidth,
-                        currentHeight,
+                        false,
+                        _width,
+                        _height,
                       ),
                     ),
                   ),
-                  if (!isNative && _showControls) ...[
+                  if (_showControls) ...[
                     Positioned.fill(
                       child: Container(
                         color: Colors.black.withValues(alpha: 0.4),
