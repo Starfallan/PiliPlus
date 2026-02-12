@@ -126,10 +126,17 @@ class MainActivity : AudioServiceActivity() {
 
                 "setPipAutoEnterEnabled" -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        val params = PictureInPictureParams.Builder()
-                            .setAutoEnterEnabled(call.argument<Boolean>("autoEnable") ?: false)
-                            .build()
-                        setPictureInPictureParams(params)
+                        val autoEnable = call.argument<Boolean>("autoEnable") ?: false
+                        val rect = call.argument<List<Int>>("sourceRectHint")
+                        
+                        val builder = PictureInPictureParams.Builder()
+                            .setAutoEnterEnabled(autoEnable)
+                        
+                        if (rect != null && rect.size == 4) {
+                            builder.setSourceRectHint(android.graphics.Rect(rect[0], rect[1], rect[2], rect[3]))
+                        }
+                        
+                        setPictureInPictureParams(builder.build())
                     }
                 }
 

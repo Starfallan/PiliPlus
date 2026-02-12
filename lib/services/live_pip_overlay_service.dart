@@ -21,6 +21,19 @@ class LivePipOverlayService {
   static VoidCallback? _onCloseCallback;
   static VoidCallback? _onReturnCallback;
 
+  static Rect? get currentBounds => _lastBounds;
+  static Rect? _lastBounds;
+  static void updateBounds(Rect bounds) {
+    if (_lastBounds == bounds) return;
+    _lastBounds = bounds;
+
+    // 同步给播放器控制器，以便更新原生 PIP 的 sourceRectHint
+    final controller = PlPlayerController.instance;
+    if (controller != null && _isInPipMode) {
+      controller.syncPipParams();
+    }
+  }
+
   static String? get currentHeroTag => _currentLiveHeroTag;
   static int? get currentRoomId => _currentRoomId;
 
@@ -276,6 +289,11 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
 
     _left ??= screenSize.width - _width - 16;
     _top ??= screenSize.height - _height - 100;
+
+    // 更新当前位置信息给 Service
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      LivePipOverlayService.updateBounds(Rect.fromLTWH(_left!, _top!, _width, _height));
+    });
 
     return Obx(() {
       final bool isNative = LivePipOverlayService.isNativePip;

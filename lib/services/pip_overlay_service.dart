@@ -59,6 +59,25 @@ class PipOverlayService {
   static VoidCallback? _onCloseCallback;
   static VoidCallback? _onTapToReturnCallback;
 
+  static Rect? get currentBounds {
+    if (_overlayEntry == null || !isInPipMode) return null;
+    // 这里需要获取实际的布局位置，但由于 _left/_top 是由 PipWidget 维护的私有变量，
+    // 我们需要通过一种方式暴露它，或者在 PipWidget 中动态上报
+    return _lastBounds;
+  }
+
+  static Rect? _lastBounds;
+  static void updateBounds(Rect bounds) {
+    if (_lastBounds == bounds) return;
+    _lastBounds = bounds;
+    
+    // 同步给播放器控制器，以便更新原生 PIP 的 sourceRectHint
+    final controller = PlPlayerController.instance;
+    if (controller != null && isInPipMode) {
+      controller.syncPipParams();
+    }
+  }
+
   static void onTapToReturn() {
     final callback = _onTapToReturnCallback;
     _onCloseCallback = null;
@@ -289,6 +308,11 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
 
     _left ??= screenSize.width - _width - 16;
     _top ??= screenSize.height - _height - 100;
+
+    // 更新当前位置信息给 Service，以便原生端同步 sourceRectHint
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PipOverlayService.updateBounds(Rect.fromLTWH(_left!, _top!, _width, _height));
+    });
 
     return Obx(() {
       final bool isNative = PipOverlayService.isNativePip;

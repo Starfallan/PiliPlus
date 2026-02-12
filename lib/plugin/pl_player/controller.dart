@@ -286,7 +286,11 @@ class PlPlayerController with BlockConfigMixin {
 
   late bool _shouldSetPip = false;
 
+  bool get _isInInAppPip =>
+      PipOverlayService.isInPipMode || LivePipOverlayService.isInPipMode;
+
   bool get _isCurrVideoPage {
+    if (_isInInAppPip) return true;
     final routing = Get.routing;
     if (routing.route is! GetPageRoute) {
       return false;
@@ -297,6 +301,7 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   bool get _isPreviousVideoPage {
+    if (_isInInAppPip) return true;
     final previousRoute = Get.previousRoute;
     return previousRoute.startsWith('/video') ||
         previousRoute.startsWith('/liveRoom');
@@ -322,10 +327,34 @@ class PlPlayerController with BlockConfigMixin {
 
   void _disableAutoEnterPip() {
     if (_shouldSetPip) {
-      Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-        'autoEnable': false,
-      });
+      syncPipParams(autoEnable: false);
     }
+  }
+
+  void syncPipParams({bool autoEnable = true}) {
+    if (!_shouldSetPip) return;
+
+    final bool isInInAppPip = _isInInAppPip;
+    List<int>? sourceRectHint;
+
+    if (autoEnable && isInInAppPip) {
+      final bounds = PipOverlayService.currentBounds ??
+          LivePipOverlayService.currentBounds;
+      if (bounds != null) {
+        final dpr = Get.context?.devicePixelRatio ?? 1.0;
+        sourceRectHint = [
+          (bounds.left * dpr).round(),
+          (bounds.top * dpr).round(),
+          (bounds.right * dpr).round(),
+          (bounds.bottom * dpr).round(),
+        ];
+      }
+    }
+
+    Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
+      'autoEnable': autoEnable,
+      if (sourceRectHint != null) 'sourceRectHint': sourceRectHint,
+    });
   }
 
   // 弹幕相关配置
@@ -537,17 +566,10 @@ class PlPlayerController with BlockConfigMixin {
       Utils.sdkInt.then((sdkInt) {
         Utils.channel.setMethodCallHandler((call) async {
           if (call.method == 'onUserLeaveHint') {
-            final bool isInInAppPip = PipOverlayService.isInPipMode ||
-                LivePipOverlayService.isInPipMode;
+            final bool isInInAppPip = _isInInAppPip;
             
-            if (isInInAppPip) {
-              // 模拟全屏以获得正确的 PiP 切换动画
-              PipOverlayService.isNativePip = true;
-              LivePipOverlayService.isNativePip = true;
-            }
-
-            // 对于 SDK < 36，手动触发 PiP
-            if (sdkInt < 36) {
+            // 对于 SDK < 31，手动触发 PiP
+            if (sdkInt < 31) {
               if (playerStatus.isPlaying && (_isCurrVideoPage || isInInAppPip)) {
                 enterPip();
               }
@@ -570,7 +592,7 @@ class PlPlayerController with BlockConfigMixin {
           }
         });
 
-        if (sdkInt >= 36) {
+        if (sdkInt >= 31) {
           _shouldSetPip = true;
         }
       });
@@ -1019,7 +1041,11 @@ class PlPlayerController with BlockConfigMixin {
                 PipOverlayService.isInPipMode ||
                 LivePipOverlayService.isInPipMode;
             if (_isCurrVideoPage || isInInAppPip) {
-              enterPip(isAuto: true);
+              if (isInInAppPip) {
+                syncPipParams(autoEnable: true);
+              } else {
+                enterPip(isAuto: true);
+              }
             } else {
               _disableAutoEnterPip();
             }
