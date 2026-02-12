@@ -1,114 +1,85 @@
-# 应用内小窗（In-App PiP）实现方案 (v2.0)
+# 应用内小窗（In-App PiP）实现方案
 
 ## 概述
 
-本文档描述了 PiliPlus 应用内小窗功能的完整实现方案。该方案允许用户在应用内以浮窗形式观看视频或直播，同时浏览其他内容。相比初期版本，v2.0 重点优化了**播放器单项单例持久性**、**横竖屏自适应**以及**复杂交互控制**。
+本文档详细说明了 PiliPlus 应用内小窗功能的完整实现。该功能允许用户在应用内部通过浮动窗口观看视频或直播，并支持跨页面操作、控制器自动恢复，以及**应用内小窗到系统原生画中画（Native PiP）的平滑衔接**。
 
-## 架构设计
+## 1. 架构设计
 
-### 核心原理：播放器单项单例与生命周期管理
-应用采用全局唯一的 \`PlPlayerController\` 实例。
-- **挑战**：常规页面销毁会触发播放器 \`dispose()\`，导致小窗或新打开的页面无法继续播放。
-- **对策**：引入 \`stopPip(callOnClose: false)\` 机制，仅移除 UI 覆盖层，不销毁控制器实例，确保新载入的详情页能无缝接管播放器。
+### 1.1 双服务架构
+为了避免视频（长视频、剧集）与直播间状态冲突，系统采用了独立但互斥的双服务模式：
+- **`PipOverlayService`**: 处理点播视频小窗。
+- **`LivePipOverlayService`**: 处理直播小窗。
 
-### 双服务架构 (Service Mutual Exclusion)
-分离的双服务架构：
-- **\`PipOverlayService\`**: 负责视频小窗管理。
-- **\`LivePipOverlayService\`**: 负责直播小窗管理。
-- **互斥逻辑**：当其中一个启动时，会自动调用另一个的 \`stop(callOnClose: false)\`，确保全局仅存一个小窗且不干扰单项单例播放器的工作。
+**互斥逻辑**：开启任一小窗服务前，会主动检查并销毁另一个服务的实例，确保全应用范围内仅存在一个 `OverlayEntry`。
 
-## 交互设计
-
-### 1. 动态缩放控制 (Cyclic Zoom)
-取消了原有的双击暂停逻辑（暂停功能移至控制栏），改为**循环缩放**：
-- **手势**：双击小窗在 \`1.0x\` -> \`1.5x\` -> \`2.0x\` 之间循环切换缩放比例。
-- **布局更新**：缩放时会自动计算并约束位置，防止按钮或窗口超出屏幕边界。
-
-### 2. 五按钮控制栏 (Control Bar)
-小窗通过点击显示一层面板，包含 5 个功能：
-- **右上角 [关闭]**：调用 \`stopPip(callOnClose: true)\`，彻底关闭小窗并销毁播放器实例。
-- **中心 [返回]**：触发 \`onReturn\` 回调，通过路由返回对应的视频/直播详情页。
-- **底部 [后退/前进]**：支持 10s 或 15s 的进度跳转（根据视频类型自适应）。
-- **底部 [播放/暂停]**：直接控制单项单例播放器的运行状态。
-
-### 3. 方向感知 (Orientation Awareness)
-小窗启动时会读取播放器的 \`isVertical\` 状态：
-- **横屏 (16:9)**：默认尺寸 \`200x112\`。
-- **竖屏 (9:16)**：默认尺寸 \`112x200\`。
-- **布局自动切换**：窗口的长宽比例会随视频内容自动调整，不再强制横屏显示。
-
-## 关键流程实现
-
-### 1. 页面进入（initState）
-详情页进入时需识别是否是从正在运行的小窗“展开”：
-\`\`\`dart
-// lib/pages/live_room/view.dart
-final bool isReturningFromPip = LivePipOverlayService.isCurrentLiveRoom(currentRoomId);
-
-if (LivePipOverlayService.isInPipMode) {
-  // 无论是否是同一房间，先移除 UI 覆盖层，但不销毁播放器逻辑
-  LivePipOverlayService.stopLivePip(callOnClose: false);
-}
-
-// 正常创建控制器，如果 isReturningFromPip 为 true，则内部跳过 DataSource 初始化
-_liveRoomController = Get.put(LiveRoomController(heroTag, fromPip: isReturningFromPip));
-\`\`\`
-
-### 2. 页面退出（onPopInvoked）
-页面退出时根据用户设置与播放状态决定是否开启小窗：
-\`\`\`dart
-void _startLivePipIfNeeded() {
-  if (plPlayerController.playerStatus.playing && !isFullScreen) {
-    _isEnteringPipMode = true;
-    LivePipOverlayService.startLivePip(
-      context: context,
-      roomId: _liveRoomController.roomId,
-      plPlayerController: plPlayerController,
-      onClose: () => _handleCleanup(), // 手动关闭时才真正 dispose
-      onReturn: () => Get.toNamed('/liveRoom', ...),
-    );
-  }
-}
-\`\`\`
-
-## SponsorBlock 集成
-
-### 逻辑保持
-由于单例不销毁，小窗模式下 SponsorBlock 的 \`positionSubscription\` 在后台继续运行。
-
-### 重设监听 (Reset Subscription)
-从小窗返回视频页时，由于 Flutter \`State\` 重建，必须重新创建 UI 层的监听逻辑：
-\`\`\`dart
-// lib/pages/video/view.dart
-if (fromPip && videoDetailController.segmentList.isNotEmpty) {
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    videoDetailController.initSkip(); // 重新关联 position 监听
-  });
-}
-\`\`\`
-
-## UI 刷新与状态恢复
-
-为了解决从 PiP 返回后 UI（简介、评论）不渲染的问题，采用以下策略：
-1. **立即 setState**：在 \`initState\` 末尾触发，强制当前 Widget 树重绘。
-2. **刷新 Observable**：通过 \`controller.videoState.refresh()\` 强制 \`Obx\` 检测。
-3. **强制逻辑更新**：调用 \`controller.update()\` 触发所有 \`GetBuilder\`。
-
-## 性能与稳定性优化
-
-### 1. 自动吸附与边界约束
-拖拽结束时小窗会自动计算距离左右边界的距离，并吸附至较近的一侧，同时保留状态栏和底部导航栏的避让。
-
-### 2. 日志系统保护与性能
-- **高频调用拦截**：在日志开关关闭时，\`_logSponsorBlock\` 等高频调用通过 \`Pref.enableLog\` 判断后立即返回，减少字符串拼接开销。
-- **崩溃保护 (White Screen Fix)**：在 \`logger\` 报告错误前校验 \`Catcher2\` 是否初始化，防止在关闭日志功能时因空调用导致详情页异常。
-
-## 未来改进方向
-- [ ] 支持手势直接调整缩放比例（Pinch to Zoom）。
-- [ ] 优化跨页面 Hero 动画。
-- [ ] 多房间小窗预览支持。
+### 1.2 核心技术栈
+- **视图层**: `Overlay` & `OverlayEntry` 实现悬浮置顶。
+- **状态管理**: GetX (`isNativePip` 响应式变量) 用于多端状态同步。
+- **原生能力**: `floating` 插件用于触发系统画中画。
+- **生命周期与离开监听**: 
+  - `WidgetsBindingObserver` 用于感知应用返回前台恢复小窗。
+  - **`onUserLeaveHint` (Android Native)** 用于精确判断用户离开意图并触发切换。
 
 ---
-**文档版本**: 2.0  
-**最后更新**: 2026-02-09  
-**维护者**: AI Coding Agent
+
+## 2. 系统画中画触发逻辑 (Native PiP Integration)
+
+为了解决 Android 分屏或自由窗口（如 HyperOS）中焦点切换导致的误触发问题，系统采用了基于原生事件的触发机制。
+
+### 2.1 触发机制：onUserLeaveHint (推荐方案)
+不再依赖 Flutter 端的 `AppLifecycleState.inactive`（因为它会在失去焦点时触发），而是监听 Android 原生的 `onUserLeaveHint`：
+
+1. **精确意图识别**: `onUserLeaveHint` 仅在用户主动按 Home 键或执行离屏手势时触发。
+2. **UI 预备机制**: 
+   - 监听到离开信号后，立即置 `isNativePip = true`。
+   - 小窗 Overlay 利用 `Obx` 检测此变量并瞬间撑满全屏。
+3. **主动申请**: 在 `sdkInt < 31` (即 `setAutoEnterEnabled` 不可用或失效) 的情况下，由 `PlPlayerController` 手动调用 `enterPip()`。
+
+### 2.2 状态恢复
+通过 `WidgetsBindingObserver` 监听 `AppLifecycleState.resumed`：
+- 当应用切回前台（无论从 Native PiP 返回还是从后台切回）时，置 `isNativePip = false`，让 Overlay 缩回用户自定义的悬浮位置。
+
+---
+
+## 3. 状态管理与控制器持久化
+
+### 3.1 防止 GC（垃圾回收）
+通过 Service 中的 `static dynamic _savedController` 保持**强引用**，直到小窗被正式关闭。
+
+### 3.2 控制器恢复与 UI 刷新
+从小窗返回全屏页时：
+1. **注入引用**: 重新 `Get.put` 暂存的控制器。
+2. **强制重绘**: 
+   - `setState(() {})`
+   - `controller.update()`
+   - `rxVariable.refresh()`
+
+---
+
+## 4. 源码级改动要点
+
+### 4.1 触发权收拢 (`lib/plugin/pl_player/controller.dart`)
+所有的 Native 切换逻辑现在统一在 `PlPlayerController` 的 MethodChannel 回调中处理，不再分散在各个 UI Service 中。
+
+### 4.2 比例校正与占位 (`lib/services/pip_overlay_service.dart`)
+小窗 Widget 使用响应式布局响应 `isNativePip`：
+```dart
+return Obx(() {
+  final bool isNative = PipOverlayService.isNativePip;
+  return Positioned(
+    left: isNative ? 0 : _left!,
+    top: isNative ? 0 : _top!,
+    child: Container(
+      width: isNative ? screenSize.width : _width,
+      height: isNative ? screenSize.height : _height,
+      // ...
+    ),
+  );
+});
+```
+
+---
+**文档更新日期**: 2026-02-12  
+**版本**: 2.1 (Fix: HyperOS Multi-window Focus Focus Issue)  
+**维护**: 核心开发组
