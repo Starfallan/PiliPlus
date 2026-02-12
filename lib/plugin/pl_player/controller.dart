@@ -290,7 +290,7 @@ class PlPlayerController with BlockConfigMixin {
       PipOverlayService.isInPipMode || LivePipOverlayService.isInPipMode;
 
   bool get _isCurrVideoPage {
-    if (_isInInAppPip) return true;
+    if (Pref.enableInAppToNativePip && _isInInAppPip) return true;
     final routing = Get.routing;
     if (routing.route is! GetPageRoute) {
       return false;
@@ -301,7 +301,7 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   bool get _isPreviousVideoPage {
-    if (_isInInAppPip) return true;
+    if (Pref.enableInAppToNativePip && _isInInAppPip) return true;
     final previousRoute = Get.previousRoute;
     return previousRoute.startsWith('/video') ||
         previousRoute.startsWith('/liveRoom');
@@ -333,8 +333,18 @@ class PlPlayerController with BlockConfigMixin {
 
   void syncPipParams({bool autoEnable = true}) {
     if (!_shouldSetPip) return;
-
+    
+    // 如果没有开启“自动转换”且当前在应用内小窗，则不设置 autoEnterEnabled
     final bool isInInAppPip = _isInInAppPip;
+    if (isInInAppPip && !Pref.enableInAppToNativePip) {
+      if (autoEnable) {
+        Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
+          'autoEnable': false,
+        });
+      }
+      return;
+    }
+
     List<int>? sourceRectHint;
 
     if (autoEnable && isInInAppPip) {

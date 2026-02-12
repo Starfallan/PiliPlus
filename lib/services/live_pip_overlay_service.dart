@@ -24,6 +24,7 @@ class LivePipOverlayService {
   static Rect? get currentBounds => _lastBounds;
   static Rect? _lastBounds;
   static void updateBounds(Rect bounds) {
+    if (!Pref.enableInAppToNativePip) return;
     if (_lastBounds == bounds) return;
     _lastBounds = bounds;
 
