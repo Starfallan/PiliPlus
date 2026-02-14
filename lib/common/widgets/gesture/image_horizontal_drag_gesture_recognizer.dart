@@ -1,5 +1,7 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart' show TransformationController;
+
+typedef IsBoundaryAllowed =
+    bool Function(Offset? initialPosition, OffsetPair lastPosition);
 
 class ImageHorizontalDragGestureRecognizer
     extends HorizontalDragGestureRecognizer {
@@ -7,37 +9,27 @@ class ImageHorizontalDragGestureRecognizer
     super.debugOwner,
     super.supportedDevices,
     super.allowedButtonsFilter,
-    required this.width,
-    required this.transformationController,
   });
 
   Offset? _initialPosition;
 
-  double width;
-  final TransformationController transformationController;
+  IsBoundaryAllowed? isBoundaryAllowed;
+
+  int? _pointer;
+
+  @override
+  void addPointer(PointerDownEvent event) {
+    if (_pointer == event.pointer) {
+      return;
+    }
+    _pointer = event.pointer;
+    super.addPointer(event);
+  }
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
     super.addAllowedPointer(event);
     _initialPosition = event.position;
-  }
-
-  bool _isBoundaryAllowed() {
-    if (_initialPosition == null) {
-      return true;
-    }
-    final storage = transformationController.value.storage;
-    final scale = storage[0];
-    if (scale <= 1.0) {
-      return true;
-    }
-    final double xOffset = storage[12];
-    final double boundaryEnd = width * scale;
-    final int xPos = (boundaryEnd + xOffset).round();
-    return (boundaryEnd.round() == xPos &&
-            lastPosition.global.dx > _initialPosition!.dx) ||
-        (width.round() == xPos &&
-            lastPosition.global.dx < _initialPosition!.dx);
   }
 
   @override
@@ -47,6 +39,12 @@ class ImageHorizontalDragGestureRecognizer
   ) {
     return globalDistanceMoved.abs() >
             computeHitSlop(pointerDeviceKind, gestureSettings) &&
-        _isBoundaryAllowed();
+        (isBoundaryAllowed?.call(_initialPosition, lastPosition) ?? true);
+  }
+
+  @override
+  void dispose() {
+    isBoundaryAllowed = null;
+    super.dispose();
   }
 }
