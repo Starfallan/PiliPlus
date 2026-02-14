@@ -28,7 +28,7 @@ jobs:
 
       - name: apply modal barrier patch
         working-directory: ${{ env.FLUTTER_ROOT }}
-        run: git apply $env:GITHUB_WORKSPACE\lib\scripts\modal-barrier-patch.diff
+        run: git apply $env:GITHUB_WORKSPACE\lib\scripts\modal-barrier-patch.diff || true
         shell: pwsh
         continue-on-error: true
 
