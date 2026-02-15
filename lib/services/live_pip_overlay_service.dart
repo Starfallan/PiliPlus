@@ -13,9 +13,6 @@ class LivePipOverlayService {
   static OverlayEntry? _overlayEntry;
   static bool _isInPipMode = false;
   static bool isVertical = false;
-  static final RxBool _isNativePip = false.obs;
-  static bool get isNativePip => _isNativePip.value;
-  static set isNativePip(bool value) => _isNativePip.value = value;
 
   static double lastLeft = 0;
   static double lastTop = 0;
@@ -37,6 +34,7 @@ class LivePipOverlayService {
   static Rect? _lastBounds;
   static void updateBounds(Rect bounds) {
     if (!Pref.enableInAppToNativePip) return;
+
     if (lastLeft == bounds.left &&
         lastTop == bounds.top &&
         lastWidth == bounds.width &&
@@ -152,7 +150,6 @@ class LivePipOverlayService {
     }
 
     _isInPipMode = false;
-    isNativePip = false;
     _currentLiveHeroTag = null;
     _currentRoomId = null;
     
@@ -272,16 +269,6 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!LivePipOverlayService.isInPipMode) return;
-    
-    if (state == AppLifecycleState.resumed) {
-      // 从系统画中画返回应用，恢复应用内小窗
-      LivePipOverlayService.isNativePip = false;
-    }
-  }
-
   void _startHideTimer() {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 2), () {
@@ -361,31 +348,22 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
     });
 
     return Obx(() {
-      final bool isNative = LivePipOverlayService.isNativePip;
       final screenSize = MediaQuery.sizeOf(context);
-      final double currentWidth = isNative ? screenSize.width : _width;
-      final double currentHeight = isNative ? screenSize.height : _height;
-      final double currentLeft = isNative ? 0 : _left!;
-      final double currentTop = isNative ? 0 : _top!;
-
-      // 更新全局记录，用于 Native PiP 过渡动画
-      if (!isNative) {
-        LivePipOverlayService.lastLeft = currentLeft;
-        LivePipOverlayService.lastTop = currentTop;
-        LivePipOverlayService.lastWidth = currentWidth;
-        LivePipOverlayService.lastHeight = currentHeight;
-      }
+      final double currentWidth = _width;
+      final double currentHeight = _height;
+      final double currentLeft = _left!;
+      final double currentTop = _top!;
 
       return Positioned(
         left: currentLeft,
         top: currentTop,
         child: GestureDetector(
-          onTap: isNative ? null : _onTap,
-          onDoubleTap: isNative ? null : _onDoubleTap,
-          onPanStart: isNative ? null : (_) {
+          onTap: _onTap,
+          onDoubleTap: _onDoubleTap,
+          onPanStart: (_) {
             _hideTimer?.cancel();
           },
-          onPanUpdate: isNative ? null : (details) {
+          onPanUpdate: (details) {
             setState(() {
               _left = (_left! + details.delta.dx).clamp(
                 0.0,
@@ -397,7 +375,7 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
               ).toDouble();
             });
           },
-          onPanEnd: isNative ? null : (_) {
+          onPanEnd: (_) {
             if (_showControls) {
               _startHideTimer();
             }
@@ -420,21 +398,17 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
             height: currentHeight,
             decoration: BoxDecoration(
               color: Colors.black,
-              borderRadius:
-                  isNative ? BorderRadius.zero : BorderRadius.circular(8),
-              boxShadow: isNative
-                  ? []
-                  : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      blurRadius: 12,
-                      spreadRadius: 2,
-                    ),
-                  ],
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: ClipRRect(
-              borderRadius:
-                  isNative ? BorderRadius.zero : BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8),
               child: Stack(
                 children: [
                   Positioned.fill(
@@ -450,7 +424,7 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
                       ),
                     ),
                   ),
-                  if (!isNative && _showControls) ...[
+                  if (_showControls) ...[
                     Positioned.fill(
                       child: Container(
                         color: Colors.black.withValues(alpha: 0.4),
