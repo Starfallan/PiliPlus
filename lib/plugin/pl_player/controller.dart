@@ -307,6 +307,17 @@ class PlPlayerController with BlockConfigMixin {
         previousRoute.startsWith('/liveRoom');
   }
 
+  // Record the position of the video player in the normal page
+  Rect? _videoViewRect;
+  void setVideoViewRect(Rect rect) {
+    if (_videoViewRect == rect) return;
+    _videoViewRect = rect;
+    // Only update params if not in InAppPip mode, and not fullscreen
+    if (!_isInInAppPip && !isFullScreen.value) {
+      syncPipParams();
+    }
+  }
+
   void enterPip({bool isAuto = false, Rect? sourceRect}) {
     if (videoController != null) {
       controls = false;
@@ -338,7 +349,7 @@ class PlPlayerController with BlockConfigMixin {
     // 在全屏模式下不设置 PiP 参数，避免干扰屏幕方向切换
     // 频繁调用 setPictureInPictureParams 会影响 Activity 的配置变更处理
     if (isFullScreen.value) return;
-    
+
     // 如果没有开启“自动转换”且当前在应用内小窗，则不设置 autoEnterEnabled
     final bool isInInAppPip = _isInInAppPip;
     if (isInInAppPip && !Pref.enableInAppToNativePip) {
@@ -352,43 +363,56 @@ class PlPlayerController with BlockConfigMixin {
 
     List<int>? sourceRectHint;
     double? aspectRatio;
+    final context = Get.overlayContext ?? Get.context;
+    // 使用修正后的 DPR：由于使用了 ScaledWidgetsFlutterBinding，
+    // 逻辑坐标转物理坐标需要乘以 (原始DPR * uiScale)
+    // 注意：Pref.uiScale可能为空或未初始化，这里使用Utils.uiScale
+    // 先获取 view
+    if (context != null) {
+      final view = View.of(context);
+      final dpr = view.devicePixelRatio * Pref.uiScale;
 
-    if (autoEnable && isInInAppPip) {
-      final bounds = PipOverlayService.currentBounds ??
-          LivePipOverlayService.currentBounds;
-      if (bounds != null) {
-        final context = Get.overlayContext ?? Get.context;
-        if (context != null) {
-          final view = View.of(context);
-          // 使用修正后的 DPR：由于使用了 ScaledWidgetsFlutterBinding，
-          // 逻辑坐标转物理坐标需要乘以 (原始DPR * uiScale)
-          final dpr = view.devicePixelRatio * Pref.uiScale;
-          
-          // SourceRectHint 在安卓原生中需要物理像素 (Physical Pixels)
-          // 且坐标系是相对于整个 Window 的。
-          sourceRectHint = [
-            (bounds.left * dpr).round(),
-            (bounds.top * dpr).round(),
-            (bounds.right * dpr).round(),
-            (bounds.bottom * dpr).round(),
-          ];
-          
-          if (bounds.height > 0 && bounds.width > 0) {
-            aspectRatio = bounds.width / bounds.height;
+      if (autoEnable) {
+        if (isInInAppPip) {
+          final bounds = PipOverlayService.currentBounds ??
+              LivePipOverlayService.currentBounds;
+          if (bounds != null) {
+            sourceRectHint = [
+              (bounds.left * dpr).round(),
+              (bounds.top * dpr).round(),
+              (bounds.right * dpr).round(),
+              (bounds.bottom * dpr).round(),
+            ];
+            if (bounds.height > 0 && bounds.width > 0) {
+              aspectRatio = bounds.width / bounds.height;
+            }
+          }
+        } else if (_isCurrVideoPage) {
+          // 普通全屏页面，使用 _videoViewRect
+          if (_videoViewRect != null) {
+            sourceRectHint = [
+              (_videoViewRect!.left * dpr).round(),
+              (_videoViewRect!.top * dpr).round(),
+              (_videoViewRect!.right * dpr).round(),
+              (_videoViewRect!.bottom * dpr).round(),
+            ];
           }
         }
       }
-      
-      // Fallback: 如果无法从 bounds 获取 aspectRatio，使用视频实际尺寸
-      if (aspectRatio == null && videoController != null) {
-        final state = videoController!.player.state;
-        final videoWidth = state.width ?? width ?? 16;
-        final videoHeight = state.height ?? height ?? 9;
-        if (videoHeight > 0) {
-          aspectRatio = videoWidth / videoHeight;
-        }
+    }
+
+    // Fallback: 如果无法从 bounds 获取 aspectRatio，使用视频实际尺寸
+    // 注意：这部分必须在所有情况下可用，不仅仅是 isInInAppPip
+    if (aspectRatio == null && videoController != null) {
+      final state = videoController!.player.state;
+      final videoWidth = state.width ?? width ?? 16;
+      final videoHeight = state.height ?? height ?? 9;
+      if (videoHeight > 0) {
+        aspectRatio = videoWidth / videoHeight;
       }
-    } else if (clearSourceRectHint) {
+    }
+
+    if (clearSourceRectHint) {
       // 传递空数组作为清除标记
       sourceRectHint = [];
     }

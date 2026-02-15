@@ -1376,6 +1376,18 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final isFullScreen = this.isFullScreen;
     final isLive = plPlayerController.isLive;
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final RenderBox? renderBox =
+          _videoKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        final offset = renderBox.localToGlobal(Offset.zero);
+        final size = renderBox.size;
+        final rect = offset & size;
+        plPlayerController.setVideoViewRect(rect);
+      }
+    });
+
     final child = Stack(
       fit: StackFit.passthrough,
       key: _playerKey,
