@@ -63,6 +63,16 @@ class PipOverlayService {
   static VoidCallback? _onCloseCallback;
   static VoidCallback? _onTapToReturnCallback;
 
+  static void _logPipDebug(String message) {
+    if (!Pref.enableLog && !kDebugMode) return;
+    try {
+      final logMsg = '[PipOverlayService] $message';
+      throw Exception(logMsg);
+    } catch (e, s) {
+      logger.e('[PiP Debug]', error: e, stackTrace: s);
+    }
+  }
+
   static Rect? get currentBounds {
     if (_overlayEntry == null || !isInPipMode) return null;
     // 这里需要获取实际的布局位置，但由于 _left/_top 是由 PipWidget 维护的私有变量，
@@ -82,6 +92,8 @@ class PipOverlayService {
     lastTop = bounds.top;
     lastWidth = bounds.width;
     lastHeight = bounds.height;
+    
+    _logPipDebug('updateBounds called: left=${bounds.left}, top=${bounds.top}, width=${bounds.width}, height=${bounds.height}');
     
     // 同步给播放器控制器，以便更新原生 PIP 的 sourceRectHint
     final controller = PlPlayerController.instance;
@@ -390,7 +402,7 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
             Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height));
       } else {
         PipOverlayService.updateBounds(
-            Rect.fromLTWH(_left!, _top!, _width, _height));
+            Rect.fromLTWH(_left!, _top!, currentWidth, currentHeight));
       }
     });
 

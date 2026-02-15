@@ -32,6 +32,7 @@ import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/services/live_pip_overlay_service.dart';
+import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -343,6 +344,16 @@ class PlPlayerController with BlockConfigMixin {
     }
   }
 
+  void _logPipDebug(String message) {
+    if (!Pref.enableLog && !kDebugMode) return;
+    try {
+      final logMsg = '[PlPlayerController] $message';
+      throw Exception(logMsg);
+    } catch (e, s) {
+      logger.e('[PiP Debug]', error: e, stackTrace: s);
+    }
+  }
+
   void syncPipParams({bool autoEnable = true, bool clearSourceRectHint = false}) {
     if (!_shouldSetPip) return;
     
@@ -372,34 +383,45 @@ class PlPlayerController with BlockConfigMixin {
     if (context != null) {
       final view = View.of(context);
       final dpr = view.devicePixelRatio * Pref.uiScale;
+      _logPipDebug('DPR: $dpr (devicePixelRatio: ${view.devicePixelRatio}, uiScale: ${Pref.uiScale})');
 
       if (autoEnable) {
         if (isInInAppPip) {
           final bounds = PipOverlayService.currentBounds ??
               LivePipOverlayService.currentBounds;
           if (bounds != null) {
+            _logPipDebug('Using InAppPip bounds: left=${bounds.left}, top=${bounds.top}, width=${bounds.width}, height=${bounds.height}');
             sourceRectHint = [
               (bounds.left * dpr).round(),
               (bounds.top * dpr).round(),
               (bounds.right * dpr).round(),
               (bounds.bottom * dpr).round(),
             ];
+            _logPipDebug('Calculated sourceRectHint: $sourceRectHint');
             if (bounds.height > 0 && bounds.width > 0) {
               aspectRatio = bounds.width / bounds.height;
             }
+          } else {
+            _logPipDebug('WARNING: InAppPip bounds is null!');
           }
         } else if (_isCurrVideoPage) {
           // 普通全屏页面，使用 _videoViewRect
           if (_videoViewRect != null) {
+            _logPipDebug('Using videoViewRect: left=${_videoViewRect!.left}, top=${_videoViewRect!.top}, width=${_videoViewRect!.width}, height=${_videoViewRect!.height}');
             sourceRectHint = [
               (_videoViewRect!.left * dpr).round(),
               (_videoViewRect!.top * dpr).round(),
               (_videoViewRect!.right * dpr).round(),
               (_videoViewRect!.bottom * dpr).round(),
             ];
+            _logPipDebug('Calculated sourceRectHint: $sourceRectHint');
+          } else {
+            _logPipDebug('WARNING: videoViewRect is null!');
           }
         }
       }
+    } else {
+      _logPipDebug('WARNING: context is null!');
     }
 
     // Fallback: 如果无法从 bounds 获取 aspectRatio，使用视频实际尺寸
@@ -423,6 +445,8 @@ class PlPlayerController with BlockConfigMixin {
       if (sourceRectHint != null) 'sourceRectHint': sourceRectHint,
       if (aspectRatio != null) 'aspectRatio': aspectRatio,
     });
+    
+    _logPipDebug('Sent to native: autoEnable=$autoEnable, sourceRectHint=$sourceRectHint, aspectRatio=$aspectRatio');
   }
 
   // 弹幕相关配置

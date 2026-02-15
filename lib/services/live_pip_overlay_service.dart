@@ -4,6 +4,7 @@ import 'dart:math' show max;
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/view.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/services/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -27,6 +28,16 @@ class LivePipOverlayService {
   static VoidCallback? _onCloseCallback;
   static VoidCallback? _onReturnCallback;
 
+  static void _logPipDebug(String message) {
+    if (!Pref.enableLog && !kDebugMode) return;
+    try {
+      final logMsg = '[LivePipOverlayService] $message';
+      throw Exception(logMsg);
+    } catch (e, s) {
+      logger.e('[PiP Debug]', error: e, stackTrace: s);
+    }
+  }
+
   static Rect? get currentBounds {
     if (_overlayEntry == null || !_isInPipMode) return null;
     return _lastBounds;
@@ -45,6 +56,8 @@ class LivePipOverlayService {
     lastWidth = bounds.width;
     lastHeight = bounds.height;
     _lastBounds = bounds;
+
+    _logPipDebug('updateBounds called: left=${bounds.left}, top=${bounds.top}, width=${bounds.width}, height=${bounds.height}');
 
     // 同步给播放器控制器，以便更新原生 PIP 的 sourceRectHint
     final controller = PlPlayerController.instance;
@@ -343,7 +356,7 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
             Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height));
       } else {
         LivePipOverlayService.updateBounds(
-            Rect.fromLTWH(_left!, _top!, _width, _height));
+            Rect.fromLTWH(_left!, _top!, currentWidth, currentHeight));
       }
     });
 
