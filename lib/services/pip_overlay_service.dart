@@ -56,6 +56,13 @@ class PipOverlayService {
   static bool get isNativePip => _isNativePip.value;
   static set isNativePip(bool value) => _isNativePip.value = value;
 
+  static double lastLeft = 0;
+  static double lastTop = 0;
+  static double lastWidth = 0;
+  static double lastHeight = 0;
+
+  static Rect get pipRect => Rect.fromLTWH(lastLeft, lastTop, lastWidth, lastHeight);
+
   static VoidCallback? _onCloseCallback;
   static VoidCallback? _onTapToReturnCallback;
 
@@ -393,6 +400,14 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
       final double currentLeft = isNative ? 0 : _left!;
       final double currentTop = isNative ? 0 : _top!;
 
+      // 更新全局记录，用于 Native PiP 过渡动画
+      if (!isNative) {
+        PipOverlayService.lastLeft = currentLeft;
+        PipOverlayService.lastTop = currentTop;
+        PipOverlayService.lastWidth = currentWidth;
+        PipOverlayService.lastHeight = currentHeight;
+      }
+
       return Positioned(
         left: currentLeft,
         top: currentTop,
@@ -435,8 +450,9 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
               }
             });
           },
-          child: Container(
-            key: _videoKey,
+          child: AnimatedContainer(
+            duration: isNative ? Duration.zero : const Duration(milliseconds: 150),
+            curve: Curves.easeOutCubic,
             width: currentWidth,
             height: currentHeight,
             decoration: BoxDecoration(

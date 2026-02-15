@@ -16,6 +16,14 @@ class LivePipOverlayService {
   static final RxBool _isNativePip = false.obs;
   static bool get isNativePip => _isNativePip.value;
   static set isNativePip(bool value) => _isNativePip.value = value;
+
+  static double lastLeft = 0;
+  static double lastTop = 0;
+  static double lastWidth = 0;
+  static double lastHeight = 0;
+
+  static Rect get pipRect => Rect.fromLTWH(lastLeft, lastTop, lastWidth, lastHeight);
+
   static String? _currentLiveHeroTag;
   static int? _currentRoomId;
 
@@ -336,10 +344,19 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
 
     return Obx(() {
       final bool isNative = LivePipOverlayService.isNativePip;
+      final screenSize = MediaQuery.sizeOf(context);
       final double currentWidth = isNative ? screenSize.width : _width;
       final double currentHeight = isNative ? screenSize.height : _height;
       final double currentLeft = isNative ? 0 : _left!;
       final double currentTop = isNative ? 0 : _top!;
+
+      // 更新全局记录，用于 Native PiP 过渡动画
+      if (!isNative) {
+        LivePipOverlayService.lastLeft = currentLeft;
+        LivePipOverlayService.lastTop = currentTop;
+        LivePipOverlayService.lastWidth = currentWidth;
+        LivePipOverlayService.lastHeight = currentHeight;
+      }
 
       return Positioned(
         left: currentLeft,

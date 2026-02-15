@@ -307,7 +307,7 @@ class PlPlayerController with BlockConfigMixin {
         previousRoute.startsWith('/liveRoom');
   }
 
-  void enterPip({bool isAuto = false}) {
+  void enterPip({bool isAuto = false, Rect? sourceRect}) {
     if (videoController != null) {
       controls = false;
       final state = videoController!.player.state;
@@ -315,6 +315,7 @@ class PlPlayerController with BlockConfigMixin {
         isAuto: isAuto,
         width: state.width ?? width,
         height: state.height ?? height,
+        sourceRect: sourceRect,
       );
     }
   }
@@ -610,15 +611,19 @@ class PlPlayerController with BlockConfigMixin {
           if (call.method == 'onUserLeaveHint') {
             final bool isInInAppPip = _isInInAppPip;
             
-            if (isInInAppPip && Pref.enableInAppToNativePip) {
-              // 在离开应用前最后同步一次精确坐标。
-              // 注意：不要在这里设置 isNativePip = true，因为系统需要捕获当前“小窗”状态的截图
-              // 以实现基于 sourceRectHint 的平滑放大（镜像）效果。
-              syncPipParams(autoEnable: true);
+            if (isInInAppPip) {
+              // 如果已经在应用内小窗，则利用目前的窗口位置作为过渡起点，并立即开启系统 PiP
+              if (PipOverlayService.isInPipMode) {
+                enterPip(sourceRect: PipOverlayService.pipRect);
+              } else if (LivePipOverlayService.isInPipMode) {
+                enterPip(sourceRect: LivePipOverlayService.pipRect);
+              }
+              return;
             }
 
-            // 对于 SDK < 31，手动触发 PiP
-            if (sdkInt < 31) {
+            // 对于 SDK < 36，手动触发 PiP
+            // 增加 fsProcessing 保护，防止在全屏切换过程中（如 HyperOS 隐藏状态栏时）误触发自动 PiP
+            if (sdkInt < 36 && !fsProcessing) {
               if (playerStatus.isPlaying && (_isCurrVideoPage || isInInAppPip)) {
                 enterPip();
               }
@@ -1620,6 +1625,7 @@ class PlPlayerController with BlockConfigMixin {
             return;
           }
           if (mode == FullScreenMode.gravity) {
+            toggleFullScreen(true);
             await fullAutoModeForceSensor();
             return;
           }
@@ -1628,16 +1634,20 @@ class PlPlayerController with BlockConfigMixin {
               (mode == FullScreenMode.auto && isVertical) ||
               (mode == FullScreenMode.ratio &&
                   (isVertical || size.height / size.width < kScreenRatio)))) {
+            toggleFullScreen(true);
             await verticalScreenForTwoSeconds();
           } else {
+            toggleFullScreen(true);
             await landscape();
           }
         } else {
           await enterDesktopFullscreen(inAppFullScreen: inAppFullScreen);
+          toggleFullScreen(true);
         }
       } else {
         if (PlatformUtils.isMobile) {
           showStatusBar();
+          toggleFullScreen(false);
           if (mode == FullScreenMode.none) {
             return;
           }
@@ -1648,10 +1658,10 @@ class PlPlayerController with BlockConfigMixin {
           }
         } else {
           await exitDesktopFullscreen();
+          toggleFullScreen(false);
         }
       }
     } finally {
-      toggleFullScreen(status);
       fsProcessing = false;
     }
   }

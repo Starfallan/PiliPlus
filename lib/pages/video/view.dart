@@ -741,17 +741,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       ModalRoute.of(context)! as PageRoute,
     );
 
-    padding = MediaQuery.viewPaddingOf(context);
-
     final size = MediaQuery.sizeOf(context);
-    maxWidth = size.width;
-    maxHeight = size.height;
-
     final shortestSide = size.shortestSide;
     final minVideoHeight = shortestSide / StyleString.aspectRatio16x9;
     final maxVideoHeight = max(size.longestSide * 0.65, shortestSide);
     videoDetailController
-      ..isPortrait = isPortrait = maxHeight >= maxWidth
+      ..isPortrait = isPortrait
       ..minVideoHeight = minVideoHeight
       ..maxVideoHeight = maxVideoHeight
       ..videoHeight = videoDetailController.isVertical.value
@@ -1659,44 +1654,52 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   );
 
   late ThemeData themeData;
-  late bool isPortrait;
-  late double maxWidth;
-  late double maxHeight;
-  late EdgeInsets padding;
+  bool get isPortrait => maxHeight >= maxWidth;
+  double get maxWidth => MediaQuery.sizeOf(context).width;
+  double get maxHeight => MediaQuery.sizeOf(context).height;
+  EdgeInsets get padding => MediaQuery.viewPaddingOf(context);
 
   @override
   Widget build(BuildContext context) {
-    Widget child;
-    if (videoDetailController.plPlayerController.isPipMode) {
-      child = plPlayer(width: maxWidth, height: maxHeight, isPipMode: true);
-    } else if (!videoDetailController.horizontalScreen) {
-      child = childWhenDisabled;
-    } else if (maxWidth / maxHeight >= kScreenRatio) {
-      child = childWhenDisabledLandscape;
-    } else if (maxWidth / StyleString.aspectRatio16x9 < 0.4 * maxHeight) {
-      child = childWhenDisabled;
-    } else {
-      child = childWhenDisabledAlmostSquare;
-    }
-    if (videoDetailController.plPlayerController.keyboardControl) {
-      child = PlayerFocus(
-        plPlayerController: videoDetailController.plPlayerController,
-        introController: introController,
-        onSendDanmaku: videoDetailController.showShootDanmakuSheet,
-        canPlay: () {
-          if (videoDetailController.autoPlay) {
-            return true;
-          }
-          handlePlay();
-          return false;
-        },
-        onSkipSegment: videoDetailController.onSkipSegment,
-        child: child,
-      );
-    }
-    return videoDetailController.plPlayerController.darkVideoPage
-        ? Theme(data: themeData, child: child)
-        : child;
+    return Obx(() {
+      if (isFullScreen) {
+        return Theme(
+          data: themeData,
+          child: videoPlayer(width: maxWidth, height: maxHeight),
+        );
+      }
+      Widget child;
+      if (videoDetailController.plPlayerController.isPipMode) {
+        child = plPlayer(width: maxWidth, height: maxHeight, isPipMode: true);
+      } else if (!videoDetailController.horizontalScreen) {
+        child = childWhenDisabled;
+      } else if (maxWidth / maxHeight >= kScreenRatio) {
+        child = childWhenDisabledLandscape;
+      } else if (maxWidth / StyleString.aspectRatio16x9 < 0.4 * maxHeight) {
+        child = childWhenDisabled;
+      } else {
+        child = childWhenDisabledAlmostSquare;
+      }
+      if (videoDetailController.plPlayerController.keyboardControl) {
+        child = PlayerFocus(
+          plPlayerController: videoDetailController.plPlayerController,
+          introController: introController,
+          onSendDanmaku: videoDetailController.showShootDanmakuSheet,
+          canPlay: () {
+            if (videoDetailController.autoPlay) {
+              return true;
+            }
+            handlePlay();
+            return false;
+          },
+          onSkipSegment: videoDetailController.onSkipSegment,
+          child: child,
+        );
+      }
+      return videoDetailController.plPlayerController.darkVideoPage
+          ? Theme(data: themeData, child: child)
+          : child;
+    });
   }
 
   Widget buildTabBar({

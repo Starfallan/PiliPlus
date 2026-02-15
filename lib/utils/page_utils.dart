@@ -184,22 +184,38 @@ abstract final class PageUtils {
     );
   }
 
-  static void enterPip({int? width, int? height, bool isAuto = false}) {
+  static void enterPip({
+    int? width,
+    int? height,
+    bool isAuto = false,
+    Rect? sourceRect,
+  }) {
+    Rational? aspectRatio;
     if (width != null && height != null) {
-      Rational aspectRatio = Rational(width, height);
+      aspectRatio = Rational(width, height);
       aspectRatio = aspectRatio.fitsInAndroidRequirements
           ? aspectRatio
           : height > width
-          ? const Rational.vertical()
-          : const Rational.landscape();
-      Floating().enable(
-        isAuto
-            ? AutoEnable(aspectRatio: aspectRatio)
-            : EnableManual(aspectRatio: aspectRatio),
-      );
-    } else {
-      Floating().enable(isAuto ? const AutoEnable() : const EnableManual());
+              ? const Rational.vertical()
+              : const Rational.landscape();
     }
+
+    final dpr = Get.pixelRatio;
+    Rect? physicalRect;
+    if (sourceRect != null) {
+      physicalRect = Rect.fromLTWH(
+        sourceRect.left * dpr,
+        sourceRect.top * dpr,
+        sourceRect.width * dpr,
+        sourceRect.height * dpr,
+      );
+    }
+
+    Floating().enable(
+      isAuto
+          ? AutoEnable(aspectRatio: aspectRatio, sourceRect: physicalRect)
+          : EnableManual(aspectRatio: aspectRatio, sourceRect: physicalRect),
+    );
   }
 
   static Future<void> pushDynDetail(
