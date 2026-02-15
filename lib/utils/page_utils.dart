@@ -200,21 +200,23 @@ abstract final class PageUtils {
               : const Rational.landscape();
     }
 
-    final dpr = Get.pixelRatio;
-    Rect? physicalRect;
-    if (sourceRect != null) {
-      physicalRect = Rect.fromLTWH(
-        sourceRect.left * dpr,
-        sourceRect.top * dpr,
-        sourceRect.width * dpr,
-        sourceRect.height * dpr,
-      );
+    if (Platform.isAndroid && sourceRect != null) {
+      final dpr = Get.pixelRatio;
+      final physicalRect = [
+        (sourceRect.left * dpr).toInt(),
+        (sourceRect.top * dpr).toInt(),
+        (sourceRect.right * dpr).toInt(),
+        (sourceRect.bottom * dpr).toInt(),
+      ];
+      Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
+        'autoEnable': isAuto,
+        'sourceRectHint': physicalRect,
+        'aspectRatio': (width != null && height != null) ? width / height : null,
+      });
     }
 
     Floating().enable(
-      isAuto
-          ? AutoEnable(aspectRatio: aspectRatio, sourceRect: physicalRect)
-          : EnableManual(aspectRatio: aspectRatio, sourceRect: physicalRect),
+      isAuto ? AutoEnable(aspectRatio: aspectRatio) : EnableManual(aspectRatio: aspectRatio),
     );
   }
 
