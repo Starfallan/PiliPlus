@@ -347,14 +347,12 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
       }
     });
 
-    return Obx(() {
-      final screenSize = MediaQuery.sizeOf(context);
-      final double currentWidth = _width;
-      final double currentHeight = _height;
-      final double currentLeft = _left!;
-      final double currentTop = _top!;
+    final double currentWidth = _width;
+    final double currentHeight = _height;
+    final double currentLeft = _left!;
+    final double currentTop = _top!;
 
-      return Positioned(
+    return Positioned(
         left: currentLeft,
         top: currentTop,
         child: GestureDetector(
@@ -367,11 +365,11 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
             setState(() {
               _left = (_left! + details.delta.dx).clamp(
                 0.0,
-                max(0.0, screenSize.width - _width),
+                max(0.0, screenSize.width - currentWidth),
               ).toDouble();
               _top = (_top! + details.delta.dy).clamp(
                 0.0,
-                max(0.0, screenSize.height - _height),
+                max(0.0, screenSize.height - currentHeight),
               ).toDouble();
             });
           },
@@ -475,6 +473,5 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
           ),
         ),
       );
-    });
   }
 }

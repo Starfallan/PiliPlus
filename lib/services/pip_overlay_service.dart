@@ -394,13 +394,12 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
       }
     });
 
-    return Obx(() {
-      final double currentWidth = _width;
-      final double currentHeight = _height;
-      final double currentLeft = _left!;
-      final double currentTop = _top!;
+    final double currentWidth = _width;
+    final double currentHeight = _height;
+    final double currentLeft = _left!;
+    final double currentTop = _top!;
 
-      return Positioned(
+    return Positioned(
         left: currentLeft,
         top: currentTop,
         child: GestureDetector(
@@ -607,6 +606,5 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
           ),
         ),
       );
-    });
   }
 }
