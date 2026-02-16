@@ -289,9 +289,6 @@ class PlPlayerController with BlockConfigMixin {
 
   bool get _isInInAppPip =>
       PipOverlayService.isInPipMode || LivePipOverlayService.isInPipMode;
-  
-  // 公开的getter，供 view.dart 等外部使用
-  bool get isInInAppPip => _isInInAppPip;
 
   bool get _isCurrVideoPage {
     if (Pref.enableInAppToNativePip && _isInInAppPip) return true;
@@ -314,10 +311,14 @@ class PlPlayerController with BlockConfigMixin {
   // Record the position of the video player in the normal page
   Rect? _videoViewRect;
   void setVideoViewRect(Rect rect) {
+    // 【关键修复】在应用内小窗模式下，不更新 _videoViewRect
+    // 避免 Overlay 中 PLVideoPlayer 的坐标污染页面中的原始坐标
+    if (_isInInAppPip) return;
+    
     if (_videoViewRect == rect) return;
     _videoViewRect = rect;
     // Only update params if not in InAppPip mode, and not fullscreen
-    if (!_isInInAppPip && !isFullScreen.value) {
+    if (!isFullScreen.value) {
       syncPipParams();
     }
   }
@@ -385,14 +386,14 @@ class PlPlayerController with BlockConfigMixin {
           // 这样系统在转换时会从小窗位置开始动画，而不是捕获整个页面背景
           final bounds = PipOverlayService.currentBounds ?? LivePipOverlayService.currentBounds;
           if (bounds != null) {
-            _logPipDebug('Bounds source: InApp small window\n  Logical bounds: $bounds');
+            _logPipDebug('Bounds source: InApp small window\n  Logical: L=${bounds.left.toStringAsFixed(1)}, T=${bounds.top.toStringAsFixed(1)}, R=${bounds.right.toStringAsFixed(1)}, B=${bounds.bottom.toStringAsFixed(1)}');
             sourceRectHint = [
               (bounds.left * dpr).round(),
               (bounds.top * dpr).round(),
               (bounds.right * dpr).round(),
               (bounds.bottom * dpr).round(),
             ];
-            _logPipDebug('  Physical bounds for native: Rect.fromLTRB(${sourceRectHint![0]}, ${sourceRectHint[1]}, ${sourceRectHint[2]}, ${sourceRectHint[3]})');
+            _logPipDebug('  Physical: L=${sourceRectHint![0]}, T=${sourceRectHint[1]}, R=${sourceRectHint[2]}, B=${sourceRectHint[3]}');
             
             if (bounds.height > 0 && bounds.width > 0) {
               aspectRatio = bounds.width / bounds.height;
@@ -403,14 +404,14 @@ class PlPlayerController with BlockConfigMixin {
         } else if (_isCurrVideoPage) {
           // 普通全屏页面，使用 _videoViewRect
           if (_videoViewRect != null) {
-            _logPipDebug('Bounds source: fullscreen video page\n  Logical bounds: $_videoViewRect');
+            _logPipDebug('Bounds source: fullscreen video page\n  Logical: L=${_videoViewRect!.left.toStringAsFixed(1)}, T=${_videoViewRect!.top.toStringAsFixed(1)}, R=${_videoViewRect!.right.toStringAsFixed(1)}, B=${_videoViewRect!.bottom.toStringAsFixed(1)}');
             sourceRectHint = [
               (_videoViewRect!.left * dpr).round(),
               (_videoViewRect!.top * dpr).round(),
               (_videoViewRect!.right * dpr).round(),
               (_videoViewRect!.bottom * dpr).round(),
             ];
-            _logPipDebug('  Physical bounds for native: Rect.fromLTRB(${sourceRectHint![0]}, ${sourceRectHint[1]}, ${sourceRectHint[2]}, ${sourceRectHint[3]})');
+            _logPipDebug('  Physical: L=${sourceRectHint![0]}, T=${sourceRectHint[1]}, R=${sourceRectHint[2]}, B=${sourceRectHint[3]}');
           } else {
             _logPipDebug('WARNING: videoViewRect is null!');
           }
