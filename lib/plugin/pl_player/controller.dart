@@ -593,7 +593,7 @@ class PlPlayerController with BlockConfigMixin {
               
               // 第三步：给 Flutter 引擎一点时间把 Buffer 真正推送到 SurfaceFlinger
               // 这是补偿 MethodChannel 跨进程延迟的关键
-              await Future.delayed(const Duration(milliseconds: 20));
+              await Future.delayed(const Duration(milliseconds: 100));
               
               // 第四步：调用 enterPip，并传递全屏 SourceRectHint
               // 即使 Platform View 无法裁剪，但传递此参数会触发系统的优化转场流程
