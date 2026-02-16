@@ -1,4 +1,4 @@
-import 'dart:async' show StreamSubscription, Timer;
+import 'dart:async' show Completer, StreamSubscription, Timer;
 import 'dart:convert' show ascii;
 import 'dart:io' show Platform, File, Directory;
 import 'dart:math' show max, min;
