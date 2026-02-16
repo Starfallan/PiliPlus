@@ -149,7 +149,7 @@ class LivePipOverlayService {
         
         // 完整清理所有状态
         _isInPipMode = false;
-        isNativePip = false;
+        // isNativePip = false;  // 已移除伪全屏机制
         _currentLiveHeroTag = null;
         _currentRoomId = null;
         _overlayEntry = null;
@@ -418,8 +418,8 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
                   Positioned.fill(
                     child: AbsorbPointer(
                       child: PLVideoPlayer(
-                        maxWidth: currentWidth,
-                        maxHeight: currentHeight,
+                        maxWidth: _width,
+                        maxHeight: _height,
                         isPipMode: true,
                         plPlayerController: widget.plPlayerController,
                         headerControl: const SizedBox.shrink(),
@@ -479,6 +479,5 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
           ),
         ),
       );
-    });
   }
 }

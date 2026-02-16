@@ -471,8 +471,8 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                     child: AbsorbPointer(
                       child: widget.videoPlayerBuilder(
                         false, // isNative flag removed
-                        currentWidth,
-                        currentHeight,
+                        _width,
+                        _height,
                       ),
                     ),
                   ),
@@ -611,5 +611,6 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
             ),
           ),
         ),
-      );    });  }
+      );
+  }
 }
