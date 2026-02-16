@@ -365,93 +365,112 @@ class PlPlayerController with BlockConfigMixin {
     // 频繁调用 setPictureInPictureParams 会影响 Activity 的配置变更处理
     // 但是，如果在应用内小窗模式下（_isInInAppPip），我们仍需更新 params（特别是 sourceRectHint）
     if (isFullScreen.value && !_isInInAppPip) return;
-
-    final bool isInInAppPip = _isInInAppPip;
     
+    // 【关键检查】如果没有开启"自动转换"且当前在应用内小窗，则不设置 autoEnterEnabled
+    // 并且提前返回，不设置 sourceRectHint
+    final bool isInInAppPip = _isInInAppPip;
+    if (isInInAppPip && !Pref.enableInAppToNativePip) {
+      if (autoEnable) {
+        _logPipDebug('InAppPip mode but enableInAppToNativePip=false, disabling autoEnterEnabled');
+        Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
+          'autoEnable': false,
+        });
+      }
+      return;  // 提前返回，不设置 sourceRectHint
+    }
+
     List<int>? sourceRectHint;
     double? aspectRatio;
-    final context = Get.overlayContext ?? Get.context;
-    // 使用修正后的 DPR：由于使用了 ScaledWidgetsFlutterBinding，
-    // 逻辑坐标转物理坐标需要乘以 (原始DPR * uiScale)
-    // 注意：Pref.uiScale可能为空或未初始化，这里使用Utils.uiScale
-    // 先获取 view
-    if (context != null) {
-      final view = View.of(context);
-      final dpr = view.devicePixelRatio * Pref.uiScale;
-      _logPipDebug('isInInAppPip: $isInInAppPip, Screen DPR: ${view.devicePixelRatio}, UI Scale: ${Pref.uiScale}, Final DPR: $dpr');
 
-      if (!clearSourceRectHint) {
-        if (isInInAppPip) {
-          // 【核心逻辑】在应用内小窗模式下，使用小窗的屏幕坐标设置 sourceRectHint
-          // 这样系统在转换时会从小窗位置开始动画，而不是捕获整个页面背景
-          final bounds = PipOverlayService.currentBounds ?? LivePipOverlayService.currentBounds;
-          if (bounds != null) {
-            _logPipDebug('Bounds source: InApp small window\n  Logical: L=${bounds.left.toStringAsFixed(1)}, T=${bounds.top.toStringAsFixed(1)}, R=${bounds.right.toStringAsFixed(1)}, B=${bounds.bottom.toStringAsFixed(1)}');
-            sourceRectHint = [
-              (bounds.left * dpr).round(),
-              (bounds.top * dpr).round(),
-              (bounds.right * dpr).round(),
-              (bounds.bottom * dpr).round(),
-            ];
-            _logPipDebug('  Physical: L=${sourceRectHint![0]}, T=${sourceRectHint[1]}, R=${sourceRectHint[2]}, B=${sourceRectHint[3]}');
-            
-            if (bounds.height > 0 && bounds.width > 0) {
-              aspectRatio = bounds.width / bounds.height;
-            }
-          } else {
-            _logPipDebug('WARNING: InAppPip mode but currentBounds is null!');
-          }
-        } else if (_isCurrVideoPage) {
-          // 普通全屏页面，使用 _videoViewRect
-          if (_videoViewRect != null) {
-            _logPipDebug('Bounds source: fullscreen video page\n  Logical: L=${_videoViewRect!.left.toStringAsFixed(1)}, T=${_videoViewRect!.top.toStringAsFixed(1)}, R=${_videoViewRect!.right.toStringAsFixed(1)}, B=${_videoViewRect!.bottom.toStringAsFixed(1)}');
-            sourceRectHint = [
-              (_videoViewRect!.left * dpr).round(),
-              (_videoViewRect!.top * dpr).round(),
-              (_videoViewRect!.right * dpr).round(),
-              (_videoViewRect!.bottom * dpr).round(),
-            ];
-            _logPipDebug('  Physical: L=${sourceRectHint![0]}, T=${sourceRectHint[1]}, R=${sourceRectHint[2]}, B=${sourceRectHint[3]}');
-          } else {
-            _logPipDebug('WARNING: videoViewRect is null!');
+    // 只有在开启了自动转换开关的情况下才设置 sourceRectHint
+    if (autoEnable && isInInAppPip) {
+      final bounds = PipOverlayService.currentBounds ??
+          LivePipOverlayService.currentBounds;
+      if (bounds != null) {
+        final context = Get.overlayContext ?? Get.context;
+        if (context != null) {
+          final view = View.of(context);
+          // 使用修正后的 DPR：由于使用了 ScaledWidgetsFlutterBinding，
+          // 逻辑坐标转物理坐标需要乘以 (原始DPR * uiScale)
+          final dpr = view.devicePixelRatio * Pref.uiScale;
+          
+          _logPipDebug('isInInAppPip: true, DPR: $dpr');
+          _logPipDebug('  InApp bounds: L=${bounds.left.toStringAsFixed(1)}, T=${bounds.top.toStringAsFixed(1)}, R=${bounds.right.toStringAsFixed(1)}, B=${bounds.bottom.toStringAsFixed(1)}');
+          
+          // SourceRectHint 在安卓原生中需要物理像素 (Physical Pixels)
+          // 且坐标系是相对于整个 Window 的。
+          sourceRectHint = [
+            (bounds.left * dpr).round(),
+            (bounds.top * dpr).round(),
+            (bounds.right * dpr).round(),
+            (bounds.bottom * dpr).round(),
+          ];
+          
+          _logPipDebug('  Physical: L=${sourceRectHint![0]}, T=${sourceRectHint[1]}, R=${sourceRectHint[2]}, B=${sourceRectHint[3]}');
+          
+          if (bounds.height > 0 && bounds.width > 0) {
+            aspectRatio = bounds.width / bounds.height;
           }
         }
+      } else {
+        _logPipDebug('WARNING: InAppPip mode but currentBounds is null!');
       }
-    } else {
-      _logPipDebug('WARNING: context is null!');
-    }
-
-    // Fallback: 如果无法从 bounds 获取 aspectRatio，使用视频实际尺寸
-    // 注意：这部分必须在所有情况下可用，不仅仅是 isInInAppPip
-    if (aspectRatio == null && videoController != null) {
-      final state = videoController!.player.state;
-      final videoWidth = state.width ?? width ?? 16;
-      final videoHeight = state.height ?? height ?? 9;
-      if (videoHeight > 0) {
-        aspectRatio = videoWidth / videoHeight;
+      
+      // Fallback: 如果无法从 bounds 获取 aspectRatio，使用视频实际尺寸
+      if (aspectRatio == null && videoController != null) {
+        final state = videoController!.player.state;
+        final videoWidth = state.width ?? width ?? 16;
+        final videoHeight = state.height ?? height ?? 9;
+        if (videoHeight > 0) {
+          aspectRatio = videoWidth / videoHeight;
+        }
       }
-    }
-
-    if (clearSourceRectHint) {
+    } else if (!isInInAppPip && _isCurrVideoPage && autoEnable) {
+      // 普通全屏页面，使用 _videoViewRect
+      if (_videoViewRect != null) {
+        final context = Get.overlayContext ?? Get.context;
+        if (context != null) {
+          final view = View.of(context);
+          final dpr = view.devicePixelRatio * Pref.uiScale;
+          
+          _logPipDebug('Normal video page, DPR: $dpr');
+          _logPipDebug('  Page bounds: L=${_videoViewRect!.left.toStringAsFixed(1)}, T=${_videoViewRect!.top.toStringAsFixed(1)}, R=${_videoViewRect!.right.toStringAsFixed(1)}, B=${_videoViewRect!.bottom.toStringAsFixed(1)}');
+          
+          sourceRectHint = [
+            (_videoViewRect!.left * dpr).round(),
+            (_videoViewRect!.top * dpr).round(),
+            (_videoViewRect!.right * dpr).round(),
+            (_videoViewRect!.bottom * dpr).round(),
+          ];
+          
+          _logPipDebug('  Physical: L=${sourceRectHint![0]}, T=${sourceRectHint[1]}, R=${sourceRectHint[2]}, B=${sourceRectHint[3]}');
+        }
+      } else {
+        _logPipDebug('WARNING: videoViewRect is null!');
+      }
+      
+      // Fallback aspectRatio
+      if (aspectRatio == null && videoController != null) {
+        final state = videoController!.player.state;
+        final videoWidth = state.width ?? width ?? 16;
+        final videoHeight = state.height ?? height ?? 9;
+        if (videoHeight > 0) {
+          aspectRatio = videoWidth / videoHeight;
+        }
+      }
+    } else if (clearSourceRectHint) {
       // 传递空数组作为清除标记
       sourceRectHint = [];
       _logPipDebug('Clearing sourceRectHint');
     }
 
-    // 决定是否启用 autoEnterEnabled：
-    // 1. 在应用内小窗模式下，需要检查用户是否开启了"自动转换为系统画中画"开关
-    // 2. 在普通页面下，根据传入的 autoEnable 参数决定
-    final bool finalAutoEnable = isInInAppPip 
-        ? (autoEnable && Pref.enableInAppToNativePip)
-        : autoEnable;
-
     Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-      'autoEnable': finalAutoEnable,
+      'autoEnable': autoEnable,
       if (sourceRectHint != null) 'sourceRectHint': sourceRectHint,
       if (aspectRatio != null) 'aspectRatio': aspectRatio,
     });
     
-    _logPipDebug('Sent to native: autoEnable=$finalAutoEnable${isInInAppPip ? " (InAppPip && enableInAppToNativePip=${Pref.enableInAppToNativePip})" : ""}, hasSourceRectHint=${sourceRectHint != null}, aspectRatio=$aspectRatio');
+    _logPipDebug('Sent to native: autoEnable=$autoEnable, hasSourceRectHint=${sourceRectHint != null}, aspectRatio=$aspectRatio');
   }
 
   // 弹幕相关配置
