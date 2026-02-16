@@ -362,17 +362,8 @@ class PlPlayerController with BlockConfigMixin {
     // 但是，如果在应用内小窗模式下（_isInInAppPip），我们仍需更新 params（特别是 sourceRectHint）
     if (isFullScreen.value && !_isInInAppPip) return;
 
-    // 如果没有开启“自动转换”且当前在应用内小窗，则不设置 autoEnterEnabled
     final bool isInInAppPip = _isInInAppPip;
-    if (isInInAppPip && !Pref.enableInAppToNativePip) {
-      if (autoEnable) {
-        Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-          'autoEnable': false,
-        });
-      }
-      return;
-    }
-
+    
     List<int>? sourceRectHint;
     double? aspectRatio;
     final context = Get.overlayContext ?? Get.context;
@@ -383,30 +374,40 @@ class PlPlayerController with BlockConfigMixin {
     if (context != null) {
       final view = View.of(context);
       final dpr = view.devicePixelRatio * Pref.uiScale;
-      _logPipDebug('DPR: $dpr (devicePixelRatio: ${view.devicePixelRatio}, uiScale: ${Pref.uiScale})');
+      _logPipDebug('isInInAppPip: $isInInAppPip, Screen DPR: ${view.devicePixelRatio}, UI Scale: ${Pref.uiScale}, Final DPR: $dpr');
 
-      if (autoEnable) {
-        // 【关键修改】在应用内小窗模式下，不设置 sourceRectHint
-        // 让 Android 系统自动找到视频 Surface，避免捕获到 Overlay 位置的错误内容
+      if (!clearSourceRectHint) {
         if (isInInAppPip) {
-          _logPipDebug('In InAppPip mode: skipping sourceRectHint to let system auto-detect Surface');
-          // 不设置 sourceRectHint，但获取宽高比用于 PiP 窗口
-          final bounds = PipOverlayService.currentBounds ??
-              LivePipOverlayService.currentBounds;
-          if (bounds != null && bounds.height > 0 && bounds.width > 0) {
-            aspectRatio = bounds.width / bounds.height;
+          // 【核心逻辑】在应用内小窗模式下，使用小窗的屏幕坐标设置 sourceRectHint
+          // 这样系统在转换时会从小窗位置开始动画，而不是捕获整个页面背景
+          final bounds = PipOverlayService.currentBounds ?? LivePipOverlayService.currentBounds;
+          if (bounds != null) {
+            _logPipDebug('Bounds source: InApp small window\n  Logical bounds: $bounds');
+            sourceRectHint = [
+              (bounds.left * dpr).round(),
+              (bounds.top * dpr).round(),
+              (bounds.right * dpr).round(),
+              (bounds.bottom * dpr).round(),
+            ];
+            _logPipDebug('  Physical bounds for native: Rect.fromLTRB(${sourceRectHint![0]}, ${sourceRectHint[1]}, ${sourceRectHint[2]}, ${sourceRectHint[3]})');
+            
+            if (bounds.height > 0 && bounds.width > 0) {
+              aspectRatio = bounds.width / bounds.height;
+            }
+          } else {
+            _logPipDebug('WARNING: InAppPip mode but currentBounds is null!');
           }
         } else if (_isCurrVideoPage) {
           // 普通全屏页面，使用 _videoViewRect
           if (_videoViewRect != null) {
-            _logPipDebug('Using videoViewRect: left=${_videoViewRect!.left}, top=${_videoViewRect!.top}, width=${_videoViewRect!.width}, height=${_videoViewRect!.height}');
+            _logPipDebug('Bounds source: fullscreen video page\n  Logical bounds: $_videoViewRect');
             sourceRectHint = [
               (_videoViewRect!.left * dpr).round(),
               (_videoViewRect!.top * dpr).round(),
               (_videoViewRect!.right * dpr).round(),
               (_videoViewRect!.bottom * dpr).round(),
             ];
-            _logPipDebug('Calculated sourceRectHint: $sourceRectHint');
+            _logPipDebug('  Physical bounds for native: Rect.fromLTRB(${sourceRectHint![0]}, ${sourceRectHint[1]}, ${sourceRectHint[2]}, ${sourceRectHint[3]})');
           } else {
             _logPipDebug('WARNING: videoViewRect is null!');
           }
@@ -430,15 +431,23 @@ class PlPlayerController with BlockConfigMixin {
     if (clearSourceRectHint) {
       // 传递空数组作为清除标记
       sourceRectHint = [];
+      _logPipDebug('Clearing sourceRectHint');
     }
 
+    // 决定是否启用 autoEnterEnabled：
+    // 1. 在应用内小窗模式下，需要检查用户是否开启了"自动转换为系统画中画"开关
+    // 2. 在普通页面下，根据传入的 autoEnable 参数决定
+    final bool finalAutoEnable = isInInAppPip 
+        ? (autoEnable && Pref.enableInAppToNativePip)
+        : autoEnable;
+
     Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-      'autoEnable': autoEnable,
+      'autoEnable': finalAutoEnable,
       if (sourceRectHint != null) 'sourceRectHint': sourceRectHint,
       if (aspectRatio != null) 'aspectRatio': aspectRatio,
     });
     
-    _logPipDebug('Sent to native: autoEnable=$autoEnable, sourceRectHint=$sourceRectHint, aspectRatio=$aspectRatio');
+    _logPipDebug('Sent to native: autoEnable=$finalAutoEnable${isInInAppPip ? " (InAppPip && enableInAppToNativePip=${Pref.enableInAppToNativePip})" : ""}, hasSourceRectHint=${sourceRectHint != null}, aspectRatio=$aspectRatio');
   }
 
   // 弹幕相关配置
