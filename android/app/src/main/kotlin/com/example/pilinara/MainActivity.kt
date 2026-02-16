@@ -134,9 +134,12 @@ class MainActivity : AudioServiceActivity() {
                             .setAutoEnterEnabled(autoEnable)
                         
                         // 设置 sourceRectHint 以支持平滑缩放动画
+                        // 如果 rect 为 null，则不设置（让 Android 自动检测视频 Surface）
+                        // 如果 rect 为空数组，则显式清除（通过不设置来清除）
                         if (rect != null && rect.size == 4) {
                             builder.setSourceRectHint(android.graphics.Rect(rect[0], rect[1], rect[2], rect[3]))
                         }
+                        // 注意：不设置 sourceRectHint 时，Android 会自动在 Activity 中查找 SurfaceView/TextureView
 
                         // 设置正确的纵横比，避免画面拉伸
                         if (aspectRatio != null && aspectRatio > 0) {

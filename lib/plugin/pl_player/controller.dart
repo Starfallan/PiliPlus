@@ -386,23 +386,15 @@ class PlPlayerController with BlockConfigMixin {
       _logPipDebug('DPR: $dpr (devicePixelRatio: ${view.devicePixelRatio}, uiScale: ${Pref.uiScale})');
 
       if (autoEnable) {
+        // 【关键修改】在应用内小窗模式下，不设置 sourceRectHint
+        // 让 Android 系统自动找到视频 Surface，避免捕获到 Overlay 位置的错误内容
         if (isInInAppPip) {
+          _logPipDebug('In InAppPip mode: skipping sourceRectHint to let system auto-detect Surface');
+          // 不设置 sourceRectHint，但获取宽高比用于 PiP 窗口
           final bounds = PipOverlayService.currentBounds ??
               LivePipOverlayService.currentBounds;
-          if (bounds != null) {
-            _logPipDebug('Using InAppPip bounds: left=${bounds.left}, top=${bounds.top}, width=${bounds.width}, height=${bounds.height}');
-            sourceRectHint = [
-              (bounds.left * dpr).round(),
-              (bounds.top * dpr).round(),
-              (bounds.right * dpr).round(),
-              (bounds.bottom * dpr).round(),
-            ];
-            _logPipDebug('Calculated sourceRectHint: $sourceRectHint');
-            if (bounds.height > 0 && bounds.width > 0) {
-              aspectRatio = bounds.width / bounds.height;
-            }
-          } else {
-            _logPipDebug('WARNING: InAppPip bounds is null!');
+          if (bounds != null && bounds.height > 0 && bounds.width > 0) {
+            aspectRatio = bounds.width / bounds.height;
           }
         } else if (_isCurrVideoPage) {
           // 普通全屏页面，使用 _videoViewRect
@@ -658,52 +650,10 @@ class PlPlayerController with BlockConfigMixin {
       Utils.sdkInt.then((sdkInt) {
         Utils.channel.setMethodCallHandler((call) async {
           if (call.method == 'onUserLeaveHint') {
-            final bool isInInAppPip = _isInInAppPip;
-            
-            if (isInInAppPip) {
-              // 从应用内小窗切换到系统 PiP：
-              // 1. 清除原生端的 sourceRectHint（移除 Overlay 位置信息）
-              // 2. 关闭 Overlay
-              // 3. 等待视图重建后进入系统 PiP，让 Android 自动找到 Surface
-              if (PipOverlayService.isInPipMode) {
-                _logPipDebug('Clearing sourceRectHint and closing Overlay');
-                // 清除 sourceRectHint，但保留宽高比信息
-                final state = videoController?.player.state;
-                final w = state?.width ?? width;
-                final h = state?.height ?? height;
-                Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-                  'autoEnable': true,
-                  'sourceRectHint': null,  // 传递 null 让原生端清除
-                  if (w != null && h != null) 'aspectRatio': w / h,
-                });
-                PipOverlayService.stopPip(callOnClose: false, immediate: true, skipSyncParams: true);
-                // 等待视图重建
-                Future.delayed(const Duration(milliseconds: 50), () {
-                  _logPipDebug('Entering native PiP without sourceRect');
-                  enterPip();
-                });
-              } else if (LivePipOverlayService.isInPipMode) {
-                _logPipDebug('Clearing sourceRectHint and closing Overlay');
-                final state = videoController?.player.state;
-                final w = state?.width ?? width;
-                final h = state?.height ?? height;
-                Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-                  'autoEnable': true,
-                  'sourceRectHint': null,
-                  if (w != null && h != null) 'aspectRatio': w / h,
-                });
-                LivePipOverlayService.stopLivePip(callOnClose: false, immediate: true, skipSyncParams: true);
-                Future.delayed(const Duration(milliseconds: 50), () {
-                  _logPipDebug('Entering native PiP without sourceRect');
-                  enterPip();
-                });
-              }
-              return;
-            }
-
             // 对于 SDK < 36，手动触发 PiP
             // 增加 fsProcessing 保护，防止在全屏切换过程中（如 HyperOS 隐藏状态栏时）误触发自动 PiP
             if (sdkInt < 36 && !fsProcessing) {
+              final bool isInInAppPip = _isInInAppPip;
               if (playerStatus.isPlaying && (_isCurrVideoPage || isInInAppPip)) {
                 enterPip();
               }
