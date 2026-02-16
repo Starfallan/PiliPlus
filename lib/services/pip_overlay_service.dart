@@ -68,15 +68,9 @@ class PipOverlayService {
 
   static Rect? _lastBounds;
   static void updateBounds(Rect bounds) {
-    if (!Pref.enableInAppToNativePip) return;
-    if (_lastBounds == bounds) return;
+    // 保留此方法以兼容现有代码，但实际上不再需要同步坐标
+    // 因为我们使用伪全屏而不是 SourceRectHint
     _lastBounds = bounds;
-    
-    // 同步给播放器控制器，以便更新原生 PIP 的 sourceRectHint
-    final controller = PlPlayerController.instance;
-    if (controller != null && isInPipMode) {
-      controller.syncPipParams();
-    }
   }
 
   static void onTapToReturn() {
@@ -157,13 +151,13 @@ class PipOverlayService {
     isInPipMode = false;
     isNativePip = false;
     
-    // 清理坐标缓存，防止影响后续的非小窗模式 PiP
+    // 清理坐标缓存（虽然不再使用 SourceRectHint，但保留此逻辑以备将来需要）
     _lastBounds = null;
     
-    // 通知原生端清除 sourceRectHint，恢复全屏 PiP 模式
+    // 通知原生端停止自动进入 PiP
     final controller = PlPlayerController.instance;
     if (controller != null) {
-      controller.syncPipParams(autoEnable: false, clearSourceRectHint: true);
+      controller.syncPipParams(autoEnable: false);
     }
 
     final closeCallback = callOnClose ? _onCloseCallback : null;
