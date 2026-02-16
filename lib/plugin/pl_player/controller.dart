@@ -319,6 +319,31 @@ class PlPlayerController with BlockConfigMixin {
     }
   }
 
+  /// 为应用内小窗转 PiP 设置全屏 SourceRectHint
+  /// 虽然 Platform View 无法被裁剪，但此参数会触发系统的优化转场流程
+  void _setFullScreenSourceRectHint() {
+    final context = Get.overlayContext ?? Get.context;
+    if (context == null) return;
+    
+    try {
+      final view = View.of(context);
+      final size = view.physicalSize;
+      
+      // 传递整个屏幕的物理像素坐标
+      Utils.channel.invokeMethod('setFullScreenSourceRectHint', {
+        'sourceRectHint': [0, 0, size.width.round(), size.height.round()],
+      });
+    } catch (e) {
+      // 忽略错误，不影响 PiP 功能
+    }
+  }
+
+  /// 调用 enterPip 并同时设置全屏 SourceRectHint
+  void _enterPipWithFullScreenHint() {
+    _setFullScreenSourceRectHint();
+    enterPip();
+  }
+
   void _disableAutoEnterPipIfNeeded() {
     if (!_isPreviousVideoPage) {
       _disableAutoEnterPip();
@@ -555,19 +580,30 @@ class PlPlayerController with BlockConfigMixin {
             final bool isInInAppPip = _isInInAppPip;
             
             if (isInInAppPip && Pref.enableInAppToNativePip) {
-              // 应用内小窗场景：使用伪全屏 + PostFrameCallback
-              // 第一步：设置 isNativePip = true，让 Overlay 撑满全屏
+              // 应用内小窗场景：使用科学的三步法
+              // 第一步：立即设置 isNativePip = true，触发 Obx 让 Overlay 撑满全屏
               PipOverlayService.isNativePip = true;
               LivePipOverlayService.isNativePip = true;
               
-              // 第二步：使用 PostFrameCallback 确保 Flutter 完成渲染
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                // 第三步：渲染完成后再调用 enterPip
-                if (sdkInt < 31 && playerStatus.isPlaying) {
-                  enterPip();
-                }
-                // SDK >= 31 依赖 autoEnterEnabled，已在播放状态变化时设置
-              });
+              // 第二步：等待当前帧布局刷新完成
+              // 这确保了 RenderObject 的 size 已经变成了全屏
+              final completer = Completer<void>();
+              WidgetsBinding.instance.addPostFrameCallback((_) => completer.complete());
+              await completer.future;
+              
+              // 第三步：给 Flutter 引擎一点时间把 Buffer 真正推送到 SurfaceFlinger
+              // 这是补偿 MethodChannel 跨进程延迟的关键
+              await Future.delayed(const Duration(milliseconds: 20));
+              
+              // 第四步：调用 enterPip，并传递全屏 SourceRectHint
+              // 即使 Platform View 无法裁剪，但传递此参数会触发系统的优化转场流程
+              if (sdkInt < 31 && playerStatus.isPlaying) {
+                _enterPipWithFullScreenHint();
+              }
+              // SDK >= 31 依赖 autoEnterEnabled，但仍需设置 hint 优化动画
+              if (sdkInt >= 31) {
+                _setFullScreenSourceRectHint();
+              }
             } else if (!isInInAppPip) {
               // 普通播放场景：直接调用原版逻辑
               if (sdkInt < 31 && playerStatus.isPlaying && _isCurrVideoPage) {

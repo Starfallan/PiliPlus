@@ -133,6 +133,18 @@ class MainActivity : AudioServiceActivity() {
                     }
                 }
 
+                "setFullScreenSourceRectHint" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        val rect = call.argument<List<Int>>("sourceRectHint")
+                        if (rect != null && rect.size == 4) {
+                            val params = PictureInPictureParams.Builder()
+                                .setSourceRectHint(android.graphics.Rect(rect[0], rect[1], rect[2], rect[3]))
+                                .build()
+                            setPictureInPictureParams(params)
+                        }
+                    }
+                }
+
                 else -> result.notImplemented()
             }
         }
