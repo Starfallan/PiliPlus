@@ -611,6 +611,7 @@ class PlPlayerController with BlockConfigMixin {
               }
             }
           } else if (call.method == 'onPipChanged') {
+            final bool isInPip = call.arguments as bool;
             // 从系统 PiP 退出时，只需恢复应用内小窗的显示状态
             // 不应该导航到新页面（onTapToReturn 会创建新的播放页）
             // 用户如果想回到全屏播放，应该点击应用内小窗的恢复按钮
