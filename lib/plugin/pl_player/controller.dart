@@ -1,4 +1,4 @@
-import 'dart:async' show Completer, StreamSubscription, Timer;
+import 'dart:async' show StreamSubscription, Timer;
 import 'dart:convert' show ascii;
 import 'dart:io' show Platform, File, Directory;
 import 'dart:math' show max, min;
@@ -580,27 +580,21 @@ class PlPlayerController with BlockConfigMixin {
             final bool isInInAppPip = _isInInAppPip;
             
             if (isInInAppPip && Pref.enableInAppToNativePip) {
-              // 应用内小窗场景：使用科学的三步法
+              // 应用内小窗场景：立即设置伪全屏并触发 PiP
+              // 关键：必须在 Activity 还是 resumed 状态时调用 enterPip
+              // 不能使用 await，否则 Activity 会转入 paused 状态
+              
               // 第一步：立即设置 isNativePip = true，触发 Obx 让 Overlay 撑满全屏
               PipOverlayService.isNativePip = true;
               LivePipOverlayService.isNativePip = true;
               
-              // 第二步：等待当前帧布局刷新完成
-              // 这确保了 RenderObject 的 size 已经变成了全屏
-              final completer = Completer<void>();
-              WidgetsBinding.instance.addPostFrameCallback((_) => completer.complete());
-              await completer.future;
-              
-              // 第三步：给 Flutter 引擎一点时间把 Buffer 真正推送到 SurfaceFlinger
-              // 这是补偿 MethodChannel 跨进程延迟的关键
-              await Future.delayed(const Duration(milliseconds: 100));
-              
-              // 第四步：调用 enterPip，并传递全屏 SourceRectHint
-              // 即使 Platform View 无法裁剪，但传递此参数会触发系统的优化转场流程
-              // 注意：无论 SDK 版本，都主动调用 enterPip，不能完全依赖 autoEnter
-              if (playerStatus.isPlaying) {
-                _enterPipWithFullScreenHint();
-              }
+              // 第二步：使用 addPostFrameCallback 但不 await
+              // 在下一帧立即执行，此时 Activity 仍是 resumed 状态
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (playerStatus.isPlaying) {
+                  _enterPipWithFullScreenHint();
+                }
+              });
             } else if (!isInInAppPip) {
               // 普通播放场景：直接调用原版逻辑
               if (sdkInt < 31 && playerStatus.isPlaying && _isCurrVideoPage) {
