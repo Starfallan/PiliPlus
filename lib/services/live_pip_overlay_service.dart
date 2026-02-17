@@ -190,7 +190,7 @@ class LivePipWidget extends StatefulWidget {
   State<LivePipWidget> createState() => _LivePipWidgetState();
 }
 
-PlPlayerControllerclass _LivePipWidgetState extends State<LivePipWidget> {
+class _LivePipWidgetState extends State<LivePipWidget> {
   double? _left;
   double? _top;
   double _scale = 1.0;
