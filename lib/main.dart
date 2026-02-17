@@ -101,7 +101,7 @@ void main() async {
         break;
 
       case 'onPipChanged':
-        // D. 恢复导航修复与状态同步
+        // D. 状态同步与还原
         final bool isInPip = call.arguments as bool;
         PipOverlayService.isNativePip = isInPip;
         LivePipOverlayService.isNativePip = isInPip;
@@ -109,16 +109,9 @@ void main() async {
         if (PlPlayerController.instanceExists()) {
           PlPlayerController.getInstance().isNativePip.value = isInPip;
         }
-        // 如果是从原生 PiP 返回应用，且当前处于应用内小窗模式，执行还原逻辑
-        if (!isInPip &&
-            (PipOverlayService.isInPipMode ||
-                LivePipOverlayService.isInPipMode)) {
-          if (PipOverlayService.isInPipMode) {
-            PipOverlayService.onTapToReturn();
-          } else if (LivePipOverlayService.isInPipMode) {
-            LivePipOverlayService.onReturn();
-          }
-        }
+        // 对于应用内小窗转换场景：
+        // 当从原生回归 (isInPip == false) 时，背景页面保持不变，
+        // 而 Overlay 会因为 isNativePip 变为 false 而自动恢复小窗尺寸（由 Service 中的 Obx 驱动）。
         break;
 
       case 'onUserLeaveHint':
