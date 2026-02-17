@@ -221,8 +221,12 @@ class _LivePipWidgetState extends State<LivePipWidget> with WidgetsBindingObserv
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!LivePipOverlayService.isInPipMode) return;
-    
-    if (state == AppLifecycleState.resumed) {
+
+    if (state == AppLifecycleState.inactive) {
+      // 进入系统画中画
+      LivePipOverlayService.isNativePip = true;
+      widget.plPlayerController.enterPip();
+    } else if (state == AppLifecycleState.resumed) {
       // 从系统画中画返回应用，恢复应用内小窗
       LivePipOverlayService.isNativePip = false;
     }

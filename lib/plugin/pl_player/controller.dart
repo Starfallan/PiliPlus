@@ -537,17 +537,10 @@ class PlPlayerController with BlockConfigMixin {
       Utils.sdkInt.then((sdkInt) {
         Utils.channel.setMethodCallHandler((call) async {
           if (call.method == 'onUserLeaveHint') {
-            final bool isInInAppPip = PipOverlayService.isInPipMode ||
-                LivePipOverlayService.isInPipMode;
-            
-            if (isInInAppPip) {
-              // 模拟全屏以获得正确的 PiP 切换动画
-              PipOverlayService.isNativePip = true;
-              LivePipOverlayService.isNativePip = true;
-            }
-
             // 对于 SDK < 36，手动触发 PiP
             if (sdkInt < 36) {
+              final bool isInInAppPip = PipOverlayService.isInPipMode ||
+                  LivePipOverlayService.isInPipMode;
               if (playerStatus.isPlaying && (_isCurrVideoPage || isInInAppPip)) {
                 enterPip();
               }

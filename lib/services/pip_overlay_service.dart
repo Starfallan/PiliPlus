@@ -225,7 +225,16 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!PipOverlayService.isInPipMode) return;
 
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.inactive) {
+      // 进入系统画中画
+      final plController = PipOverlayService
+          .getSavedController<VideoDetailController>()
+          ?.plPlayerController;
+      if (plController != null) {
+        PipOverlayService.isNativePip = true;
+        plController.enterPip();
+      }
+    } else if (state == AppLifecycleState.resumed) {
       // 从系统画中画返回应用，恢复应用内小窗
       PipOverlayService.isNativePip = false;
     }
