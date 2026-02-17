@@ -226,7 +226,7 @@ class PlPlayerController with BlockConfigMixin, WidgetsBindingObserver {
 
   late final bool autoPiP = Pref.autoPiP;
   bool get isPipMode =>
-      (Platform.isAndroid && Floating().isPipMode) ||
+      (Platform.isAndroid && (Floating().isPipMode || isNativePip.value)) ||
       (PlatformUtils.isDesktop && isDesktopPip);
   late bool isDesktopPip = false;
   late Rect _lastWindowBounds;
@@ -593,16 +593,6 @@ class PlPlayerController with BlockConfigMixin, WidgetsBindingObserver {
             }
           } else if (call.method == 'onPipChanged') {
             final bool isInPip = call.arguments as bool;
-            if (!isInPip &&
-                isNativePip.value &&
-                (PipOverlayService.isInPipMode ||
-                    LivePipOverlayService.isInPipMode)) {
-              if (PipOverlayService.isInPipMode) {
-                PipOverlayService.onTapToReturn();
-              } else if (LivePipOverlayService.isInPipMode) {
-                LivePipOverlayService.onReturn();
-              }
-            }
             isNativePip.value = isInPip;
             PipOverlayService.isNativePip = isInPip;
             LivePipOverlayService.isNativePip = isInPip;
