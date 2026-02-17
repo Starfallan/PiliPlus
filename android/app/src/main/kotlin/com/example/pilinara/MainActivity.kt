@@ -150,6 +150,12 @@ class MainActivity : AudioServiceActivity() {
         }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // 向 Flutter 报告窗口焦点变化，用于过滤非切出场景的 inactive 状态
+        methodChannel.invokeMethod("onWindowFocusChanged", hasFocus)
+    }
+
     private fun back() {
         val intent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_HOME)
