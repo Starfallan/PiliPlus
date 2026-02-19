@@ -199,6 +199,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         // 如果小窗内的控制器正是我们要打开的这个（aid 匹配），则立即关闭小窗
         // 这里如果是同一个 aid，Get.put 会自动找回之前的控制器实例，因此我们只需确保 Overlay 关闭
         PipOverlayService.stopPip(callOnClose: false, immediate: true);
+        _logSponsorBlock('小窗已关闭以避免状态污染 (initState)');
       }
       videoDetailController = Get.put(VideoDetailController(), tag: heroTag);
     }

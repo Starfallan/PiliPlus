@@ -147,6 +147,13 @@ class PipOverlayService {
   static T? getAdditionalController<T>(String key) => _savedControllers[key] as T?;
 
   static void stopPip({bool callOnClose = true, bool immediate = false}) {
+    // 无论状态如何，都尝试清理保存的控制器引用
+    if (_savedController != null || _savedControllers.isNotEmpty) {
+      _savedController = null;
+      _savedControllers.clear();
+      logger.i('[PipOverlayService] 小窗控制器已清理: _savedController=null, _savedControllers cleared');
+    }
+
     if (!isInPipMode && _overlayEntry == null) {
       return;
     }
@@ -157,8 +164,6 @@ class PipOverlayService {
     final closeCallback = callOnClose ? _onCloseCallback : null;
     _onCloseCallback = null;
     _onTapToReturnCallback = null;
-    _savedController = null;
-    _savedControllers.clear();
 
     final overlayToRemove = _overlayEntry;
     _overlayEntry = null;

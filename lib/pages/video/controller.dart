@@ -312,6 +312,13 @@ class VideoDetailController extends GetxController
   @override
   void onInit() {
     super.onInit();
+
+    // 检查并清理小窗状态，避免SponsorBlock状态污染
+    if (PipOverlayService.isInPipMode) {
+      PipOverlayService.stopPip(immediate: true);
+      logger.e('[VideoDetailController] 小窗已强制关闭以避免状态污染');
+    }
+
     args = Get.arguments;
     videoType = args['videoType'];
     if (videoType == VideoType.pgc) {
